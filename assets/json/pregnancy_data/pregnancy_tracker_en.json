@@ -1,0 +1,984 @@
+{
+  "pregnancy_weeks": [
+    {
+      "week": 1,
+      "title": "Week 1 – The Journey Begins",
+      "baby_size": "Smaller than a dot – not yet formed",
+      "baby_development": "Fertilization hasn't officially occurred yet, but your body is preparing to release an egg. The uterine lining is building up to receive a fertilized egg.",
+      "mother_changes": "No noticeable symptoms yet. You may be in the last days of your period or approaching ovulation.",
+      "tips": "Start taking folic acid daily, avoid smoking and alcohol, and maintain a healthy lifestyle.",
+      "food_recommended": [
+        "Leafy greens",
+        "Oranges and citrus fruits",
+        "Legumes",
+        "Whole grains"
+      ],
+      "food_avoid": [
+        "Alcohol",
+        "Cigarettes",
+        "Medications without doctor's advice"
+      ],
+      "medical": "Begin taking 400 mcg of folic acid daily before or at the very start of pregnancy.",
+      "warnings": "Avoid all medications and supplements without consulting your doctor first.",
+      "notification": {
+        "title": "✨ Your journey starts now!",
+        "body": "Get ready for the most beautiful experience of your life. Start folic acid today 💊"
+      },
+      "image": "assets/images/health/pregnancy/week_1_4.webp"
+    },
+    {
+      "week": 2,
+      "title": "Week 2 – The Moment of Fertilization",
+      "baby_size": "A single fertilized cell – smaller than a pinhead",
+      "baby_development": "Sperm meets egg to form the zygote. It begins dividing rapidly and travels toward the uterus.",
+      "mother_changes": "No obvious symptoms. Some women feel a mild twinge during ovulation.",
+      "tips": "Stay calm and relaxed. Avoid intense stress as it may affect ovulation.",
+      "food_recommended": [
+        "Omega-3 rich fish",
+        "Nuts",
+        "Yogurt",
+        "Eggs"
+      ],
+      "food_avoid": [
+        "High-mercury fish like large tuna",
+        "Excess caffeine"
+      ],
+      "medical": "Continue folic acid. If you take chronic medications, check with your doctor about their safety in pregnancy.",
+      "warnings": "Extreme heat can affect fertilization – avoid very hot baths or saunas.",
+      "notification": {
+        "title": "🌱 A seed of life is sprouting!",
+        "body": "A new life may have just been created. You're already an amazing mom 💛"
+      },
+      "image": "assets/images/health/pregnancy/week_1_4.webp"
+    },
+    {
+      "week": 3,
+      "title": "Week 3 – Nestling in the Uterus",
+      "baby_size": "Size of a grain of sand – 0.1 mm",
+      "baby_development": "Now called a blastocyst, it burrows into the uterine wall and begins producing the pregnancy hormone HCG.",
+      "mother_changes": "You may notice light spotting from implantation, which is completely normal.",
+      "tips": "Continue folic acid. Don't worry about light spotting – it's actually a good sign!",
+      "food_recommended": [
+        "Dairy products",
+        "Spinach",
+        "Lentils",
+        "Berries"
+      ],
+      "food_avoid": [
+        "Unpasteurized cheese",
+        "Raw or undercooked meats"
+      ],
+      "medical": "It's too early for a home pregnancy test. Wait until your missed period.",
+      "warnings": "If bleeding is heavy with severe pain, see your doctor immediately.",
+      "notification": {
+        "title": "🏠 Baby chose its home!",
+        "body": "Your tiny embryo is settling into your womb. A true miracle! 🌸"
+      },
+      "image": "assets/images/health/pregnancy/week_1_4.webp"
+    },
+    {
+      "week": 4,
+      "title": "Week 4 – Your First Positive Test",
+      "baby_size": "Size of a poppy seed – 1 mm",
+      "baby_development": "The embryo forms two primary layers that will become all body organs. The neural tube begins forming.",
+      "mother_changes": "Missed period, and you may feel mild fatigue or breast tenderness.",
+      "tips": "You can take a home pregnancy test now. If it's positive, book an appointment with your doctor!",
+      "food_recommended": [
+        "Broccoli",
+        "Beans",
+        "Avocado",
+        "Almonds"
+      ],
+      "food_avoid": [
+        "Alcohol – completely",
+        "Cigarettes",
+        "Caffeine over 200mg daily"
+      ],
+      "medical": "Start looking for an OB-GYN and schedule your first prenatal visit, ideally between weeks 8–10.",
+      "warnings": "Don't take any medication without your doctor's approval – even simple pain relievers.",
+      "notification": {
+        "title": "🎉 Two lines means a baby!",
+        "body": "The most beautiful news of your life – you're pregnant! 🤰💕"
+      },
+      "image": "assets/images/health/pregnancy/week_1_4.webp"
+    },
+    {
+      "week": 5,
+      "title": "Week 5 – A Tiny Heart Starts Beating",
+      "baby_size": "Size of a sesame seed – 2 mm",
+      "baby_development": "The heart begins forming and may start beating. Three primary cell layers develop that will form all body systems.",
+      "mother_changes": "Morning sickness often begins. Fatigue, breast swelling, and frequent urination are common.",
+      "tips": "Eat small, frequent meals to ease nausea. Dry crackers before getting out of bed can help a lot.",
+      "food_recommended": [
+        "Ginger for nausea relief",
+        "Bananas",
+        "White rice",
+        "Light soup"
+      ],
+      "food_avoid": [
+        "Strong smells",
+        "Fatty and fried foods",
+        "Excessive coffee"
+      ],
+      "medical": "If vomiting is severe and persistent, ask your doctor about hyperemesis gravidarum.",
+      "warnings": "Severe fatigue is normal, but rapid weight loss or inability to eat warrants a doctor's visit.",
+      "notification": {
+        "title": "💓 The heartbeat has begun!",
+        "body": "Your baby's heart is beating for the very first time! You'll hear it soon 🩺"
+      },
+      "image": "assets/images/health/pregnancy/week_5_8.webp"
+    },
+    {
+      "week": 6,
+      "title": "Week 6 – Facial Features Begin",
+      "baby_size": "Size of a lentil – 4–6 mm",
+      "baby_development": "Tiny buds appear that will become arms and legs. Eyes, ears, and mouth begin forming. The brain grows rapidly.",
+      "mother_changes": "Nausea intensifies, ongoing fatigue, heightened sense of smell. You may suddenly dislike previously loved scents.",
+      "tips": "Early bedtime is essential. Ask for help from family and don't feel guilty for resting a lot.",
+      "food_recommended": [
+        "Lemon and mint for nausea",
+        "Whole grains",
+        "Greek yogurt",
+        "Apples"
+      ],
+      "food_avoid": [
+        "Spicy foods",
+        "Strong-smelling foods",
+        "Raw seafood like sushi"
+      ],
+      "medical": "Your first prenatal visit covers medical history, estimated due date, and initial blood work.",
+      "warnings": "Bright red vaginal bleeding with cramping requires an emergency visit immediately.",
+      "notification": {
+        "title": "👀 Eyes are forming!",
+        "body": "Your baby's face is drawing its very first features this week 🎨"
+      },
+      "image": "assets/images/health/pregnancy/week_5_8.webp"
+    },
+    {
+      "week": 7,
+      "title": "Week 7 – Brain Growing at Lightning Speed",
+      "baby_size": "Size of a blueberry – 10 mm",
+      "baby_development": "The brain grows incredibly fast – 100 new nerve cells per minute! Tiny arm buds resemble fins. Kidneys begin functioning.",
+      "mother_changes": "The uterus grows slightly. Frequent urination increases. Constipation may occur due to progesterone.",
+      "tips": "Drink plenty of water. Dietary fiber helps prevent constipation. Avoid standing for long periods.",
+      "food_recommended": [
+        "Leafy greens",
+        "Fiber-rich fruits",
+        "Oats",
+        "Plenty of water"
+      ],
+      "food_avoid": [
+        "Soft unpasteurized cheeses",
+        "Raw eggs",
+        "Liver in large amounts"
+      ],
+      "medical": "An ultrasound this week may detect the baby's heartbeat for the first time.",
+      "warnings": "Severe constipation with abdominal pain may need medical advice.",
+      "notification": {
+        "title": "🧠 Brain cells at full speed!",
+        "body": "100 new nerve cells every minute! Your baby is smart from day one 💡"
+      },
+      "image": "assets/images/health/pregnancy/week_5_8.webp"
+    },
+    {
+      "week": 8,
+      "title": "Week 8 – A Real Embryo",
+      "baby_size": "Size of a kidney bean – 1.6 cm",
+      "baby_development": "The tail disappears completely. All major organs are forming. Fingers begin emerging. Eyes are wide but fused shut.",
+      "mother_changes": "Your belly is still flat, but the uterus has doubled in size. Nausea is often at its peak.",
+      "tips": "A good time for your first comprehensive prenatal visit if you haven't yet. Start a symptom journal.",
+      "food_recommended": [
+        "Fresh lean fish",
+        "Well-cooked chicken",
+        "Natural juices",
+        "Nuts"
+      ],
+      "food_avoid": [
+        "Smoked fish",
+        "Processed meats like salami and hot dogs"
+      ],
+      "medical": "Your first visit includes: due date calculation, full blood panel, urinalysis, blood pressure, and weight check.",
+      "warnings": "If you take medication for heart, diabetes, or blood pressure conditions, tell your doctor right away.",
+      "notification": {
+        "title": "🫘 Size of a bean!",
+        "body": "Baby has taken on a fully human shape. A little miracle inside you 🌟"
+      },
+      "image": "assets/images/health/pregnancy/week_5_8.webp"
+    },
+    {
+      "week": 9,
+      "title": "Week 9 – Fingers Are Separating",
+      "baby_size": "Size of a grape – 2.3 cm",
+      "baby_development": "Fingers separate and become distinct. Muscles grow and baby starts moving for the first time – though you won't feel it yet.",
+      "mother_changes": "Breasts feel heavier and more tender. Mood swings come and go quickly due to hormones.",
+      "tips": "Wear a supportive maternity bra. Talking openly with your partner about your feelings really helps.",
+      "food_recommended": [
+        "Iron from lean red meats",
+        "Spinach",
+        "Plant-based protein",
+        "Milk"
+      ],
+      "food_avoid": [
+        "Peanuts if there's a family history of allergies",
+        "Gas-causing foods"
+      ],
+      "medical": "The NIPT (Non-Invasive Prenatal Test) can be done now to screen for chromosomal abnormalities.",
+      "warnings": "Severe mood swings with uncontrolled crying may benefit from professional emotional support.",
+      "notification": {
+        "title": "🖐 Tiny fingers are opening!",
+        "body": "Baby's little fingers are forming. One day they'll hold yours 🥹"
+      },
+      "image": "assets/images/health/pregnancy/week_9_12.webp"
+    },
+    {
+      "week": 10,
+      "title": "Week 10 – End of the Early Embryonic Stage",
+      "baby_size": "Size of a strawberry – 3 cm",
+      "baby_development": "All vital organs are complete – we enter the growth and development phase. The head is still proportionally large. Kidneys produce urine.",
+      "mother_changes": "You may notice your clothes fitting tighter around the waist. Nausea may start easing soon.",
+      "tips": "Start thinking about maternity clothes. Elastic-waist pants are perfect for right now.",
+      "food_recommended": [
+        "Vitamin D from eggs and dairy",
+        "Calcium from milk and cheese",
+        "Zinc from seeds and legumes"
+      ],
+      "food_avoid": [
+        "Excess carbonated drinks",
+        "Fast food high in sodium"
+      ],
+      "medical": "The Nuchal Translucency (NT) scan is done between weeks 11–14 to screen for Down syndrome.",
+      "warnings": "Any lower abdominal pain or bleeding requires an urgent medical visit.",
+      "notification": {
+        "title": "🍓 Strawberry-sized baby!",
+        "body": "All organs are complete! Baby grows stronger every single day 💪"
+      },
+      "image": "assets/images/health/pregnancy/week_9_12.webp"
+    },
+    {
+      "week": 11,
+      "title": "Week 11 – Swallowing and Breathing Practice!",
+      "baby_size": "Size of a date – 4 cm",
+      "baby_development": "Baby swallows amniotic fluid and practices breathing motions. Can open and close its fist. Skin is transparent.",
+      "mother_changes": "Dizziness and headaches may occur due to blood pressure changes. Hair and nails grow stronger from hormones.",
+      "tips": "Rise slowly from bed to avoid dizziness. Drink water consistently throughout the day.",
+      "food_recommended": [
+        "Citrus fruits rich in vitamin C",
+        "Carrots",
+        "Sweet potatoes",
+        "Natural honey"
+      ],
+      "food_avoid": [
+        "Unverified herbal remedies",
+        "Energy drinks"
+      ],
+      "medical": "A blood test to check for pregnancy anemia is recommended at this stage.",
+      "warnings": "Severe headache with ringing ears requires an immediate blood pressure check.",
+      "notification": {
+        "title": "🌬 Practicing to breathe!",
+        "body": "Baby is gearing up for life outside your womb with full energy! 🫁"
+      },
+      "image": "assets/images/health/pregnancy/week_9_12.webp"
+    },
+    {
+      "week": 12,
+      "title": "Week 12 – End of the First Trimester",
+      "baby_size": "Size of a lime – 5.4 cm",
+      "baby_development": "Major organ development is complete. The digestive system begins working. The placenta fully takes over nourishing the baby.",
+      "mother_changes": "Miscarriage risk drops significantly. Nausea retreats for most women. A gentle return of energy begins.",
+      "tips": "A great time to share your pregnancy news with family and friends! You've made it through the first trimester.",
+      "food_recommended": [
+        "Omega-3 from fish",
+        "Soy",
+        "Quinoa",
+        "Grapes"
+      ],
+      "food_avoid": [
+        "Liver frequently (excess vitamin A)",
+        "Raw meats and fish"
+      ],
+      "medical": "The week 12 ultrasound clearly shows the baby and measures nuchal fold thickness for early screening.",
+      "warnings": "Abdominal cramps with bleeding at this stage need immediate medical evaluation.",
+      "notification": {
+        "title": "🎊 First trimester complete!",
+        "body": "The hardest part is over! Nausea is fading and baby is thriving 🌈"
+      },
+      "image": "assets/images/health/pregnancy/week_9_12.webp"
+    },
+    {
+      "week": 13,
+      "title": "Week 13 – Second Trimester Begins",
+      "baby_size": "Size of a kiwi – 7 cm",
+      "baby_development": "Baby can now suck its thumb. Primary baby teeth begin forming inside the gums. Vocal cords start developing.",
+      "mother_changes": "Energy returns for most women. The bump starts showing. Mild lower abdominal pain from uterine stretching is normal.",
+      "tips": "Welcome to the honeymoon phase of pregnancy! Use your restored energy for planning and baby shopping.",
+      "food_recommended": [
+        "Protein from poultry and legumes",
+        "Iron from spinach",
+        "Magnesium from bananas",
+        "Healthy oils"
+      ],
+      "food_avoid": [
+        "Nitrates in processed meats",
+        "Artificial sweeteners in large amounts"
+      ],
+      "medical": "The Quad Screen test is done between weeks 15–20 to detect potential fetal abnormalities.",
+      "warnings": "Mild lower belly aches are normal, but sharp pain warrants medical evaluation.",
+      "notification": {
+        "title": "🥝 Welcome, second trimester!",
+        "body": "Nausea is gone and joy has arrived! Enjoy every single moment 🌺"
+      },
+      "image": "assets/images/health/pregnancy/week_13_16.webp"
+    },
+    {
+      "week": 14,
+      "title": "Week 14 – First Movements!",
+      "baby_size": "Size of a peach – 8.7 cm",
+      "baby_development": "Baby can make primitive facial expressions – frowning and smiling! Kidneys are working and producing urine into the amniotic fluid.",
+      "mother_changes": "You may notice skin pigmentation changes (a dark line from the navel). Hair becomes shinier.",
+      "tips": "Start Kegel exercises to strengthen pelvic floor muscles – beneficial for delivery and recovery.",
+      "food_recommended": [
+        "Calcium from cheese and dairy",
+        "Vitamin K from green vegetables",
+        "Protein from eggs"
+      ],
+      "food_avoid": [
+        "Very salty foods to prevent bloating",
+        "Carbonated drinks"
+      ],
+      "medical": "If you're over 35, discuss chorionic villus sampling (CVS) or amniocentesis with your doctor.",
+      "warnings": "Skin changes are normal, but intense itching on hands and feet should prompt a liver function test.",
+      "notification": {
+        "title": "😊 Baby is smiling!",
+        "body": "That tiny face is forming its very first smile. Incredible! 🥰"
+      },
+      "image": "assets/images/health/pregnancy/week_13_16.webp"
+    },
+    {
+      "week": 15,
+      "title": "Week 15 – Baby Can Hear Your Voice!",
+      "baby_size": "Size of an apple – 10 cm",
+      "baby_development": "Ears are in their proper position and begin picking up external sounds. Bones harden. Skin is covered in fine lanugo hair.",
+      "mother_changes": "The bump is now clearly visible. A healthy weight gain of 1–2 kg so far. Back pain may begin.",
+      "tips": "Sing to your baby! They can hear you now. Talking and reading aloud helps develop hearing and the brain.",
+      "food_recommended": [
+        "Phosphorus from fish for bone building",
+        "Yogurt for calcium",
+        "Seeds like sesame and flax"
+      ],
+      "food_avoid": [
+        "Anti-inflammatory drugs like ibuprofen",
+        "Unverified herbal remedies"
+      ],
+      "medical": "The flu vaccine is safe and recommended during pregnancy.",
+      "warnings": "Sharp pain on one side with difficulty urinating may indicate a kidney infection.",
+      "notification": {
+        "title": "👂 Baby hears you now!",
+        "body": "Talk to them, sing to them. Your voice is the sweetest music they know! 🎵"
+      },
+      "image": "assets/images/health/pregnancy/week_13_16.webp"
+    },
+    {
+      "week": 16,
+      "title": "Week 16 – The Bump Is Showing!",
+      "baby_size": "Size of an avocado – 11.6 cm",
+      "baby_development": "Eyes respond to light even though eyelids are closed. Baby moves arms and legs with strength. The immune system is forming.",
+      "mother_changes": "Everyone notices your pregnancy now! You may feel the first fluttery baby movements (like butterflies in your belly).",
+      "tips": "Start taking weekly bump photos. These moments won't come back and you'll be glad you captured them.",
+      "food_recommended": [
+        "Omega-3 from walnuts",
+        "Vitamin E from olive oil",
+        "Iron from dates"
+      ],
+      "food_avoid": [
+        "Excess added sugars",
+        "Canned foods high in sodium"
+      ],
+      "medical": "The AFP blood test may be done now to screen for neural tube defects.",
+      "warnings": "First baby movements are normal anytime between weeks 16 and 25.",
+      "notification": {
+        "title": "🌟 Your bump tells a story!",
+        "body": "Baby is moving and playing. Did you feel those butterflies? 🦋"
+      },
+      "image": "assets/images/health/pregnancy/week_13_16.webp"
+    },
+    {
+      "week": 17,
+      "title": "Week 17 – Fat Starts Building Up",
+      "baby_size": "Size of a pear – 13 cm",
+      "baby_development": "Baby begins storing fat beneath the skin for warmth regulation. The umbilical cord becomes thicker and stronger.",
+      "mother_changes": "Increased sweating from a higher metabolism. Skin may become oilier or drier.",
+      "tips": "Use a natural moisturizing cream on your belly to help prevent stretch marks.",
+      "food_recommended": [
+        "Beta-carotene from carrots and sweet potatoes",
+        "Raisins for iron",
+        "Full-fat milk"
+      ],
+      "food_avoid": [
+        "Trans fats in fast food",
+        "Frequent consumption of pre-packaged frozen meals"
+      ],
+      "medical": "Monitor blood pressure regularly. A sudden rise combined with swelling may indicate preeclampsia.",
+      "warnings": "Sudden severe facial or hand swelling is a medical emergency.",
+      "notification": {
+        "title": "🍐 Pear-sized baby!",
+        "body": "Baby's tiny fat deposits are forming to keep them warm. So precious! 🤗"
+      },
+      "image": "assets/images/health/pregnancy/week_17_20.webp"
+    },
+    {
+      "week": 18,
+      "title": "Week 18 – The Big Anatomy Scan",
+      "baby_size": "Size of a bell pepper – 14.2 cm",
+      "baby_development": "Baby hears clearly and responds to sounds. Can yawn and stretch. Genitalia are now clearly visible on ultrasound.",
+      "mother_changes": "Baby movements become clearer. Back pain increases. Round ligament pain (sides of the belly) is common.",
+      "tips": "Book your anatomy scan (weeks 18–22). This ultrasound checks for structural abnormalities.",
+      "food_recommended": [
+        "Choline from eggs (vital for baby's brain)",
+        "Continued folic acid",
+        "Zinc from shellfish and meats"
+      ],
+      "food_avoid": [
+        "Raw shellfish",
+        "High-mercury fish like swordfish"
+      ],
+      "medical": "The anatomy scan (Level 2 ultrasound) is the most important scan of the second trimester. Don't miss it.",
+      "warnings": "If your doctor recommends bed rest, please don't ignore the advice.",
+      "notification": {
+        "title": "🔍 Time for the big scan!",
+        "body": "You'll see baby fully and maybe find out the gender! 👶"
+      },
+      "image": "assets/images/health/pregnancy/week_17_20.webp"
+    },
+    {
+      "week": 19,
+      "title": "Week 19 – Baby's Protective Coating",
+      "baby_size": "Size of a mango – 15.3 cm",
+      "baby_development": "Vernix caseosa (a waxy coating) forms to protect baby's skin from amniotic fluid. Baby is very active.",
+      "mother_changes": "Dizziness and fainting are possible. The growing uterus presses on veins, lowering blood pressure when standing up quickly.",
+      "tips": "Sleep on your left side to improve blood flow to the baby. Place a pillow between your knees for comfort.",
+      "food_recommended": [
+        "Magnesium from dark nuts",
+        "Iron from red lentils",
+        "Vitamin C with iron for better absorption"
+      ],
+      "food_avoid": [
+        "Tea and coffee with iron-rich meals (they block absorption)",
+        "Excess salt"
+      ],
+      "medical": "Ask your doctor to go over the anatomy scan results in detail if you've already had it.",
+      "warnings": "Sudden dizziness with chest pain or shortness of breath requires immediate evaluation.",
+      "notification": {
+        "title": "🥭 Mango-sized miracle!",
+        "body": "Baby's skin is getting its own special protective coating. Nature is amazing! 🌿"
+      },
+      "image": "assets/images/health/pregnancy/week_17_20.webp"
+    },
+    {
+      "week": 20,
+      "title": "Week 20 – Halfway There! 🎉",
+      "baby_size": "Size of a banana – 16.5 cm",
+      "baby_development": "The midpoint of pregnancy! Baby swallows amniotic fluid and practices digestion. Fingerprints are forming. Sleep and wake cycles are visible.",
+      "mother_changes": "The uterus is now near your navel level. You've likely gained 4–5 kg. Baby movements are felt clearly.",
+      "tips": "Celebrate this milestone! Half the journey is done. Now start planning the nursery.",
+      "food_recommended": [
+        "Protein from chicken and fish",
+        "1000mg calcium daily",
+        "Vitamin D from sunlight and food"
+      ],
+      "food_avoid": [
+        "Raw and unpasteurized foods",
+        "Caffeine over 200mg daily"
+      ],
+      "medical": "Schedule your glucose screening test between weeks 24–28 to check for gestational diabetes.",
+      "warnings": "No baby movement felt for over 12 hours – call your doctor.",
+      "notification": {
+        "title": "🎉 Halfway there!",
+        "body": "20 weeks behind you, 20 ahead. You are absolutely amazing! 💪❤️"
+      },
+      "image": "assets/images/health/pregnancy/week_17_20.webp"
+    },
+    {
+      "week": 21,
+      "title": "Week 21 – Senses Are Awakening",
+      "baby_size": "Size of a carrot – 26.7 cm",
+      "baby_development": "Baby can taste flavors through amniotic fluid. They prefer sweet and make faces at sour! Senses are developing fast.",
+      "mother_changes": "Heartburn may begin. The growing uterus pushes on the stomach, forcing acid upward.",
+      "tips": "Avoid lying down right after eating. Elevate your head slightly while sleeping. Small meals help with heartburn.",
+      "food_recommended": [
+        "Almonds to soothe the stomach",
+        "Ginger",
+        "Fresh papaya for digestion",
+        "Whole grains"
+      ],
+      "food_avoid": [
+        "Spicy foods",
+        "Tomatoes in large quantities",
+        "Dark chocolate if it triggers heartburn"
+      ],
+      "medical": "Iron deficiency is very common now. Request a CBC blood test to check hemoglobin levels.",
+      "warnings": "Heartburn with difficulty swallowing warrants a medical visit.",
+      "notification": {
+        "title": "👅 Baby tastes what you eat!",
+        "body": "What you eat reaches baby through amniotic fluid. Feed them well! 🍽️"
+      },
+      "image": "assets/images/health/pregnancy/week_21_24.webp"
+    },
+    {
+      "week": 22,
+      "title": "Week 22 – Eyes Opening",
+      "baby_size": "Size of a corn on the cob – 27.8 cm",
+      "baby_development": "Eyelids begin opening and closing. Baby responds to strong light outside the womb. Hair on the head starts growing.",
+      "mother_changes": "White vaginal discharge is normal at this stage due to hormonal changes.",
+      "tips": "Shine a gentle light toward your belly and watch the reaction. It's a fun way to stimulate baby's senses.",
+      "food_recommended": [
+        "Iodine from ocean fish for thyroid development",
+        "Vitamin A from carrots",
+        "Complete protein"
+      ],
+      "food_avoid": [
+        "Excess vitamin A from animal sources",
+        "Unpasteurized blue cheese"
+      ],
+      "medical": "See your doctor if discharge is colored or has an unusual odor.",
+      "warnings": "Pink or bloody discharge after week 20 needs immediate evaluation.",
+      "notification": {
+        "title": "👁 Eyes are opening!",
+        "body": "Baby's eyes are searching for light. Send them a warm hello from your heart! ✨"
+      },
+      "image": "assets/images/health/pregnancy/week_21_24.webp"
+    },
+    {
+      "week": 23,
+      "title": "Week 23 – A Fighting Chance Outside the Womb",
+      "baby_size": "Size of a small mango – 28.9 cm",
+      "baby_development": "Baby now has a chance of survival outside the womb with intensive medical support. Lungs are developing rapidly. Hearing is very developed.",
+      "mother_changes": "Back pain worsens. You may experience Braxton Hicks contractions (practice contractions).",
+      "tips": "Learn the difference between Braxton Hicks (irregular, painless) and real labor (regular, intensifying).",
+      "food_recommended": [
+        "Collagen from bone broth",
+        "Vitamin C for skin",
+        "Omega-3 for lung development"
+      ],
+      "food_avoid": [
+        "High-histamine foods if you have allergies",
+        "Caffeine"
+      ],
+      "medical": "If you experience regular contractions before week 37, call your doctor immediately – it may be preterm labor.",
+      "warnings": "More than 4 contractions per hour is a medical emergency.",
+      "notification": {
+        "title": "💪 Baby is fighting to grow!",
+        "body": "Every day inside your womb makes baby stronger. You're a hero! 🦸‍♀️"
+      },
+      "image": "assets/images/health/pregnancy/week_21_24.webp"
+    },
+    {
+      "week": 24,
+      "title": "Week 24 – Gestational Diabetes Screening",
+      "baby_size": "Size of an ear of corn – 30 cm",
+      "baby_development": "Baby is beginning to recognize dad's voice! The brain develops rapidly with folding grooves. Facial features are now complete.",
+      "mother_changes": "Feet and ankles may swell by the end of the day. This is normal if it improves with rest.",
+      "tips": "Elevate your feet above heart level when sitting. Avoid prolonged standing. Regular walking improves circulation.",
+      "food_recommended": [
+        "Low glycemic index foods like oats",
+        "Leafy vegetables",
+        "Lean protein"
+      ],
+      "food_avoid": [
+        "Refined white sugar",
+        "Sweetened artificial juices",
+        "Refined carbohydrates"
+      ],
+      "medical": "Gestational diabetes screening (GCT or OGTT) is done between weeks 24–28. Do not skip this test!",
+      "warnings": "Blurred vision with severe headache and sudden swelling may indicate preeclampsia.",
+      "notification": {
+        "title": "🍬 Sugar test matters!",
+        "body": "Don't forget your gestational diabetes screening this week. For you and baby 🩸"
+      },
+      "image": "assets/images/health/pregnancy/week_21_24.webp"
+    },
+    {
+      "week": 25,
+      "title": "Week 25 – Learning to Breathe",
+      "baby_size": "Size of an eggplant – 34.6 cm",
+      "baby_development": "Lungs develop surfactant (the substance that keeps air sacs from collapsing). Head hair grows thicker.",
+      "mother_changes": "Insomnia begins visiting some moms. Finding a comfortable sleeping position with a big belly becomes harder.",
+      "tips": "A U- or C-shaped pregnancy pillow helps enormously. Avoid sleeping on your back after week 20.",
+      "food_recommended": [
+        "Natural melatonin from cherries and bananas",
+        "Magnesium for better sleep",
+        "Warm milk"
+      ],
+      "food_avoid": [
+        "Coffee and tea in the afternoon",
+        "Heavy foods before bed"
+      ],
+      "medical": "Ask your doctor about the Tdap vaccine (whooping cough), which is recommended in the third trimester.",
+      "warnings": "Persistent severe insomnia is worth discussing with your doctor for safe solutions.",
+      "notification": {
+        "title": "😴 How's your sleep?",
+        "body": "Baby sleeps 20 hours a day! How about you? Take that nap guilt-free 💤"
+      },
+      "image": "assets/images/health/pregnancy/week_25_28.webp"
+    },
+    {
+      "week": 26,
+      "title": "Week 26 – Eyes Fully Open",
+      "baby_size": "Size of a zucchini – 35.6 cm",
+      "baby_development": "Eyes fully open and respond to light by moving or squinting. The immune system receives antibodies from mom through the placenta.",
+      "mother_changes": "Braxton Hicks contractions repeat more often. Mild shortness of breath may occur as the uterus grows.",
+      "tips": "Deep breathing exercises help you relax and ventilate your lungs. Just 5 minutes daily makes a difference.",
+      "food_recommended": [
+        "Greek yogurt for probiotics",
+        "Berries for antioxidants",
+        "Chickpeas and fava beans for plant protein"
+      ],
+      "food_avoid": [
+        "Cold deli meats that aren't heated",
+        "Soft unpasteurized pastries"
+      ],
+      "medical": "Blood pressure checks at every visit are critically important heading into the third trimester.",
+      "warnings": "Sudden severe shortness of breath with chest pain is a medical emergency.",
+      "notification": {
+        "title": "👀 Eyes can see you from inside!",
+        "body": "Baby sees light filtering through your belly. Shine a light! 🔦"
+      },
+      "image": "assets/images/health/pregnancy/week_25_28.webp"
+    },
+    {
+      "week": 27,
+      "title": "Week 27 – End of the Second Trimester",
+      "baby_size": "Size of a cauliflower – 36.6 cm",
+      "baby_development": "Baby sleeps and wakes in regular patterns. Brain grows and folds its layers. The immune system strengthens.",
+      "mother_changes": "Fatigue returns. Back and feet ache more. Mild facial swelling may appear.",
+      "tips": "Start learning about labor stages and birthing techniques. Enroll in a childbirth preparation class.",
+      "food_recommended": [
+        "Fatty fish like sardines and salmon",
+        "Walnuts",
+        "Turmeric for anti-inflammation"
+      ],
+      "food_avoid": [
+        "Processed foods",
+        "Excess saturated fat",
+        "Too much salt"
+      ],
+      "medical": "After week 28, start monitoring daily fetal movement (10 movements in 2 hours).",
+      "warnings": "Not feeling usual fetal movement – call your doctor right away.",
+      "notification": {
+        "title": "🎊 Two trimesters done!",
+        "body": "You've completed two-thirds of the journey! The finish line is close 🏁"
+      },
+      "image": "assets/images/health/pregnancy/week_25_28.webp"
+    },
+    {
+      "week": 28,
+      "title": "Week 28 – Third Trimester Begins",
+      "baby_size": "Size of a papaya – 38 cm",
+      "baby_development": "Baby blinks, moves its head, and raises its eyebrows! The brain grows remarkably from the outside inward.",
+      "mother_changes": "Sleep gets harder. Ankles and feet swell more. Colostrum (first breast milk) may start being produced.",
+      "tips": "If driving long distances, stop every two hours to walk. Sitting too long increases the risk of blood clots.",
+      "food_recommended": [
+        "Extra calcium is crucial now",
+        "Iron from lean red meat",
+        "At least 2 liters of water daily"
+      ],
+      "food_avoid": [
+        "Gas-causing foods",
+        "Spices that worsen acid reflux"
+      ],
+      "medical": "Prenatal visits become every two weeks from now. RH factor antibody check if you're RH negative.",
+      "warnings": "Sudden facial swelling with headache and vision changes = immediate medical emergency.",
+      "notification": {
+        "title": "🌅 Third trimester is here!",
+        "body": "Last 12 weeks! Baby is growing incredibly fast now 🚀"
+      },
+      "image": "assets/images/health/pregnancy/week_25_28.webp"
+    },
+    {
+      "week": 29,
+      "title": "Week 29 – Bones Are Hardening",
+      "baby_size": "Size of a large zucchini – 38.6 cm",
+      "baby_development": "Bones are solidifying and demanding large amounts of calcium. The head grows to accommodate the expanding brain.",
+      "mother_changes": "Shortness of breath worsens. Heartburn continues. Many moms experience restless leg syndrome at night.",
+      "tips": "A warm bath before bed eases leg muscles. Magnesium may help reduce nighttime leg cramps.",
+      "food_recommended": [
+        "Calcium from white cheese",
+        "Vitamin K2 to direct calcium to bones",
+        "Legumes"
+      ],
+      "food_avoid": [
+        "Carbonated drinks (deplete calcium)",
+        "Excess salt"
+      ],
+      "medical": "Ask your doctor about baby's position. By now, baby should be starting to rotate for delivery.",
+      "warnings": "Painful nighttime leg cramps with redness and swelling may indicate a blood clot.",
+      "notification": {
+        "title": "🦴 Bones getting stronger!",
+        "body": "Body is building its calcium reserves. Enjoy that dairy! 🥛"
+      },
+      "image": "assets/images/health/pregnancy/week_29_32.webp"
+    },
+    {
+      "week": 30,
+      "title": "Week 30 – Brain Development Accelerates",
+      "baby_size": "Size of a large cabbage head – 39.9 cm",
+      "baby_development": "Brain develops its folds, increasing storage capacity. Eyes respond to light and dark. Lungs are nearly ready.",
+      "mother_changes": "The uterus has grown considerably. More frequent false contractions. General fatigue continues.",
+      "tips": "Start packing your hospital bag. Include medical documents, baby clothes, and your own essentials.",
+      "food_recommended": [
+        "Omega-3 for baby's brain development",
+        "Protein for muscle growth",
+        "Iron to prevent anemia during delivery"
+      ],
+      "food_avoid": [
+        "Caffeine over 200mg daily",
+        "High-salt foods"
+      ],
+      "medical": "The Group B Streptococcus (GBS) test is done between weeks 35–37. Ask your doctor about it now.",
+      "warnings": "Any fluid leaking from the vagina may be a broken water sac. Go to the ER immediately.",
+      "notification": {
+        "title": "🧠 Brain in overdrive!",
+        "body": "30 weeks! Baby is learning and remembering inside your womb! 🌙"
+      },
+      "image": "assets/images/health/pregnancy/week_29_32.webp"
+    },
+    {
+      "week": 31,
+      "title": "Week 31 – Nodding and Smiling",
+      "baby_size": "Size of a coconut – 41.1 cm",
+      "baby_development": "Baby can now process information and track sounds. Swallows amniotic fluid to practice feeding.",
+      "mother_changes": "Bladder pressure intensifies as baby pushes on it. Frequent nighttime bathroom trips disrupt sleep.",
+      "tips": "Avoid drinking large amounts of water right before bed, but don't reduce daytime intake.",
+      "food_recommended": [
+        "Lactose-free milk if needed",
+        "Dates for their pre-labor benefits",
+        "Almonds"
+      ],
+      "food_avoid": [
+        "Diuretic foods like caffeine",
+        "Excess kiwi before bedtime"
+      ],
+      "medical": "Start counting daily fetal movements. 10 movements within 2 hours is a reassuring sign.",
+      "warnings": "No baby movement felt for over 2 hours after eating – call your doctor.",
+      "notification": {
+        "title": "🥥 Weight is doubling!",
+        "body": "Baby gains 200g every week now. Growing so fast! ⚡"
+      },
+      "image": "assets/images/health/pregnancy/week_29_32.webp"
+    },
+    {
+      "week": 32,
+      "title": "Week 32 – Preparing for Birth",
+      "baby_size": "Size of a small cantaloupe – 42.4 cm",
+      "baby_development": "Baby begins positioning head-down for delivery. Lungs mature rapidly. Fat stores build up for the outside world.",
+      "mother_changes": "Breathing difficulty increases as the uterus presses on the diaphragm. Belly may look slightly lower (lightening).",
+      "tips": "Meditation and breathing sessions help you relax. Discuss your birth plan with your doctor now.",
+      "food_recommended": [
+        "Dates (6 per day in the final weeks – proven to ease labor)",
+        "Healthy oils",
+        "Protein"
+      ],
+      "food_avoid": [
+        "Gas-causing legumes in large amounts",
+        "Hot juices before bed"
+      ],
+      "medical": "Every-two-week prenatal visits. Discuss birth preferences, pain management, and delivery wishes.",
+      "warnings": "If baby is still breech (head up), discuss your options with your doctor.",
+      "notification": {
+        "title": "🏁 8 weeks to go!",
+        "body": "Prepare your bag and your birth plan. It's getting close! 👜"
+      },
+      "image": "assets/images/health/pregnancy/week_29_32.webp"
+    },
+    {
+      "week": 33,
+      "title": "Week 33 – Lungs Nearly Complete",
+      "baby_size": "Size of a pineapple – 43.7 cm",
+      "baby_development": "Lungs are approaching full maturity. The immune system receives more antibodies from mom. Skin turns a healthy pink.",
+      "mother_changes": "Heartburn is at its worst as the uterus presses hard on the stomach. Braxton Hicks are more frequent.",
+      "tips": "Eat very small meals and stay upright for at least two hours after eating. Chocolate and acidic drinks worsen heartburn.",
+      "food_recommended": [
+        "Nuts and almonds as nutritious snacks",
+        "Low-fat white cheese",
+        "Dates"
+      ],
+      "food_avoid": [
+        "Tomatoes and hot spices",
+        "Acidic juices before bed",
+        "Coffee"
+      ],
+      "medical": "Make sure your birth plan is formally documented in your medical file.",
+      "warnings": "Regular painful contractions before week 37 = possible preterm labor. Go to the hospital immediately.",
+      "notification": {
+        "title": "🍍 Lungs are complete!",
+        "body": "Every breath baby practices now will be their first breath of life 💨"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 34,
+      "title": "Week 34 – Final Organ Touches",
+      "baby_size": "Size of a small watermelon – 45 cm",
+      "baby_development": "Kidneys are fully functional. The central nervous system is complete. The fontanelle (soft spot in skull) stays flexible for birth.",
+      "mother_changes": "Lightening reduces breathing pressure but increases pelvic pressure. Walking becomes harder.",
+      "tips": "Rest as much as possible. Place your left hand on your heart and right hand on your belly and talk to your baby.",
+      "food_recommended": [
+        "6 dates daily",
+        "Coconut oil",
+        "Lean protein"
+      ],
+      "food_avoid": [
+        "Very salty foods",
+        "Alcohol – absolutely"
+      ],
+      "medical": "Ask your doctor about signs of true labor: water breaking, bloody show, regular intensifying contractions.",
+      "warnings": "Clear or pinkish fluid leaking from the vagina – head to the hospital immediately.",
+      "notification": {
+        "title": "🔜 Meeting soon!",
+        "body": "6 weeks or less! Your baby is almost ready to say hello 👋"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 35,
+      "title": "Week 35 – Nearly Complete",
+      "baby_size": "Size of a medium pumpkin – 46.2 cm",
+      "baby_development": "Baby is nearly fully developed. Fat deposits give the healthy, chubby newborn appearance. Twins typically arrive around this week.",
+      "mother_changes": "Every step takes effort. Bathroom trips every 30 minutes. Insomnia is at its peak.",
+      "tips": "Prepare a list of emergency contacts (hospital, doctor, support person). Keep your phone charged at all times.",
+      "food_recommended": [
+        "Daily dates to help ripen the cervix",
+        "Plenty of water",
+        "Dietary iron to prevent post-birth bleeding"
+      ],
+      "food_avoid": [
+        "Constipation-causing foods",
+        "Excess caffeine"
+      ],
+      "medical": "GBS (Group B Strep) swab is done this week. A positive result means you'll need antibiotics during labor.",
+      "warnings": "Sudden intense baby activity after a quiet period may signal fetal distress.",
+      "notification": {
+        "title": "⏰ The clock is ticking!",
+        "body": "Your baby is almost ready. Is your bag ready too? 👜✅"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 36,
+      "title": "Week 36 – Final Preparations",
+      "baby_size": "Size of a large head of lettuce – 47.4 cm",
+      "baby_development": "Baby fills the uterus completely. Movements decrease but must still be felt. The placenta begins aging.",
+      "mother_changes": "You may feel intense pelvic heaviness. Full baby descent eases breathing pressure.",
+      "tips": "Do a home nesting sweep to prepare for your newborn. Set up your feeding station.",
+      "food_recommended": [
+        "Energy from complex carbohydrates",
+        "Protein",
+        "Water"
+      ],
+      "food_avoid": [
+        "Heavy gas-causing foods",
+        "Laxatives without medical supervision"
+      ],
+      "medical": "Weekly prenatal visits now. Doctor checks cervical dilation and effacement.",
+      "warnings": "Less baby movement than usual – call your doctor right now.",
+      "notification": {
+        "title": "🏠 Home ready? And baby?",
+        "body": "Final preparations! You're just steps away from meeting 🌸"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 37,
+      "title": "Week 37 – Full-Term Pregnancy",
+      "baby_size": "Size of a bunch of apricots – 48.6 cm",
+      "baby_development": "Pregnancy is officially full term! Baby clears meconium from intestines. Lungs are fully mature.",
+      "mother_changes": "Labor can begin any time now! Signs: bloody show, regular contractions, water breaking.",
+      "tips": "Stay calm and alert. Time your contractions: if every 5 minutes for 1 hour, go to the hospital.",
+      "food_recommended": [
+        "Light, easily digestible meals",
+        "Water and natural juices",
+        "Dates"
+      ],
+      "food_avoid": [
+        "Heavy meals that make dealing with labor contractions harder"
+      ],
+      "medical": "If labor doesn't begin by week 42, your doctor will discuss labor induction options.",
+      "warnings": "If baby movements stop completely at any point = emergency hospital visit immediately.",
+      "notification": {
+        "title": "🎊 Full term! Congratulations!",
+        "body": "Your baby is ready to meet you. Stay prepared! 🏥"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 38,
+      "title": "Week 38 – Any Moment Now",
+      "baby_size": "Size of a small pumpkin – 49.8 cm",
+      "baby_development": "Head hair is fully grown, fingernails are long. Meconium (first poop) is ready for after birth. The body releases birth hormones.",
+      "mother_changes": "You may feel a sudden surge of energy (nesting instinct) or the opposite – extreme fatigue.",
+      "tips": "If you feel that energy surge, use it for rest, not cleaning! Your body needs every bit of energy for labor.",
+      "food_recommended": [
+        "Nutritious light snacks",
+        "Light mint tea",
+        "Dates"
+      ],
+      "food_avoid": [
+        "Heavy meals",
+        "Excess caffeine"
+      ],
+      "medical": "Weekly visits. Doctor monitors baby via ultrasound to confirm placental function.",
+      "warnings": "Any amniotic fluid leakage – go to the hospital immediately, even without contractions.",
+      "notification": {
+        "title": "🤱 Any moment now!",
+        "body": "Get ready! Every hour could be the start of the birth journey 🌟"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 39,
+      "title": "Week 39 – The Moment Approaches",
+      "baby_size": "50.7 cm – Full-term baby size",
+      "baby_development": "Brain reaches final completion. Antibodies from mom protect baby in early months of life. Fully ready!",
+      "mother_changes": "Cervix dilates and effaces. You may notice the mucus plug (bloody show) coming away.",
+      "tips": "Talk to your baby and tell them you're excited to meet them. Vocal soothing has a powerful effect even before birth.",
+      "food_recommended": [
+        "6 dates daily",
+        "Plenty of fluids",
+        "Energy-giving foods"
+      ],
+      "food_avoid": [
+        "Overeating",
+        "Foods you know cause you bloating"
+      ],
+      "medical": "If you reach week 40 without labor, your doctor will closely monitor baby and discuss induction options.",
+      "warnings": "No baby movement or water breaking = go to the hospital immediately without delay.",
+      "notification": {
+        "title": "💫 Tomorrow? The day after? Soon!",
+        "body": "A whole life is about to begin. You're ready, Mama 💕"
+      },
+      "image": "assets/images/health/pregnancy/week_33_40.webp"
+    },
+    {
+      "week": 40,
+      "title": "Week 40 – The Long-Awaited Day",
+      "baby_size": "Average 51.2 cm – Weight approx. 3.3 kg",
+      "baby_development": "Fully complete! Ready for the first cry of life. Lungs will open with the first breath. All body systems operate independently.",
+      "mother_changes": "The journey is complete! Whether you deliver this week or slightly after, your body knows exactly what to do.",
+      "tips": "Trust your body and your doctor. Vaginal or cesarean delivery – both take incredible courage. What matters is your safety and baby's health.",
+      "food_recommended": [
+        "Whatever you crave!",
+        "Warm comforting soup",
+        "Pomegranate juice for antioxidants"
+      ],
+      "food_avoid": [
+        "No strict restrictions now, but avoid heavy foods if you feel labor is near"
+      ],
+      "medical": "After 40+3 weeks, elective induction or close monitoring begins. Trust your doctor's decision.",
+      "warnings": "Any decrease in fetal movement, any fluid, any bleeding = hospital immediately. Never hesitate.",
+      "notification": {
+        "title": "👶 The big day is here!",
+        "body": "Congratulations! You'll meet the most beautiful thing in your life very soon 🌈💖"
+      },
+      "image": "assets/images/health/pregnancy/week_37_40.webp"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 draws its own splash screen before the window theme applies, and
+         it ignores a layer-list windowBackground: with nothing named here it falls
+         back to the platform's background colour, which flashed black before the
+         brand colour arrived. These three lines are what stop that.
+
+         The icon is the butterfly alone, not the frame ① composition: the system
+         masks this drawable to a circle, so a wordmark beside it would be cut. The
+         full composition follows immediately in windowBackground, and then in the
+         in-app sequence — the mark never changes across the three. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/launch_icon</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+    </style>
+</resources>

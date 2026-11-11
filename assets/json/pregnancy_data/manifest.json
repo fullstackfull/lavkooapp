@@ -1,0 +1,192 @@
+{
+  "week_01_04_embryo": {
+    "query": "early pregnancy embryo conception",
+    "files": [
+      "images/week_01_04_embryo/week_01_04_embryo_01.jpg",
+      "images/week_01_04_embryo/week_01_04_embryo_02.jpg",
+      "images/week_01_04_embryo/week_01_04_embryo_03.jpg",
+      "images/week_01_04_embryo/week_01_04_embryo_04.jpg",
+      "images/week_01_04_embryo/week_01_04_embryo_05.jpg"
+    ]
+  },
+  "week_05_08_embryo": {
+    "query": "embryo 6 weeks fetus development",
+    "files": [
+      "images/week_05_08_embryo/week_05_08_embryo_01.jpg",
+      "images/week_05_08_embryo/week_05_08_embryo_02.png",
+      "images/week_05_08_embryo/week_05_08_embryo_03.jpg",
+      "images/week_05_08_embryo/week_05_08_embryo_04.jpg",
+      "images/week_05_08_embryo/week_05_08_embryo_05.jpg"
+    ]
+  },
+  "week_09_12_fetus": {
+    "query": "fetus 10 weeks ultrasound",
+    "files": [
+      "images/week_09_12_fetus/week_09_12_fetus_01.jpg",
+      "images/week_09_12_fetus/week_09_12_fetus_02.jpg",
+      "images/week_09_12_fetus/week_09_12_fetus_03.jpg",
+      "images/week_09_12_fetus/week_09_12_fetus_04.jpg",
+      "images/week_09_12_fetus/week_09_12_fetus_05.jpg"
+    ]
+  },
+  "week_13_16_fetus": {
+    "query": "fetus 14 weeks pregnancy scan",
+    "files": [
+      "images/week_13_16_fetus/week_13_16_fetus_01.jpg",
+      "images/week_13_16_fetus/week_13_16_fetus_02.jpg",
+      "images/week_13_16_fetus/week_13_16_fetus_03.jpg",
+      "images/week_13_16_fetus/week_13_16_fetus_04.jpg",
+      "images/week_13_16_fetus/week_13_16_fetus_05.jpg"
+    ]
+  },
+  "week_17_20_fetus": {
+    "query": "fetus 18 weeks ultrasound baby",
+    "files": [
+      "images/week_17_20_fetus/week_17_20_fetus_01.jpg",
+      "images/week_17_20_fetus/week_17_20_fetus_02.jpg",
+      "images/week_17_20_fetus/week_17_20_fetus_03.jpg",
+      "images/week_17_20_fetus/week_17_20_fetus_04.jpg",
+      "images/week_17_20_fetus/week_17_20_fetus_05.jpg"
+    ]
+  },
+  "week_21_24_fetus": {
+    "query": "fetus 22 weeks pregnancy",
+    "files": [
+      "images/week_21_24_fetus/week_21_24_fetus_01.jpg",
+      "images/week_21_24_fetus/week_21_24_fetus_02.jpg",
+      "images/week_21_24_fetus/week_21_24_fetus_03.jpg",
+      "images/week_21_24_fetus/week_21_24_fetus_04.jpg",
+      "images/week_21_24_fetus/week_21_24_fetus_05.jpg"
+    ]
+  },
+  "week_25_28_fetus": {
+    "query": "fetus 28 weeks baby womb",
+    "files": [
+      "images/week_25_28_fetus/week_25_28_fetus_01.jpg",
+      "images/week_25_28_fetus/week_25_28_fetus_02.jpg",
+      "images/week_25_28_fetus/week_25_28_fetus_03.jpg",
+      "images/week_25_28_fetus/week_25_28_fetus_04.jpg",
+      "images/week_25_28_fetus/week_25_28_fetus_05.jpg"
+    ]
+  },
+  "week_29_32_fetus": {
+    "query": "fetus 30 weeks pregnancy",
+    "files": [
+      "images/week_29_32_fetus/week_29_32_fetus_01.jpg",
+      "images/week_29_32_fetus/week_29_32_fetus_02.jpg",
+      "images/week_29_32_fetus/week_29_32_fetus_03.jpg",
+      "images/week_29_32_fetus/week_29_32_fetus_04.jpg",
+      "images/week_29_32_fetus/week_29_32_fetus_05.jpg"
+    ]
+  },
+  "week_33_36_fetus": {
+    "query": "fetus 35 weeks baby",
+    "files": [
+      "images/week_33_36_fetus/week_33_36_fetus_01.jpg",
+      "images/week_33_36_fetus/week_33_36_fetus_02.jpg",
+      "images/week_33_36_fetus/week_33_36_fetus_03.jpg",
+      "images/week_33_36_fetus/week_33_36_fetus_04.jpg",
+      "images/week_33_36_fetus/week_33_36_fetus_05.jpg"
+    ]
+  },
+  "week_37_40_newborn": {
+    "query": "newborn baby birth hospital",
+    "files": [
+      "images/week_37_40_newborn/week_37_40_newborn_01.jpg",
+      "images/week_37_40_newborn/week_37_40_newborn_02.jpg",
+      "images/week_37_40_newborn/week_37_40_newborn_03.jpg",
+      "images/week_37_40_newborn/week_37_40_newborn_04.jpg",
+      "images/week_37_40_newborn/week_37_40_newborn_05.jpg"
+    ]
+  },
+  "belly_first_trimester": {
+    "query": "pregnant belly first trimester",
+    "files": [
+      "images/belly_first_trimester/belly_first_trimester_01.jpg",
+      "images/belly_first_trimester/belly_first_trimester_02.jpg",
+      "images/belly_first_trimester/belly_first_trimester_03.jpg",
+      "images/belly_first_trimester/belly_first_trimester_04.jpg",
+      "images/belly_first_trimester/belly_first_trimester_05.jpg"
+    ]
+  },
+  "belly_second_trimester": {
+    "query": "pregnant belly second trimester",
+    "files": [
+      "images/belly_second_trimester/belly_second_trimester_01.jpg",
+      "images/belly_second_trimester/belly_second_trimester_02.jpg",
+      "images/belly_second_trimester/belly_second_trimester_03.jpg",
+      "images/belly_second_trimester/belly_second_trimester_04.jpg",
+      "images/belly_second_trimester/belly_second_trimester_05.jpg"
+    ]
+  },
+  "belly_third_trimester": {
+    "query": "pregnant belly third trimester",
+    "files": [
+      "images/belly_third_trimester/belly_third_trimester_01.jpg",
+      "images/belly_third_trimester/belly_third_trimester_02.jpg",
+      "images/belly_third_trimester/belly_third_trimester_03.jpg",
+      "images/belly_third_trimester/belly_third_trimester_04.jpg",
+      "images/belly_third_trimester/belly_third_trimester_05.jpg"
+    ]
+  },
+  "pregnancy_food": {
+    "query": "healthy pregnancy food nutrition",
+    "files": [
+      "images/pregnancy_food/pregnancy_food_01.jpg",
+      "images/pregnancy_food/pregnancy_food_02.jpg",
+      "images/pregnancy_food/pregnancy_food_03.jpg",
+      "images/pregnancy_food/pregnancy_food_04.jpg",
+      "images/pregnancy_food/pregnancy_food_05.jpg"
+    ]
+  },
+  "pregnancy_exercise": {
+    "query": "pregnancy yoga exercise",
+    "files": [
+      "images/pregnancy_exercise/pregnancy_exercise_01.jpg",
+      "images/pregnancy_exercise/pregnancy_exercise_02.jpg",
+      "images/pregnancy_exercise/pregnancy_exercise_03.jpg",
+      "images/pregnancy_exercise/pregnancy_exercise_04.jpg",
+      "images/pregnancy_exercise/pregnancy_exercise_05.jpg"
+    ]
+  },
+  "pregnancy_checkup": {
+    "query": "pregnancy doctor ultrasound checkup",
+    "files": [
+      "images/pregnancy_checkup/pregnancy_checkup_01.jpg",
+      "images/pregnancy_checkup/pregnancy_checkup_02.jpg",
+      "images/pregnancy_checkup/pregnancy_checkup_03.jpg",
+      "images/pregnancy_checkup/pregnancy_checkup_04.jpg",
+      "images/pregnancy_checkup/pregnancy_checkup_05.jpg"
+    ]
+  },
+  "pregnancy_sleep": {
+    "query": "pregnant woman sleeping rest",
+    "files": [
+      "images/pregnancy_sleep/pregnancy_sleep_01.jpg",
+      "images/pregnancy_sleep/pregnancy_sleep_02.jpg",
+      "images/pregnancy_sleep/pregnancy_sleep_03.jpg",
+      "images/pregnancy_sleep/pregnancy_sleep_04.jpg",
+      "images/pregnancy_sleep/pregnancy_sleep_05.jpg"
+    ]
+  },
+  "newborn_care": {
+    "query": "newborn baby care breastfeeding",
+    "files": [
+      "images/newborn_care/newborn_care_01.jpg",
+      "images/newborn_care/newborn_care_02.jpg",
+      "images/newborn_care/newborn_care_03.jpg",
+      "images/newborn_care/newborn_care_04.jpg",
+      "images/newborn_care/newborn_care_05.jpg"
+    ]
+  },
+  "mother_baby": {
+    "query": "mother newborn baby love",
+    "files": [
+      "images/mother_baby/mother_baby_01.jpg",
+      "images/mother_baby/mother_baby_02.jpg",
+      "images/mother_baby/mother_baby_03.jpg",
+      "images/mother_baby/mother_baby_04.jpg",
+      "images/mother_baby/mother_baby_05.jpg"
+    ]
+  }
+}

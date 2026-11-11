@@ -1,0 +1,452 @@
+{
+  "emergencies": [
+    {
+      "id": "cpr",
+      "title": { "en": "CPR (Resuscitation)", "ar": "الإنعاش القلبي الرئوي" },
+      "icon": "favorite",
+      "color": "0xFFFF5252",
+      "image": "assets/images/health/first_aid/cpr.webp",
+      "symptoms": {
+        "en": "Unresponsiveness, no normal breathing, no pulse.",
+        "ar": "فقدان الوعي، عدم وجود تنفس طبيعي، عدم وجود نبض."
+      },
+      "steps": {
+        "en": [
+          "Check the scene for safety and the person for responsiveness.",
+          "Call emergency services immediately (110).",
+          "Place the person on their back on a firm, flat surface.",
+          "Give 30 chest compressions (2 inches deep) at a rate of 100-120 per minute.",
+          "Tilt the head back, lift the chin, and give 2 rescue breaths.",
+          "Continue cycles of 30 compressions and 2 breaths until help arrives or an AED is available."
+        ],
+        "ar": [
+          "تأكد من أمان الموقع وافحص استجابة المصاب.",
+          "اتصل بالإسعاف فوراً (110).",
+          "ضع المصاب على ظهره على سطح صلب ومستوٍ.",
+          "قم بإجراء 30 ضغطة صدرية (بعمق 5 سم) بمعدل 100-120 ضغطة في الدقيقة.",
+          "أمل الرأس للخلف وارفع الذقن وأعطِ نفسين إنقاذيين.",
+          "استمر في دورات الـ 30 ضغطة والنفسين حتى وصول الإسعاف أو توفر جهاز الصدمات الآلي."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not stop compressions for more than 10 seconds.",
+          "Ensure full chest recoil between compressions."
+        ],
+        "ar": [
+          "لا تتوقف عن الضغط لأكثر من 10 ثوانٍ.",
+          "تأكد من عودة الصدر لوضعه الطبيعي تماماً بين الضغطات."
+        ]
+      }
+    },
+    {
+      "id": "choking",
+      "title": { "en": "Choking", "ar": "الاختناق (الغصة)" },
+      "icon": "air",
+      "color": "0xFFFFAB40",
+      "image": "assets/images/health/first_aid/choking.webp",
+      "symptoms": {
+        "en": "Inability to breathe, cough, or speak; clutching the throat.",
+        "ar": "عدم القدرة على التنفس أو السعال أو التحدث؛ الإمساك بالحنجرة."
+      },
+      "steps": {
+        "en": [
+          "Ask 'Are you choking?' and encourage them to cough.",
+          "Perform 5 back blows between the shoulder blades with the heel of your hand.",
+          "If object isn't out, perform 5 abdominal thrusts (Heimlich maneuver).",
+          "Stand behind the person, wrap arms around waist, and make a fist above the navel.",
+          "Grasp your fist and pull sharply inward and upward.",
+          "Repeat cycles of 5 blows and 5 thrusts until the object is forced out or person becomes unconscious."
+        ],
+        "ar": [
+          "اسأل المصاب 'هل تغص؟' وشجعه على السعال.",
+          "وجه 5 ضربات على الظهر بين لوحي الكتف بكعب يدك.",
+          "إذا لم يخرج الجسم، قم بـ 5 ضغطات بطنية (مانور هاملنغ).",
+          "قف خلف الشخص، لف ذراعيك حول خصره، واصنع قبضة فوق السرة مباشرة.",
+          "أمسك قبضتك واسحب بقوة للداخل وللأعلى.",
+          "كرر دورات الـ 5 ضربات والـ 5 ضغطات حتى يخرج الجسم أو يفقد الشخص وعيه."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not perform abdominal thrusts on infants or pregnant women (use chest thrusts instead).",
+          "Do not try to reach for the object unless you can see it clearly."
+        ],
+        "ar": [
+          "لا تقم بالضغط على البطن للرضع أو الحوامل (استخدم ضغطات الصدر بدلاً من ذلك).",
+          "لا تحاول سحب الجسم الغريب إلا إذا كنت تراه بوضوح."
+        ]
+      }
+    },
+    {
+      "id": "bleeding",
+      "title": { "en": "Severe Bleeding", "ar": "النزيف الحاد" },
+      "icon": "opacity",
+      "color": "0xFFFF1744",
+      "image": "assets/images/health/first_aid/bleeding.webp",
+      "symptoms": {
+        "en": "Blood spurting or flowing continuously from a wound.",
+        "ar": "تدفق الدم بغزارة أو اندفاعه باستمرار من الجرح."
+      },
+      "steps": {
+        "en": [
+          "Apply firm, direct pressure to the wound with a clean cloth or gauze.",
+          "If blood soaks through, add more gauze on top (do not remove the old one).",
+          "If bleeding is from a limb and severe, use a tourniquet 2-3 inches above the wound.",
+          "Keep the person lying down and still.",
+          "Monitor for shock (pale skin, rapid pulse)."
+        ],
+        "ar": [
+          "اضغط بقوة ومباشرة على الجرح بقطعة قماش نظيفة أو شاش.",
+          "إذا تشبع الشاش بالدم، أضف المزيد فوقه (لا ترفع الشاش القديم).",
+          "إذا كان النزيف في أحد الأطراف وحاداً، استخدم رباطاً ضاغطاً (Tourniquet) فوق الجرح بـ 5-7 سم.",
+          "اجعل المصاب يستلقي بهدوء.",
+          "راقب علامات الصدمة (شحوب الجلد، نبض سريع)."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not remove embedded objects from the wound.",
+          "Do not wash a severe wound as it may trigger more bleeding."
+        ],
+        "ar": [
+          "لا تنزع الأجسام المنغرسة في الجرح.",
+          "لا تغسل الجرح الحاد لأن ذلك قد يحفز المزيد من النزيف."
+        ]
+      }
+    },
+    {
+      "id": "burns",
+      "title": { "en": "Burns", "ar": "الحروق" },
+      "icon": "local_fire_department",
+      "color": "0xFFFF3D00",
+      "image": "assets/images/health/first_aid/burns.webp",
+      "symptoms": {
+        "en": "Redness, pain, swelling, or blistering of the skin.",
+        "ar": "احمرار، ألم، تورم، أو ظهور فقاعات على الجلد."
+      },
+      "steps": {
+        "en": [
+          "Stop the burning process (remove from heat or douse flames).",
+          "Cool the burn with cool (not cold) running water for at least 10-20 minutes.",
+          "Remove jewelry or tight clothing before swelling occurs.",
+          "Cover the burn loosely with a sterile dressing or clean plastic wrap.",
+          "Seek medical help if the burn is large, deep, or on the face/hands."
+        ],
+        "ar": [
+          "أوقف عملية الحرق (ابعد المصاب عن المصدر أو أخمد النيران).",
+          "برد الحرق بماء جارٍ بارد (ليس مثلجاً) لمدة 10-20 دقيقة على الأقل.",
+          "انزع المجوهرات أو الملابس الضيقة قبل حدوث التورم.",
+          "غطِ الحرق بشكل فضفاض بضمادة معقمة أو غلاف بلاستيكي نظيف.",
+          "اطلب المساعدة الطبية إذا كان الحرق كبيراً أو عميقاً أو في الوجه/اليدين."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not use ice, butter, or ointments on a fresh burn.",
+          "Do not break blisters."
+        ],
+        "ar": [
+          "لا تستخدم الثلج أو الزبدة أو المراهم على الحرق الجديد.",
+          "لا تفتح الفقاعات الناتجة عن الحرق."
+        ]
+      }
+    },
+    {
+      "id": "stroke",
+      "title": { "en": "Stroke", "ar": "السكتة الدماغية" },
+      "icon": "psychology",
+      "color": "0xFF7C4DFF",
+      "image": "assets/images/health/first_aid/stroke.webp",
+      "symptoms": {
+        "en": "Facial drooping, arm weakness, slurred speech (FAST).",
+        "ar": "تدلي الوجه، ضعف في الذراع، صعوبة في الكلام."
+      },
+      "steps": {
+        "en": [
+          "Perform the FAST test: Face (smile), Arms (raise both), Speech (repeat a phrase), Time (call 110).",
+          "Call emergency services immediately.",
+          "Note the time when symptoms first started.",
+          "Keep the person calm and lying on their side if they are breathing.",
+          "Stay with them until professional help arrives."
+        ],
+        "ar": [
+          "قم بإجراء اختبار FAST: الوجه (ابتسامة)، الذراعين (رفعهما)، الكلام (كرر جملة)، الوقت (اتصل بـ 110).",
+          "اتصل بالإسعاف فوراً.",
+          "سجل الوقت الذي بدأت فيه الأعراض بالظهور.",
+          "حافظ على هدوء المصاب واجعله يستلقي على جانبه إذا كان يتنفس.",
+          "ابقَ مع المصاب حتى وصول المساعدة الطبية."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not give aspirin unless a doctor advises it.",
+          "Do not give food or drink (swallowing may be difficult)."
+        ],
+        "ar": [
+          "لا تعطِ الأسبرين إلا إذا نصح الطبيب بذلك.",
+          "لا تعطِ المصاب طعاماً أو شراباً (قد يصعب عليه البلع)."
+        ]
+      }
+    },
+    {
+      "id": "heart_attack",
+      "title": { "en": "Heart Attack", "ar": "النوبة القلبية" },
+      "icon": "monitor_heart",
+      "color": "0xFFE91E63",
+      "image": "assets/images/health/first_aid/heart_attack.webp",
+      "symptoms": {
+        "en": "Chest pain, pressure, shortness of breath, nausea, cold sweat.",
+        "ar": "ألم في الصدر، ضغط، ضيق في التنفس، غثيان، عرق بارد."
+      },
+      "steps": {
+        "en": [
+          "Call emergency services immediately (110).",
+          "Help the person sit on the floor, leaning against a wall or chair.",
+          "Loosen tight clothing around the neck and waist.",
+          "If the person is conscious, give them an aspirin to chew (if not allergic).",
+          "Stay with the person and be prepared to start CPR if they become unconscious."
+        ],
+        "ar": [
+          "اتصل بالإسعاف فوراً (110).",
+          "ساعد المصاب على الجلوس على الأرض والاتكاء على حائط أو كرسي.",
+          "فك الملابس الضيقة حول الرقبة والخصر.",
+          "إذا كان المصاب واعيًا، أعطه قرص أسبرين للمضغ (إذا لم يكن لديه حساسية).",
+          "ابقَ مع المصاب وكن مستعداً لبدء الإنعاش القلبي إذا فقد وعيه."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not ignore the symptoms even if they are mild.",
+          "Do not let the person walk or drive themselves to the hospital."
+        ],
+        "ar": [
+          "لا تتجاهل الأعراض حتى لو كانت خفيفة.",
+          "لا تسمح للمصاب بالمشي أو قيادة السيارة بنفسه إلى المستشفى."
+        ]
+      }
+    },
+    {
+      "id": "seizure",
+      "title": { "en": "Seizures", "ar": "النوبات (الصرع)" },
+      "icon": "bolt",
+      "color": "0xFF607D8B",
+      "image": "assets/images/health/first_aid/seizure.webp",
+      "symptoms": {
+        "en": "Sudden jerking movements, loss of consciousness, staring blankly.",
+        "ar": "حركات اهتزازية مفاجئة، فقدان الوعي، التحديق في الفراغ."
+      },
+      "steps": {
+        "en": [
+          "Clear the area of hard or sharp objects.",
+          "Place something soft (like a folded jacket) under their head.",
+          "Time the seizure. If it lasts more than 5 minutes, call 110.",
+          "After jerking stops, gently turn them onto their side (recovery position).",
+          "Stay with them until they are fully awake and alert."
+        ],
+        "ar": [
+          "أبعد الأشياء الصلبة أو الحادة من حول المصاب.",
+          "ضع شيئاً ناعماً (مثل سترة مطوية) تحت رأسه.",
+          "احسب وقت النوبة. إذا استمرت أكثر من 5 دقائق، اتصل بـ 110.",
+          "بعد توقف التشنجات، اقلب المصاب برفق على جانبه (وضعية الإفاقة).",
+          "ابقَ معه حتى يستيقظ تماماً ويستعيد وعيه."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not restrain the person.",
+          "Do not put anything in the person's mouth."
+        ],
+        "ar": [
+          "لا تقيد حركة المصاب.",
+          "لا تضع أي شيء في فم المصاب."
+        ]
+      }
+    },
+    {
+      "id": "heat_stroke",
+      "title": { "en": "Heat Stroke", "ar": "ضربة الشمس" },
+      "icon": "wb_sunny",
+      "color": "0xFFFFD600",
+      "image": "assets/images/health/first_aid/heat_stroke.webp",
+      "symptoms": {
+        "en": "High body temperature (>40C), confusion, hot/dry skin.",
+        "ar": "ارتفاع شديد في درجة الحرارة (>40)، ارتباك، جلد ساخن وجاف."
+      },
+      "steps": {
+        "en": [
+          "Call emergency services immediately.",
+          "Move the person to a cool, shaded area.",
+          "Cool the person quickly using a cool bath or wet sheets and a fan.",
+          "Apply ice packs to the neck, armpits, and groin.",
+          "Give cool water to drink only if they are conscious and alert."
+        ],
+        "ar": [
+          "اتصل بالإسعاف فوراً.",
+          "انقل المصاب إلى مكان بارد ومظلل.",
+          "برد المصاب بسرعة باستخدام حمام بارد أو ملاءات مبللة ومروحة.",
+          "ضع كمادات ثلج على الرقبة وتحت الإبطين ومنطقة الفخذ.",
+          "أعطه ماءً بارداً للشرب فقط إذا كان واعياً ومنتبهاً."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not use rubbing alcohol for cooling.",
+          "Do not give the person anything to drink if they are vomiting or confused."
+        ],
+        "ar": [
+          "لا تستخدم الكحول لغرض التبريد.",
+          "لا تعطِ المصاب أي شيء ليشربه إذا كان يتقيأ أو مشوشاً."
+        ]
+      }
+    },
+    {
+      "id": "fracture",
+      "title": { "en": "Fractures", "ar": "الكسور" },
+      "icon": "architecture",
+      "color": "0xFF8D6E63",
+      "image": "assets/images/health/first_aid/fracture.webp",
+      "symptoms": {
+        "en": "Pain, swelling, bruising, deformity, inability to move the limb.",
+        "ar": "ألم، تورم، كدمات، تشوه، عدم القدرة على تحريك الطرف."
+      },
+      "steps": {
+        "en": [
+          "Keep the person still and support the injured area.",
+          "Stop any bleeding with direct pressure and a sterile dressing.",
+          "Immobilize the area using a splint or sling if professional help is far.",
+          "Apply an ice pack wrapped in a cloth to reduce swelling.",
+          "Seek medical help or call 110 if the bone is protruding or pain is severe."
+        ],
+        "ar": [
+          "حافظ على سكون المصاب ودعم المنطقة المصابة.",
+          "أوقف أي نزيف بالضغط المباشر وضمادة معقمة.",
+          "ثبت المنطقة المصابة باستخدام جبيرة أو حمالة إذا كان الإسعاف بعيداً.",
+          "ضع كمادة ثلج ملفوفة بقطعة قماش لتقليل التورم.",
+          "اطلب المساعدة الطبية أو اتصل بـ 110 إذا كان العظم بارزاً أو الألم شديداً."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not try to realign the bone or push it back in.",
+          "Do not move the person if a spinal or neck injury is suspected."
+        ],
+        "ar": [
+          "لا تحاول إعادة العظم لمكانه أو دفعه للداخل.",
+          "لا تحرك المصاب إذا كنت تشك في إصابة بالعمود الفقري أو الرقبة."
+        ]
+      }
+    },
+    {
+      "id": "electric_shock",
+      "title": { "en": "Electric Shock", "ar": "الصدمة الكهربائية" },
+      "icon": "flash_on",
+      "color": "0xFFFFEB3B",
+      "image": "assets/images/health/first_aid/electric_shock.webp",
+      "symptoms": {
+        "en": "Burns, unconsciousness, muscle contractions, seizures.",
+        "ar": "حروق، فقدان الوعي، تقلصات عضلية، نوبات."
+      },
+      "steps": {
+        "en": [
+          "Do not touch the person if they are still in contact with the source.",
+          "Turn off the source of electricity if possible.",
+          "If not, use a dry wooden stick or plastic object to push the source away.",
+          "Check for breathing and pulse; start CPR if needed.",
+          "Cover any burned areas with a sterile gauze bandage."
+        ],
+        "ar": [
+          "لا تلمس المصاب إذا كان لا يزال ملامساً لمصدر الكهرباء.",
+          "أوقف مصدر الكهرباء إذا كان ذلك ممكناً.",
+          "إذا لم يكن ممكناً، استخدم عصا خشبية جافة أو غرضاً بلاستيكياً لدفع المصدر بعيداً.",
+          "افحص التنفس والنبض؛ ابدأ الإنعاش القلبي إذا لزم الأمر.",
+          "غطِ أي مناطق محروقة بضمادة شاش معقمة."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not use water on an electrical fire or the victim.",
+          "Do not move the victim unless they are in immediate danger."
+        ],
+        "ar": [
+          "لا تستخدم الماء في حريق كهربائي أو على الضحية.",
+          "لا تحرك الضحية إلا إذا كانت في خطر وشيك."
+        ]
+      }
+    },
+    {
+      "id": "bites",
+      "title": { "en": "Bites (Snake/Insects)", "ar": "اللدغات (الأفاعي والحشرات)" },
+      "icon": "bug_report",
+      "color": "0xFF4CAF50",
+      "image": "assets/images/health/first_aid/bites.webp",
+      "symptoms": {
+        "en": "Bite marks, severe pain, swelling, difficulty breathing.",
+        "ar": "علامات لدغ، ألم شديد، تورم، صعوبة في التنفس."
+      },
+      "steps": {
+        "en": [
+          "Move away from the snake or insect to avoid further bites.",
+          "Keep the bitten limb still and positioned at or below heart level.",
+          "Clean the wound with soap and water; cover with a dry dressing.",
+          "For snake bites, call 110 immediately and keep the person very still.",
+          "Note the appearance of the snake or insect if possible."
+        ],
+        "ar": [
+          "ابتعد عن الأفعى أو الحشرة لتجنب لدغات أخرى.",
+          "حافظ على سكون الطرف الملدوغ واجعله في مستوى القلب أو أدنى منه.",
+          "نظف الجرح بالماء والصابون وغطه بضمادة جافة.",
+          "في حال لدغة الأفعى، اتصل بـ 110 فوراً وحافظ على سكون المصاب التام.",
+          "لاحظ شكل الأفعى أو الحشرة إذا كان ذلك ممكناً."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not apply a tourniquet or ice to a snake bite.",
+          "Do not try to suck out the venom."
+        ],
+        "ar": [
+          "لا تضع رباطاً ضاغطاً أو ثلجاً على لدغة الأفعى.",
+          "لا تحاول مص السم."
+        ]
+      }
+    },
+    {
+      "id": "poisoning",
+      "title": { "en": "Poisoning", "ar": "التسمم" },
+      "icon": "warning",
+      "color": "0xFF9C27B0",
+      "image": "assets/images/health/first_aid/poisoning.webp",
+      "symptoms": {
+        "en": "Nausea, vomiting, abdominal pain, drowsiness, chemical odors.",
+        "ar": "غثيان، قيء، ألم في البطن، نعاس، روائح كيميائية."
+      },
+      "steps": {
+        "en": [
+          "Call emergency services or poison control immediately.",
+          "Try to identify what was swallowed and how much.",
+          "If the person is unconscious, check for breathing and start CPR if needed.",
+          "If the poison is on the skin or in the eyes, rinse with water for 20 minutes.",
+          "Save the poison container to show to emergency responders."
+        ],
+        "ar": [
+          "اتصل بالإسعاف أو مركز السموم فوراً.",
+          "حاول تحديد المادة التي تم ابتلاعها وكميتها.",
+          "إذا كان الشخص فاقداً للوعي، افحص التنفس وابدأ الإنعاش القلبي إذا لزم الأمر.",
+          "إذا كان السم على الجلد أو في العينين، اشطف بالماء لمدة 20 دقيقة.",
+          "احفظ عبوة السم لعرضها على المسعفين."
+        ]
+      },
+      "warnings": {
+        "en": [
+          "Do not induce vomiting unless told to do so by a professional.",
+          "Do not give the person anything to drink if they are unconscious."
+        ],
+        "ar": [
+          "لا تحاول تحفيز القيء إلا إذا طلب منك مختص ذلك.",
+          "لا تعطِ المصاب أي شيء ليشربه إذا كان فاقداً للوعي."
+        ]
+      }
+    }
+  ]
+}

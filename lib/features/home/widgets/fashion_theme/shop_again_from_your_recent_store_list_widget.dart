@@ -1,0 +1,30 @@
+import 'package:flutter/material.dart';
+import 'package:syriapharmacy/features/home/widgets/shop_again_from_recent_store_widget.dart';
+import 'package:syriapharmacy/features/product/controllers/seller_product_controller.dart';
+import 'package:provider/provider.dart';
+
+class ShopAgainFromYourRecentStore extends StatelessWidget {
+  const ShopAgainFromYourRecentStore({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SellerProductController>(
+        builder: (context, shopAgainProvider, _) {
+      return RepaintBoundary(
+        child: ListView.builder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: shopAgainProvider.shopAgainFromRecentStoreList.length,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              return ShopAgainFromRecentStoreWidget(
+                shopAgainFromRecentStoreModel:
+                    shopAgainProvider.shopAgainFromRecentStoreList[index],
+                index: index,
+                length: shopAgainProvider.shopAgainFromRecentStoreList.length,
+              );
+            }),
+      );
+    });
+  }
+}

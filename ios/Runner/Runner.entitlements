@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>aps-environment</key>
+	<string>development</string>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<!-- The shop this app belongs to. It claimed applinks:6valley-install.6amdev.xyz, the
+	     marketplace template vendor's own demo host, so iOS fetched that domain's association file
+	     and never pharmacyksa.com's: no universal link to this shop could ever open the app.
+	     The matching half is served from https://pharmacyksa.com/.well-known/apple-app-site-association,
+	     which is generated from the shop's deep-link settings and currently carries an appID of "."
+	     -- see docs/release-readiness.md, which cannot be fixed from this repository. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:pharmacyksa.com</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layer 1 of the approved launch experience (Concept 3A, frame ①): a flat brand
+     colour with the brand mark centred over it, drawn by the platform before the
+     runtime exists.
+
+     Deliberately flat — splash tooling does not render gradients consistently —
+     and deliberately not white, which used to flash before the launch screen took
+     over. The mark is a pre-composed image because a splash drawable can draw
+     neither text nor a scaled bitmap: the butterfly at 118dp, its 0.92 opacity and
+     the wordmark 16dp below it are baked in, one file per density. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/launch_background" />
+    <item android:drawable="@drawable/launch_logo" android:gravity="center" />
+</layer-list>
