@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/logging_interceptor.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +71,9 @@ class DioClient {
         'X-App-Version': AppConstants.appVersion,
         'X-Client-Id': _clientId,
         AppConstants.langKey: _language,
+        if (StorefrontConfig.enabled)
+          AppConstants.storefrontHeader:
+              StorefrontConfig.resolve(sharedPreferences).code,
       };
 
   late final String _clientId;
