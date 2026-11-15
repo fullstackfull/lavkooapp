@@ -33,6 +33,7 @@ jobs:
           lib/utill/app_constants.dart
           test/storefront_config_test.dart
           test/dio_storefront_header_test.dart
+          test/storefront_choice_test.dart
 
       - name: Test storefront header
-        run: flutter test test/storefront_config_test.dart test/dio_storefront_header_test.dart
+        run: flutter test test/storefront_config_test.dart test/dio_storefront_header_test.dart test/storefront_choice_test.dart
