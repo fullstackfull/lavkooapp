@@ -71,4 +71,45 @@ void main() {
       expect(StorefrontChoice(preferences, enabled: true).current().code, 'SA');
     });
   });
+
+  group('browse-only storefronts', () {
+    test('while storefronts are off every storefront may sell, as before', () async {
+      final preferences = await preferencesWith({});
+      final choice = StorefrontChoice(preferences, enabled: false);
+
+      expect(choice.canSell(StorefrontCountry.unitedArabEmirates), isTrue);
+    });
+
+    test('while storefronts are on, Saudi Arabia may sell and the others are browse-only', () async {
+      final preferences = await preferencesWith({});
+      final choice = StorefrontChoice(preferences, enabled: true);
+
+      expect(choice.canSell(StorefrontCountry.saudiArabia), isTrue);
+      expect(choice.canSell(StorefrontCountry.unitedArabEmirates), isFalse);
+    });
+
+    test('a storefront marked sellable may sell', () async {
+      final preferences = await preferencesWith({});
+      final choice = StorefrontChoice(preferences, enabled: true);
+      const approvedEmirates = StorefrontCountry(
+        code: 'AE',
+        path: '/ae',
+        currency: 'AED',
+        sellable: true,
+      );
+
+      expect(choice.canSell(approvedEmirates), isTrue);
+    });
+
+    test('a browse-only storefront can still be chosen and browsed', () async {
+      final preferences = await preferencesWith({});
+      final choice = StorefrontChoice(preferences, enabled: true);
+
+      final saved = await choice.choose(StorefrontCountry.kuwait);
+
+      expect(saved, isTrue);
+      expect(choice.current().code, 'KW');
+      expect(choice.canSell(choice.current()), isFalse);
+    });
+  });
 }

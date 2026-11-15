@@ -22,6 +22,10 @@ class StorefrontChoice {
     return StorefrontConfig.resolve(_preferences);
   }
 
+  /// While storefronts are off every storefront is the Saudi one, which may sell as before. While they are on, a storefront may
+  /// sell only when it is marked sellable. A browse-only storefront can still be chosen and browsed.
+  bool canSell(StorefrontCountry storefront) => !enabled || storefront.sellable;
+
   Future<bool> choose(StorefrontCountry storefront) {
     if (!enabled) {
       return Future<bool>.value(false);
