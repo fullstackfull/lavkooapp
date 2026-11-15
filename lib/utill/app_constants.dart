@@ -302,6 +302,8 @@ class AppConstants {
   static const String guestMode = 'guest_mode';
   static const String currency = 'currency';
   static const String langKey = 'lang';
+  static const String storefrontCountry = 'gcc_storefront_country';
+  static const String storefrontHeader = 'X-Storefront';
   static const String intro = 'intro';
   static const String userLogData = 'user_log_data';
   static const pi = 3.14;
