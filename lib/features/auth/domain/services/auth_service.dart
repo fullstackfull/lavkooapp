@@ -191,9 +191,13 @@ class AuthService implements AuthServiceInterface {
   Future existingAccountCheck(
       {required String email,
       required int userResponse,
-      required String medium}) {
+      required String medium,
+      String? temporaryToken}) {
     return authRepoInterface.existingAccountCheck(
-        email: email, userResponse: userResponse, medium: medium);
+        email: email,
+        userResponse: userResponse,
+        medium: medium,
+        temporaryToken: temporaryToken);
   }
 
   @override

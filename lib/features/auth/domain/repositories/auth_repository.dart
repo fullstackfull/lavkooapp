@@ -348,11 +348,17 @@ class AuthRepository implements AuthRepoInterface {
   Future<ApiResponseModel> existingAccountCheck(
       {required String email,
       required int userResponse,
-      required String medium}) async {
+      required String medium,
+      String? temporaryToken}) async {
     try {
       Response response = await dioClient!.post(
         AppConstants.existingAccountCheck,
-        data: {"email": email, "user_response": userResponse, "medium": medium},
+        data: {
+          "email": email,
+          "user_response": userResponse,
+          "medium": medium,
+          if (temporaryToken != null) "temporary_token": temporaryToken,
+        },
       );
       return ApiResponseModel.withSuccess(response);
     } catch (e) {
