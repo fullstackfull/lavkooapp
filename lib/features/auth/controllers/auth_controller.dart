@@ -82,6 +82,9 @@ class AuthController with ChangeNotifier {
   String? _verificationID = '';
   String? get verificationID => _verificationID;
 
+  /// The server hands this out with the answer that asks "is this your account?" and takes it back with the answer.
+  String? _socialLoginConfirmationToken;
+
   bool get isLoading => _isLoading;
   bool? get isRemember => _isRemember;
 
@@ -120,6 +123,7 @@ class AuthController with ChangeNotifier {
         message = map['error_message'];
         token = map['token'];
         temporaryToken = map['temp_token'];
+        _socialLoginConfirmationToken = map['temporary_token'];
         if (map["user"] != null) {
           email = map["user"]["email"];
           phone = map["user"]["phone"];
@@ -1186,7 +1190,11 @@ class AuthController with ChangeNotifier {
     notifyListeners();
     ApiResponseModel apiResponse =
         await authServiceInterface.existingAccountCheck(
-            email: email, userResponse: userResponse, medium: medium);
+            email: email,
+            userResponse: userResponse,
+            medium: medium,
+            temporaryToken: _socialLoginConfirmationToken);
+    _socialLoginConfirmationToken = null;
     ResponseModel responseModel;
     String? token;
     String? tempToken;
