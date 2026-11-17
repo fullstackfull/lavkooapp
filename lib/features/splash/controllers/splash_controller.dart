@@ -9,6 +9,7 @@ import 'package:syriapharmacy/features/splash/domain/models/business_pages_model
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -80,8 +81,13 @@ class SplashController extends ChangeNotifier {
     final ThemeController themeController =
         Provider.of<ThemeController>(context, listen: false);
 
+    // The config is read and kept for the storefront the customer is on now; if they choose another while an answer is on its way, that
+    // answer is neither used nor kept.
+    final String? storefront = StorefrontScope.current;
+
     var configLocalData =
         await database.getCacheResponseById(AppConstants.configUri);
+    if (!StorefrontScope.isCurrent(storefront)) return false;
 
     bool localMaintainanceMode = false;
 
@@ -118,6 +124,7 @@ class SplashController extends ChangeNotifier {
 
     _hasConnection = true;
     ApiResponseModel apiResponse = await splashServiceInterface!.getConfig();
+    if (!StorefrontScope.isCurrent(storefront)) return false;
 
     // _configModel = ConfigModel.fromJson(apiResponse.response!.data);
     bool isSuccess;

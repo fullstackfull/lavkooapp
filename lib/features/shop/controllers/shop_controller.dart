@@ -10,6 +10,7 @@ import 'package:syriapharmacy/features/shop/domain/models/more_store_model.dart'
 import 'package:syriapharmacy/features/shop/domain/models/seller_info_model.dart';
 import 'package:syriapharmacy/features/shop/domain/models/seller_model.dart';
 import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:syriapharmacy/main.dart';
@@ -250,8 +251,13 @@ class ShopController extends ChangeNotifier {
   Future<void> getClearanceShopProductList(
       String type, String offset, String slug,
       {bool reload = false}) async {
+    // A shop's clearance products are read and kept for the storefront the customer is on now; if they choose another while an answer is
+    // on its way, that answer is neither shown nor kept.
+    final String? storefront = StorefrontScope.current;
+
     var localData = await database.getCacheResponseById(
         "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type");
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (localData != null) {
       clearanceProductModel =
@@ -261,6 +267,7 @@ class ShopController extends ChangeNotifier {
 
     ApiResponseModel apiResponse = await shopServiceInterface!
         .getClearanceShopProductList(type, offset, slug);
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {

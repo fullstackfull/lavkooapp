@@ -8,6 +8,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/deal/domain/models/flash_deal_model.dart';
 import 'package:syriapharmacy/features/deal/domain/services/flash_deal_service_interface.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -15,7 +16,14 @@ import 'package:intl/intl.dart';
 
 class FlashDealController extends ChangeNotifier {
   final FlashDealServiceInterface flashDealServiceInterface;
-  FlashDealController({required this.flashDealServiceInterface});
+
+  /// The database the deal is kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  FlashDealController(
+      {required this.flashDealServiceInterface, this.localDatabase});
+
+  AppDatabase get _database => localDatabase ?? database;
 
   FlashDealModel? _flashDeal;
   final List<Product> _flashDealList = [];
@@ -28,8 +36,14 @@ class FlashDealController extends ChangeNotifier {
   int? get currentIndex => _currentIndex;
 
   Future<void> getFlashDealList(bool reload, bool notify) async {
+    // The deal is read and kept for the storefront the customer is on now; if they choose another while an answer is on its way, that
+    // answer is neither shown nor kept.
+    final String? storefront = StorefrontScope.current;
+
     var localData =
-        await database.getCacheResponseById(AppConstants.flashDealUri);
+        await _database.getCacheResponseById(AppConstants.flashDealUri);
+    if (!StorefrontScope.isCurrent(storefront)) return;
+
     CacheResponseData? localData2;
 
     if (localData != null) {
@@ -66,8 +80,9 @@ class FlashDealController extends ChangeNotifier {
           });
         }
 
-        localData2 = await database
+        localData2 = await _database
             .getCacheResponseById(AppConstants.flashDealProductUri);
+        if (!StorefrontScope.isCurrent(storefront)) return;
 
         // if (localData2 != null) {
         //   _flashDealList.clear();
@@ -97,6 +112,8 @@ class FlashDealController extends ChangeNotifier {
     if (_flashDealList.isEmpty || reload) {
       ApiResponseModel apiResponse =
           await flashDealServiceInterface.getFlashDeal();
+      if (!StorefrontScope.isCurrent(storefront)) return;
+
       if (apiResponse.response != null &&
           apiResponse.response!.statusCode == 200) {
         final dynamic fresh = apiResponse.response!.data;
@@ -104,7 +121,7 @@ class FlashDealController extends ChangeNotifier {
             fresh is Map<String, dynamic> ? FlashDealModel.fromJson(fresh) : null;
 
         if (localData != null) {
-          await database.updateCacheResponse(
+          await _database.updateCacheResponse(
               AppConstants.flashDealUri,
               CacheResponseCompanion(
                 endPoint: const Value(AppConstants.flashDealUri),
@@ -112,7 +129,7 @@ class FlashDealController extends ChangeNotifier {
                 response: Value(jsonEncode(apiResponse.response!.data)),
               ));
         } else {
-          await database.insertCacheResponse(
+          await _database.insertCacheResponse(
             CacheResponseCompanion(
               endPoint: const Value(AppConstants.flashDealUri),
               header: Value(jsonEncode(apiResponse.response!.headers.map)),
@@ -150,6 +167,7 @@ class FlashDealController extends ChangeNotifier {
 
           ApiResponseModel megaDealResponse =
               await flashDealServiceInterface.get(_flashDeal!.id.toString());
+          if (!StorefrontScope.isCurrent(storefront)) return;
 
           if (megaDealResponse.response != null &&
               megaDealResponse.response!.statusCode == 200) {
@@ -167,7 +185,7 @@ class FlashDealController extends ChangeNotifier {
             _currentIndex = 0;
 
             if (localData2 != null) {
-              await database.updateCacheResponse(
+              await _database.updateCacheResponse(
                   AppConstants.flashDealProductUri,
                   CacheResponseCompanion(
                     endPoint: const Value(AppConstants.flashDealProductUri),
@@ -177,7 +195,7 @@ class FlashDealController extends ChangeNotifier {
                         Value(jsonEncode(megaDealResponse.response!.data)),
                   ));
             } else {
-              await database.insertCacheResponse(
+              await _database.insertCacheResponse(
                 CacheResponseCompanion(
                   endPoint: const Value(AppConstants.flashDealProductUri),
                   header:
