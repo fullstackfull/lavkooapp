@@ -41,8 +41,11 @@ jobs:
           lib/features/splash/screens/splash_screen.dart
           lib/features/wallet/controllers/wallet_controller.dart
           lib/main.dart
+          lib/data/datasource/remote/dio/api_cache_key.dart
+          test/api_cache_key_test.dart
           test/api_error_handler_storefront_test.dart
           test/checkout_sale_gate_test.dart
+          test/dio_cache_storefront_test.dart
           test/storefront_browse_only_notice_test.dart
           test/storefront_can_sell_test.dart
           test/storefront_controller_test.dart
@@ -60,9 +63,10 @@ jobs:
         run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/features/cart/screens/cart_screen.dart
 
       # localization_keys_test.dart is not new, but this branch adds a
-      # translation key it checks. storefront_controller_test.dart has one test
-      # that runs only in a build made with GCC_STOREFRONTS_ENABLED=true; it is
-      # skipped here, as the flag is off by default.
+      # translation key it checks. storefront_controller_test.dart has one test,
+      # and dio_cache_storefront_test.dart a group of them, that run only in a
+      # build made with GCC_STOREFRONTS_ENABLED=true; they are skipped here, as
+      # the flag is off by default.
       - name: Test storefront
         run: >
           flutter test
@@ -79,3 +83,5 @@ jobs:
           test/storefront_repository_test.dart
           test/storefront_service_test.dart
           test/stored_storefronts_test.dart
+          test/api_cache_key_test.dart
+          test/dio_cache_storefront_test.dart
