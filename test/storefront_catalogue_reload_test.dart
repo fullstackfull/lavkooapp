@@ -342,7 +342,8 @@ class _FakeShopService implements ShopServiceInterface {
 
 /// The lists of the home and what a screen of the catalogue holds, in the controllers: what each does when the customer moves to another
 /// storefront. Each controller is given the answers of a server that answers for the storefront it is asked for, so what is shown can be
-/// told by what it says.
+/// told by what it says. That server is written by hand from the audit of the backend, whose storefront pull requests (#47 to #64) were
+/// not available when this was written, not recorded from a real one.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

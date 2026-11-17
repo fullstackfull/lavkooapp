@@ -184,7 +184,9 @@ Map<String, Object?> _themePage(String label) => <String, Object?>{
 
 /// Every cache of the app that keeps an answer in the local database, once for the build with storefronts off, whose rows must be what
 /// they always were, and once with them on, whose rows must never be read by another storefront. The storefront is the one the HTTP client
-/// publishes, so both settings run in one test run, over a real SQLite database in memory.
+/// publishes, so both settings run in one test run, over a real SQLite database in memory. The server's answers are written by hand from
+/// the audit of the backend, whose storefront pull requests (#47 to #64) were not available when this was written, not recorded from a
+/// real server.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

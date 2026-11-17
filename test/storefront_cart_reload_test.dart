@@ -162,7 +162,9 @@ class _Unused
 }
 
 /// What the customer's own lists do when they move to another storefront: the cart and the wishlist, which the server keeps per
-/// storefront, and everything else that is derived from them or that a storefront decides.
+/// storefront, and everything else that is derived from them or that a storefront decides. The server's answers are written by hand from
+/// the audit of the backend, whose storefront pull requests (#47 to #64) were not available when this was written, not recorded from a
+/// real server.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

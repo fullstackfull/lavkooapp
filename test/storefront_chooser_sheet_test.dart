@@ -55,7 +55,9 @@ class _FileLocalizationsDelegate
   bool shouldReload(_FileLocalizationsDelegate old) => false;
 }
 
-/// What the server answers when it is asked for the storefronts, as the controller's service keeps it.
+/// What the server answers when it is asked for the storefronts, as the controller's service keeps it. The answer is written by hand from
+/// the audit of the backend, whose storefront pull requests (#47 to #64) were not available when this was written, not recorded from a
+/// real server.
 class _Server implements StorefrontServiceInterface {
   _Server(this._preferences);
 
