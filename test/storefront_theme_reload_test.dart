@@ -43,6 +43,8 @@ class _ThemeServer implements DynamicThemeServiceInterface {
   /// While a page is in here, its request waits for it; the answer is still built for the storefront asked for at the time of the request.
   final Map<String, Completer<void>> holdPage = <String, Completer<void>>{};
   Completer<void>? holdSection;
+  Completer<void>? holdRevision;
+  Completer<void>? holdCached;
   final List<String> homeAskedFor = <String>[];
   final List<String?> checksumsSent = <String?>[];
   int revisionAsked = 0;
@@ -50,6 +52,7 @@ class _ThemeServer implements DynamicThemeServiceInterface {
   @override
   Future<ThemeRevision> getRevision() async {
     revisionAsked++;
+    await holdRevision?.future;
     return const ThemeRevision(
       revision: 5,
       checksum: 'version',
@@ -74,8 +77,12 @@ class _ThemeServer implements DynamicThemeServiceInterface {
   }
 
   @override
-  Future<ThemePayload?> getCachedPayload({String page = 'home'}) async =>
-      page == 'home' ? cached[_who] : null;
+  Future<ThemePayload?> getCachedPayload({String page = 'home'}) async {
+    final ThemePayload? payload = page == 'home' ? cached[_who] : null;
+    await holdCached?.future;
+
+    return payload;
+  }
 
   @override
   Future<ApiResponseModel> getSectionData(SectionSource source) async {
@@ -228,6 +235,89 @@ void main() {
 
     expect(server.homeAskedFor, <String>['SA', 'AE']);
     expect(controller.payload.checksum, 'home of AE');
+  });
+
+  test('a version check on its way when the shopper moved on is not acted on',
+      () async {
+    final Completer<void> hold = Completer<void>();
+    server.holdRevision = hold;
+    addTearDown(() {
+      if (!hold.isCompleted) hold.complete();
+    });
+    server.homeAskedFor.clear();
+
+    final Future<void> syncing = controller.sync();
+    await pumpEventQueue();
+    StorefrontScope.publish('AE');
+    await controller.onStorefrontChanged(_toEmirates);
+    server.holdRevision = null;
+    hold.complete();
+    await syncing;
+
+    expect(server.homeAskedFor, <String>['AE'],
+        reason: 'only the refresh the change asked for fetches the page');
+    expect(controller.payload.checksum, 'home of AE');
+  });
+
+  test('a header on its way when the shopper moved on is not kept', () async {
+    final Completer<void> header = Completer<void>();
+    final Completer<void> home = Completer<void>();
+    server.holdPage['header'] = header;
+    addTearDown(() {
+      if (!header.isCompleted) header.complete();
+      if (!home.isCompleted) home.complete();
+    });
+
+    final Future<void> syncing = controller.sync(force: true);
+    await pumpEventQueue();
+    StorefrontScope.publish('AE');
+    await controller.onStorefrontChanged(_toEmirates);
+    server.holdPage
+      ..remove('header')
+      ..['home'] = home;
+    header.complete();
+    await pumpEventQueue();
+
+    expect(controller.headerSections, isEmpty,
+        reason: 'the header of the other storefront is not shown');
+    expect(controller.hasPublishedTheme, isFalse);
+
+    home.complete();
+    await syncing;
+    expect(controller.payload.checksum, 'home of AE');
+  });
+
+  test('a cached home on its way when the shopper moved on is not shown',
+      () async {
+    final DynamicThemeController fresh =
+        DynamicThemeController(dynamicThemeServiceInterface: server);
+    addTearDown(fresh.dispose);
+    final Completer<void> cache = Completer<void>();
+    final Completer<void> home = Completer<void>();
+    server
+      ..cached['SA'] = _page('cached home of SA')
+      ..holdCached = cache;
+    addTearDown(() {
+      if (!cache.isCompleted) cache.complete();
+      if (!home.isCompleted) home.complete();
+    });
+
+    final Future<void> syncing = fresh.sync();
+    await pumpEventQueue();
+    StorefrontScope.publish('AE');
+    await fresh.onStorefrontChanged(_toEmirates);
+    server
+      ..holdCached = null
+      ..holdPage['home'] = home;
+    cache.complete();
+    await pumpEventQueue();
+
+    expect(fresh.payload.checksum, isNot('cached home of SA'));
+    expect(fresh.hasPublishedTheme, isFalse);
+
+    home.complete();
+    await syncing;
+    expect(fresh.payload.checksum, 'home of AE');
   });
 
   test('data a section fetched is dropped, and data on its way is not kept',

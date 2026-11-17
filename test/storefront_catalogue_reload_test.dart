@@ -15,8 +15,10 @@ import 'package:syriapharmacy/features/deal/controllers/featured_deal_controller
 import 'package:syriapharmacy/features/deal/domain/services/featured_deal_service_interface.dart';
 import 'package:syriapharmacy/features/product/controllers/product_controller.dart';
 import 'package:syriapharmacy/features/product/domain/services/product_service_interface.dart';
+import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
 import 'package:syriapharmacy/features/product/enums/product_type.dart';
 import 'package:syriapharmacy/features/shop/controllers/shop_controller.dart';
+import 'package:syriapharmacy/features/shop/domain/models/seller_model.dart';
 import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
@@ -58,6 +60,7 @@ Map<String, Object> _productPage(String name) => <String, Object>{
 
 class _FakeCategoryService implements CategoryServiceInterface {
   Completer<void>? hold;
+  Completer<void>? holdHeader;
   int asked = 0;
 
   @override
@@ -79,8 +82,16 @@ class _FakeCategoryService implements CategoryServiceInterface {
       ApiResponseModel.withError('x');
 
   @override
-  Future<ApiResponseModel> getCategoryPageHeader(int categoryId) async =>
-      ApiResponseModel.withError('x');
+  Future<ApiResponseModel> getCategoryPageHeader(int categoryId) async {
+    final String who = _who;
+    await holdHeader?.future;
+
+    return ApiResponseModel.withSuccess(_ok(<String, Object>{
+      'sub_categories': <Object>[
+        <String, Object>{'id': 2, 'name': 'sub category of $who'},
+      ],
+    }));
+  }
 }
 
 class _FakeBannerService implements BannerServiceInterface {
@@ -193,8 +204,12 @@ class _FakeProductService implements ProductServiceInterface {
 
   @override
   Future<ApiResponseModel<T>> getClearanceAllProductList<T>(
-          {required int offset, required DataSourceEnum source}) async =>
-      _page<T>('clearance', source);
+      {required int offset, required DataSourceEnum source}) async {
+    final ApiResponseModel<T> answer = _page<T>('clearance', source);
+    if (offset == 2) await holdSecondPage?.future;
+
+    return answer;
+  }
 
   @override
   Future<ApiResponseModel<T>> getMostDemandedProduct<T>(
@@ -208,8 +223,12 @@ class _FakeProductService implements ProductServiceInterface {
 
   @override
   Future<ApiResponseModel<T>> getMostSearchingProductList<T>(
-          {required int offset, required DataSourceEnum source}) async =>
-      ApiResponseModel<T>.withError('not used');
+      {required int offset, required DataSourceEnum source}) async {
+    final ApiResponseModel<T> answer = _page<T>('mostSearching', source);
+    if (offset == 2) await holdSecondPage?.future;
+
+    return answer;
+  }
 
   @override
   Future<dynamic> getFilteredProductList(
@@ -389,6 +408,35 @@ void main() {
     });
   });
 
+  group('the header of a category', () {
+    test('is dropped with the rest, and one that was on its way is not kept',
+        () async {
+      final _FakeCategoryService service = _FakeCategoryService();
+      final CategoryController controller =
+          CategoryController(categoryServiceInterface: service);
+      await controller.getCategoryPageHeaderData(1);
+      expect(controller.hasHeaderFor(1), isTrue);
+      expect(controller.getSubCategoriesForCategory(1)?.single.name,
+          'sub category of SA');
+
+      await moveTo(controller);
+      expect(controller.hasHeaderFor(1), isFalse);
+
+      final Completer<void> hold = Completer<void>();
+      service.holdHeader = hold;
+      addTearDown(() {
+        if (!hold.isCompleted) hold.complete();
+      });
+      final Future<void> loading = controller.getCategoryPageHeaderData(1);
+      await pumpEventQueue();
+      StorefrontScope.publish('KW');
+      hold.complete();
+      await loading;
+
+      expect(controller.hasHeaderFor(1), isFalse);
+    });
+  });
+
   group('banners', () {
     test('drop at once, every slot of them, and are loaded again', () async {
       final BannerController controller =
@@ -554,49 +602,169 @@ void main() {
       expect(controller.brandList.map((b) => b.name), <String>['brand of AE']);
     });
 
-    test('is not added to the products of the storefront they are on',
-        () async {
-      final _FakeProductService service = _FakeProductService();
-      final ProductController controller =
-          ProductController(productServiceInterface: service);
-      await controller.getLatestProductList(1);
-      await pumpEventQueue();
-      final Completer<void> hold = Completer<void>();
-      service.holdSecondPage = hold;
-      addTearDown(() {
-        if (!hold.isCompleted) hold.complete();
+    for (final ({
+      String name,
+      Future<void> Function(ProductController) first,
+      Future<void> Function(ProductController) second,
+      List<Product>? Function(ProductController) shown,
+      String label,
+    }) loader in <({
+      String name,
+      Future<void> Function(ProductController) first,
+      Future<void> Function(ProductController) second,
+      List<Product>? Function(ProductController) shown,
+      String label,
+    })>[
+      (
+        name: 'latest',
+        first: (c) => c.getLatestProductList(1),
+        second: (c) => c.getLatestProductList(2),
+        shown: (c) => c.latestProductModel?.products,
+        label: 'latestProduct',
+      ),
+      (
+        name: 'selected',
+        first: (c) => c.getSelectedProductModel(1),
+        second: (c) => c.getSelectedProductModel(2),
+        shown: (c) => c.selectedProductModel?.products,
+        label: 'discountedProduct',
+      ),
+      (
+        name: 'featured',
+        first: (c) => c.getFeaturedProductModel(1),
+        second: (c) => c.getFeaturedProductModel(2),
+        shown: (c) => c.featuredProductModel?.products,
+        label: 'featuredProduct',
+      ),
+      (
+        name: 'just for you',
+        first: (c) => c.getJustForYouProduct(1),
+        second: (c) => c.getJustForYouProduct(2),
+        shown: (c) => c.justForYouProductModel?.products,
+        label: 'justForYou',
+      ),
+      (
+        name: 'every product of a type',
+        first: (c) => c.getAllProductModelByType(
+            offset: 1, type: ProductType.latestProduct),
+        second: (c) => c.getAllProductModelByType(
+            offset: 2, type: ProductType.latestProduct),
+        shown: (c) => c.allProductModel?.products,
+        label: 'latestProduct',
+      ),
+      (
+        name: 'most searched',
+        first: (c) => c.getMostSearchingProduct(1),
+        second: (c) => c.getMostSearchingProduct(2),
+        shown: (c) => c.mostSearchingProduct?.products,
+        label: 'mostSearching',
+      ),
+      (
+        name: 'clearance',
+        first: (c) => c.getClearanceAllProductList(1),
+        second: (c) => c.getClearanceAllProductList(2),
+        shown: (c) => c.clearanceProductModel?.products,
+        label: 'clearance',
+      ),
+    ]) {
+      test(
+          'is not added to the ${loader.name} products of the storefront they are on',
+          () async {
+        final _FakeProductService service = _FakeProductService();
+        final ProductController controller =
+            ProductController(productServiceInterface: service);
+        await loader.first(controller);
+        await pumpEventQueue();
+        expect(loader.shown(controller), isNotNull, reason: 'page one loaded');
+        final Completer<void> hold = Completer<void>();
+        service.holdSecondPage = hold;
+        addTearDown(() {
+          if (!hold.isCompleted) hold.complete();
+        });
+
+        final Future<void> paging = loader.second(controller);
+        await pumpEventQueue();
+        await moveTo(controller);
+        hold.complete();
+        await paging;
+        await pumpEventQueue();
+
+        // A list that belongs to one screen is dropped and not loaded again, and the most searched list is, in the code as it is, always
+        // replaced by an empty one after its first page.
+        final Map<String, List<String?>?> expectedByLoader =
+            <String, List<String?>?>{
+          'every product of a type': null,
+          'most searched': <String?>[],
+        };
+        expect(
+          loader.shown(controller)?.map((p) => p.name).toList(),
+          expectedByLoader.containsKey(loader.name)
+              ? expectedByLoader[loader.name]
+              : <String?>['${loader.label} of AE'],
+        );
       });
+    }
 
-      final Future<void> paging = controller.getLatestProductList(2);
-      await pumpEventQueue();
-      await moveTo(controller);
-      hold.complete();
-      await paging;
+    for (final ({
+      String name,
+      Future<void> Function(ShopController) first,
+      Future<void> Function(ShopController) second,
+      List<Seller>? Function(ShopController) shown,
+      String label,
+    }) loader in <({
+      String name,
+      Future<void> Function(ShopController) first,
+      Future<void> Function(ShopController) second,
+      List<Seller>? Function(ShopController) shown,
+      String label,
+    })>[
+      (
+        name: 'top',
+        first: (c) => c.getTopSellerList(offset: 1),
+        second: (c) => c.getTopSellerList(offset: 2),
+        shown: (c) => c.topSellerModel?.sellers,
+        label: 'top',
+      ),
+      (
+        name: 'filtered',
+        first: (c) => c.getFilteredSellerList(type: 'new', offset: 1),
+        second: (c) => c.getFilteredSellerList(type: 'new', offset: 2),
+        shown: (c) => c.filteredSellerModel?.sellers,
+        label: 'top',
+      ),
+      (
+        name: 'all',
+        first: (c) => c.getAllSellerList(offset: 1),
+        second: (c) => c.getAllSellerList(offset: 2),
+        shown: (c) => c.allSellerModel?.sellers,
+        label: 'all',
+      ),
+    ]) {
+      test(
+          'is not added to the ${loader.name} shops of the storefront they are on',
+          () async {
+        final _FakeShopService service = _FakeShopService();
+        final ShopController controller =
+            ShopController(shopServiceInterface: service);
+        await loader.first(controller);
+        await pumpEventQueue();
+        expect(loader.shown(controller), isNotNull, reason: 'page one loaded');
+        final Completer<void> hold = Completer<void>();
+        service.holdSecondPage = hold;
+        addTearDown(() {
+          if (!hold.isCompleted) hold.complete();
+        });
 
-      expect(controller.latestProductModel?.products?.map((p) => p.name),
-          <String?>['latestProduct of AE']);
-    });
+        final Future<void> paging = loader.second(controller);
+        await pumpEventQueue();
+        await moveTo(controller);
+        hold.complete();
+        await paging;
+        await pumpEventQueue();
 
-    test('is not added to the shops of the storefront they are on', () async {
-      final _FakeShopService service = _FakeShopService();
-      final ShopController controller =
-          ShopController(shopServiceInterface: service);
-      await controller.getTopSellerList(offset: 1);
-      await pumpEventQueue();
-      final Completer<void> hold = Completer<void>();
-      service.holdSecondPage = hold;
-      addTearDown(() {
-        if (!hold.isCompleted) hold.complete();
+        expect(loader.shown(controller)?.map((s) => s.fName),
+            <String?>['${loader.label} seller of AE']);
       });
-
-      final Future<void> paging = controller.getTopSellerList(offset: 2);
-      await pumpEventQueue();
-      await moveTo(controller);
-      hold.complete();
-      await paging;
-
-      expect(controller.topSellerModel?.sellers?.map((s) => s.fName),
-          <String?>['top seller of AE']);
-    });
+    }
   });
 }
