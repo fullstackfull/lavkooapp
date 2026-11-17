@@ -4,6 +4,8 @@ import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 import 'package:syriapharmacy/features/checkout/domain/services/checkout_service_interface.dart';
 import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
@@ -150,6 +152,18 @@ class CheckoutController with ChangeNotifier {
     bool isfOffline = false,
     bool wallet = false,
   }) async {
+    // A storefront that may not sell yet never reaches the server: the refusal is shown from here, before the attempt starts. The
+    // callback gets it as it gets any failure that is not a confirmed order.
+    if (!StorefrontController.maySellIn(Get.context)) {
+      callback(
+        false,
+        getTranslated('storefront_browse_only_notice', Get.context!) ?? '',
+        '',
+        false,
+      );
+      return;
+    }
+
     // ============================================================
     // IMPORTANT:
     // Billing Address must always be the same as Delivery Address.
@@ -720,6 +734,20 @@ class CheckoutController with ChangeNotifier {
     String? couponDiscount,
     String? paymentMethod,
   }) async {
+    // A storefront that may not sell yet never reaches the server: no payment is started.
+    if (!StorefrontController.maySellIn(Get.context)) {
+      final String browseOnlyNotice =
+          getTranslated('storefront_browse_only_notice', Get.context!) ?? '';
+
+      showCustomSnackBarWidget(
+        browseOnlyNotice,
+        Get.context!,
+        snackBarType: SnackBarType.warning,
+      );
+
+      return ApiResponseModel.withError(browseOnlyNotice);
+    }
+
     // ============================================================
     // Billing = Delivery
     // ============================================================
@@ -745,6 +773,9 @@ class CheckoutController with ChangeNotifier {
       _isCheckCreateAccount,
       passwordController.text.trim(),
     );
+
+    final String? storefrontRefusal =
+        StorefrontRefusal.messageOf(apiResponse.response?.data);
 
     if (apiResponse.response != null &&
         apiResponse.response?.statusCode == 200) {
@@ -789,6 +820,16 @@ class CheckoutController with ChangeNotifier {
         Get.context!,
         snackBarType:
         SnackBarType.warning,
+      );
+    } else if (storefrontRefusal != null) {
+      // The server refused to start a payment in a storefront that may not sell yet. Its message is shown as it is, because it is already
+      // in the customer's language, and it is never mistaken for a gateway that is not configured.
+      _isLoading = false;
+
+      showCustomSnackBarWidget(
+        storefrontRefusal,
+        Get.context!,
+        snackBarType: SnackBarType.warning,
       );
     } else if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 403) {

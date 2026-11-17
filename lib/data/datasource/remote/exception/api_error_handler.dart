@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:syriapharmacy/data/model/error_response.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:provider/provider.dart';
 
@@ -36,6 +37,14 @@ class ApiErrorHandler {
     if (error is Exception) {
       try {
         if (error is DioException) {
+          // A storefront that may not sell yet refuses with a 422 and its own message, which is already in the customer's language.
+          // Without this the 422 reads "Failed to load data - status code: 422".
+          final String? storefrontRefusal =
+              StorefrontRefusal.messageOf(error.response?.data);
+          if (storefrontRefusal != null) {
+            return storefrontRefusal;
+          }
+
           switch (error.type) {
             case DioExceptionType.cancel:
               errorDescription = "Request to API server was cancelled";

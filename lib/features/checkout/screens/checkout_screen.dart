@@ -8,6 +8,9 @@ import 'package:syriapharmacy/features/checkout/widgets/order_place_bottomsheet_
 import 'package:syriapharmacy/features/checkout/widgets/payment_method_bottom_sheet_widget.dart';
 import 'package:syriapharmacy/features/profile/controllers/profile_contrroller.dart';
 import 'package:syriapharmacy/features/shipping/controllers/shipping_controller.dart';
+import 'package:syriapharmacy/features/storefront/checkout_sale_gate.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/widgets/storefront_browse_only_notice.dart';
 import 'package:syriapharmacy/helper/cart_healper.dart';
 import 'package:syriapharmacy/helper/debounce_helper.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
@@ -144,6 +147,9 @@ class CheckoutScreenState extends State<CheckoutScreen> {
                         builder: (context, cartProvider, _) {
                           return Consumer<ProfileController>(
                               builder: (context, profileProvider, _) {
+                                final CheckoutSaleGate saleGate =
+                                    Provider.of<StorefrontController>(context)
+                                        .saleGate;
                                 return orderProvider.isLoading
                                     ? const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -175,12 +181,19 @@ class CheckoutScreenState extends State<CheckoutScreen> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      if (saleGate.showsBrowseOnlyNotice) ...[
+                                        const StorefrontBrowseOnlyNotice(),
+                                        const SizedBox(
+                                            height: Dimensions.paddingSizeSmall),
+                                      ],
                                       const CheckoutConditionCheckBox(),
                                       const SizedBox(height: Dimensions.paddingSizeSmall),
                                       //// الزر تبع المتابعة بالحجز ====================
                                       CustomButton(
-                                        onTap: (orderProvider.isLoading ||
-                                            !orderProvider.isAcceptTerms)
+                                        onTap: !saleGate.permits(
+                                            otherwiseEnabled:
+                                            !orderProvider.isLoading &&
+                                                orderProvider.isAcceptTerms)
                                             ? null
                                             : () async {
                                           if (orderProvider.addressIndex == null &&
