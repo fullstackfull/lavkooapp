@@ -286,6 +286,7 @@ class _FakeShopService implements ShopServiceInterface {
       required DataSourceEnum source}) async {
     final String who = _who;
     if (source == DataSourceEnum.client) asked.add(type);
+    if (offset == 2) await holdSecondPage?.future;
     return _answer<T>(
         source,
         () => <String, Object>{
@@ -704,6 +705,38 @@ void main() {
         );
       });
     }
+
+    test(
+        'is not added to the list of every product of a type that a screen opened for the storefront they are on',
+        () async {
+      final _FakeProductService service = _FakeProductService();
+      final ProductController controller =
+          ProductController(productServiceInterface: service);
+      await controller.getAllProductModelByType(
+          offset: 1, type: ProductType.latestProduct);
+      await pumpEventQueue();
+      final Completer<void> hold = Completer<void>();
+      service.holdSecondPage = hold;
+      addTearDown(() {
+        if (!hold.isCompleted) hold.complete();
+      });
+
+      final Future<void> paging = controller.getAllProductModelByType(
+          offset: 2, type: ProductType.latestProduct);
+      await pumpEventQueue();
+      await moveTo(controller);
+      // The change drops the list and loads nothing in its place: it belongs to a screen. This one is opened on the new storefront before
+      // the page of the old one comes in.
+      await controller.getAllProductModelByType(
+          offset: 1, type: ProductType.latestProduct);
+      await pumpEventQueue();
+      hold.complete();
+      await paging;
+      await pumpEventQueue();
+
+      expect(controller.allProductModel?.products?.map((p) => p.name),
+          <String?>['latestProduct of AE']);
+    });
 
     for (final ({
       String name,

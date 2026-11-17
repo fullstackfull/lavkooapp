@@ -66,6 +66,12 @@ class _FakeFlashDealService implements FlashDealServiceInterface {
   Future<dynamic> Function() deal = () async => ApiResponseModel.withError('x');
   int dealAsked = 0;
 
+  /// The products the deal answers with.
+  List<Object> products = <Object>[];
+
+  /// While set, the deal's products wait for it.
+  Completer<void>? holdProducts;
+
   @override
   Future<dynamic> getFlashDeal() {
     dealAsked++;
@@ -73,8 +79,12 @@ class _FakeFlashDealService implements FlashDealServiceInterface {
   }
 
   @override
-  Future<dynamic> get(String productID) async => ApiResponseModel.withSuccess(
-      _ok(<String, Object>{'products': <Object>[]}));
+  Future<dynamic> get(String productID) async {
+    await holdProducts?.future;
+
+    return ApiResponseModel.withSuccess(
+        _ok(<String, Object>{'products': products}));
+  }
 }
 
 class _FakeOrderService implements OrderServiceInterface {
@@ -110,10 +120,14 @@ class _SwitchingDatabase extends AppDatabase {
 
   String? switchWhileLookingUp;
 
+  /// The key whose lookup moves the app, or null for every lookup.
+  String? onlyWhenLookingUp;
+
   @override
   Future<CacheResponseData?> getCacheResponseById(String endPoint) async {
     final CacheResponseData? row = await super.getCacheResponseById(endPoint);
-    if (switchWhileLookingUp != null) {
+    if (switchWhileLookingUp != null &&
+        (onlyWhenLookingUp == null || onlyWhenLookingUp == endPoint)) {
       StorefrontScope.publish(switchWhileLookingUp);
     }
 
@@ -668,6 +682,96 @@ void main() {
         expect(controller.flashDeal, isNull);
         expect(await storedKeys(), isEmpty);
       });
+
+      test(
+          'the products that arrive after the customer chose another storefront are neither shown nor filed',
+          () async {
+        final Completer<void> held = Completer<void>();
+        addTearDown(() {
+          if (!held.isCompleted) held.complete();
+        });
+        StorefrontScope.publish('SA');
+        service.deal =
+            () async => ApiResponseModel.withSuccess(_ok(_flashDeal(1)));
+        service.products = <Object>[
+          <String, Object>{'id': 1, 'name': 'saudi product'},
+        ];
+        service.holdProducts = held;
+
+        final Future<void> loading = controller.getFlashDealList(true, true);
+        await pumpEventQueue();
+        StorefrontScope.publish('AE');
+        held.complete();
+        await loading;
+
+        expect(controller.flashDealList, isEmpty);
+        expect(await storedKeys(), <String>['${AppConstants.flashDealUri}#SA'],
+            reason: 'the deal was asked for under Saudi Arabia, the products '
+                'that came after the change were not filed anywhere');
+      });
+
+      group('a row that is being read when the customer moves on', () {
+        late _SwitchingDatabase switching;
+        late _FakeFlashDealService answering;
+        late FlashDealController reading;
+
+        setUp(() async {
+          switching = _SwitchingDatabase();
+          addTearDown(switching.close);
+          answering = _FakeFlashDealService();
+          reading = FlashDealController(
+            flashDealServiceInterface: answering,
+            localDatabase: switching,
+          );
+          StorefrontScope.publish('SA');
+          await switching.insertCacheResponse(CacheResponseCompanion.insert(
+            endPoint: AppConstants.flashDealUri,
+            header: '{}',
+            response: jsonEncode(_flashDeal(1)),
+          ));
+          await switching.insertCacheResponse(CacheResponseCompanion.insert(
+            endPoint: AppConstants.flashDealProductUri,
+            header: '{}',
+            response: jsonEncode(<String, Object>{
+              'products': <Object>[
+                <String, Object>{'id': 1, 'name': 'saudi product'},
+              ],
+            }),
+          ));
+        });
+
+        test('the deal of the storefront they left is not shown', () async {
+          switching
+            ..switchWhileLookingUp = 'AE'
+            ..onlyWhenLookingUp = AppConstants.flashDealUri;
+
+          await reading.getFlashDealList(true, true);
+
+          expect(reading.flashDeal, isNull);
+          expect(reading.flashDealList, isEmpty);
+          expect(answering.dealAsked, 0);
+        });
+
+        test('the products of the storefront they left are not shown',
+            () async {
+          switching
+            ..switchWhileLookingUp = 'AE'
+            ..onlyWhenLookingUp = AppConstants.flashDealProductUri;
+
+          await reading.getFlashDealList(true, true);
+
+          expect(reading.flashDealList, isEmpty);
+          expect(answering.dealAsked, 0);
+        });
+
+        test('both are shown when the customer stays', () async {
+          await reading.getFlashDealList(false, true);
+
+          expect(reading.flashDeal?.id, 1);
+          expect(reading.flashDealList.map((product) => product.name),
+              <String?>['saudi product']);
+        });
+      });
     });
   });
 
@@ -751,6 +855,48 @@ void main() {
 
       expect(controller.deliveredOrderModel, isNull);
       expect(await storedKeys(), isEmpty);
+    });
+
+    group('a row that is being read when the customer moves on', () {
+      late _SwitchingDatabase switching;
+      late OrderController reading;
+
+      setUp(() async {
+        switching = _SwitchingDatabase();
+        addTearDown(switching.close);
+        reading = OrderController(
+          orderServiceInterface: service,
+          localDatabase: switching,
+        );
+        service.orders =
+            () async => ApiResponseModel.withSuccess(_ok(_orders(22)));
+        StorefrontScope.publish('SA');
+        await switching.insertCacheResponse(CacheResponseCompanion.insert(
+          endPoint: AppConstants.orderUri,
+          header: '{}',
+          response: jsonEncode(_orders(11)),
+        ));
+      });
+
+      test('is not shown when it is the one of the storefront they left',
+          () async {
+        switching.switchWhileLookingUp = 'AE';
+
+        await reading.getOrderList(1, 'delivered', type: 'reorder');
+
+        expect(reading.deliveredOrderModel, isNull);
+        expect(reading.orderModel, isNull);
+      });
+
+      test('is shown when the customer stays', () async {
+        final Completer<dynamic> neverAnswered = Completer<dynamic>();
+        service.orders = () => neverAnswered.future;
+
+        unawaited(reading.getOrderList(1, 'delivered', type: 'reorder'));
+        await pumpEventQueue();
+
+        expect(reading.deliveredOrderModel?.totalSize, 11);
+      });
     });
   });
 
@@ -879,6 +1025,49 @@ void main() {
 
       expect(controller.clearanceProductModel, isNull);
       expect(await storedKeys(), isEmpty);
+    });
+
+    group('a row that is being read when the customer moves on', () {
+      late _SwitchingDatabase switching;
+      late ShopController reading;
+
+      setUp(() async {
+        switching = _SwitchingDatabase();
+        addTearDown(switching.close);
+        reading = ShopController(
+          shopServiceInterface: service,
+          localDatabase: switching,
+        );
+        StorefrontScope.publish('SA');
+        await switching.insertCacheResponse(CacheResponseCompanion.insert(
+          endPoint: rowKey,
+          header: '{}',
+          response: jsonEncode(_productPage('saudi products')),
+        ));
+      });
+
+      test('is not shown when it is the one of the storefront they left',
+          () async {
+        service.products = () async => ApiResponseModel.withSuccess(
+            _ok(_productPage('emirates products')));
+        switching.switchWhileLookingUp = 'AE';
+
+        await reading.getClearanceShopProductList('clearance_sale', '1', slug);
+
+        expect(reading.clearanceProductModel, isNull);
+      });
+
+      test('is shown when the customer stays', () async {
+        final Completer<dynamic> neverAnswered = Completer<dynamic>();
+        service.products = () => neverAnswered.future;
+
+        unawaited(
+            reading.getClearanceShopProductList('clearance_sale', '1', slug));
+        await pumpEventQueue();
+
+        expect(reading.clearanceProductModel?.products?.single.name,
+            'saudi products');
+      });
     });
   });
 
