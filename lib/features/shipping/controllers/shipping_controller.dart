@@ -8,14 +8,20 @@ import 'package:syriapharmacy/features/shipping/domain/models/shipping_method_mo
 import 'package:syriapharmacy/features/shipping/domain/models/shipping_model.dart';
 import 'package:syriapharmacy/features/checkout/domain/models/selected_shipping_type.dart';
 import 'package:syriapharmacy/features/shipping/domain/services/shipping_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:provider/provider.dart';
 
-class ShippingController extends ChangeNotifier {
+class ShippingController extends ChangeNotifier with StorefrontChangeAware {
   final ShippingServiceInterface shippingServiceInterface;
-  ShippingController({required this.shippingServiceInterface});
+  ShippingController({
+    required this.shippingServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   List<ChosenShippingMethodModel> _chosenShippingList = [];
   List<ChosenShippingMethodModel> get chosenShippingList => _chosenShippingList;
@@ -209,6 +215,24 @@ class ShippingController extends ChangeNotifier {
       ApiChecker.checkApi(apiResponse);
     }
     _isLoading = false;
+    notifyListeners();
+  }
+
+  /// The customer is on another storefront, whose cart is another cart: the shipping methods offered per cart group, and the ones chosen,
+  /// belong to the cart they left. The checkout asks for them again when it is opened.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _chosenShippingList = [];
+    _shippingList = null;
+    isSelectedList = [];
+    amount = 0.0;
+    isSelectAll = true;
+    cart = null;
+    _updateQuantityErrorText = null;
+    _isLoading = false;
+    _chosenShippingMethodIndex.clear();
+    _selectedShippingType = null;
+    _selectedShippingTypeList.clear();
     notifyListeners();
   }
 

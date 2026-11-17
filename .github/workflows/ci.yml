@@ -53,6 +53,45 @@ jobs:
           test/storefront_repository_test.dart
           test/storefront_service_test.dart
           test/stored_storefronts_test.dart
+          lib/data/local/cache_response.dart
+          lib/data/reposotories/data_sync_repo.dart
+          lib/features/banner/controllers/banner_controller.dart
+          lib/features/brand/controllers/brand_controller.dart
+          lib/features/cart/controllers/cart_controller.dart
+          lib/features/category/controllers/category_controller.dart
+          lib/features/compare/controllers/compare_controller.dart
+          lib/features/coupon/controllers/coupon_controller.dart
+          lib/features/deal/controllers/featured_deal_controller.dart
+          lib/features/deal/controllers/flash_deal_controller.dart
+          lib/features/dynamic_theme/controllers/dynamic_theme_controller.dart
+          lib/features/dynamic_theme/domain/repositories/dynamic_theme_repository.dart
+          lib/features/order/controllers/order_controller.dart
+          lib/features/product/controllers/product_controller.dart
+          lib/features/product/controllers/seller_product_controller.dart
+          lib/features/product_details/controllers/product_details_controller.dart
+          lib/features/restock/controllers/restock_controller.dart
+          lib/features/search_product/controllers/search_product_controller.dart
+          lib/features/setting/screens/settings_screen.dart
+          lib/features/shipping/controllers/shipping_controller.dart
+          lib/features/shop/controllers/shop_controller.dart
+          lib/features/splash/controllers/splash_controller.dart
+          lib/features/wishlist/controllers/wishlist_controller.dart
+          lib/helper/data_sync_helper.dart
+          lib/helper/db_helper.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cache_inventory_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_theme_reload_test.dart
 
       # cart_screen.dart already carries two analyzer warnings of its own (two
       # unused locals), so it cannot join the list above. It is analyzed for
@@ -62,11 +101,15 @@ jobs:
       - name: Analyze the cart screen for errors only
         run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/features/cart/screens/cart_screen.dart
 
-      # localization_keys_test.dart is not new, but this branch adds a
-      # translation key it checks. storefront_controller_test.dart has one test,
-      # and dio_cache_storefront_test.dart a group of them, that run only in a
-      # build made with GCC_STOREFRONTS_ENABLED=true; they are skipped here, as
-      # the flag is off by default.
+      # localization_keys_test.dart is not new, but this branch adds translation
+      # keys it checks. storefront_controller_test.dart has one test, and
+      # dio_cache_storefront_test.dart a group of them, that run only in a build
+      # made with GCC_STOREFRONTS_ENABLED=true; they are skipped here, as the flag
+      # is off by default, and run in the next step. The tests of the storefront
+      # caches and the change of storefront do not depend on the build flag: they
+      # set the storefront the way the HTTP client does, so both settings run
+      # here. The local database ones run over SQLite in memory, which needs
+      # libsqlite3 on the runner.
       - name: Test storefront
         run: >
           flutter test
@@ -85,3 +128,39 @@ jobs:
           test/stored_storefronts_test.dart
           test/api_cache_key_test.dart
           test/dio_cache_storefront_test.dart
+          test/dynamic_theme_controller_test.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cache_inventory_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_theme_reload_test.dart
+
+      # The groups that run only with the flag on, and everything new that has to
+      # hold in both settings.
+      - name: Test storefront with storefronts on
+        run: >
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true
+          test/dio_cache_storefront_test.dart
+          test/storefront_controller_test.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_theme_reload_test.dart

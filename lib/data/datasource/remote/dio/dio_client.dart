@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/api_cache_key.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/logging_interceptor.dart';
+import 'package:syriapharmacy/features/storefront/storefront_cache_key.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,12 +48,14 @@ class DioClient {
       ..httpClientAdapter
       ..options.headers = _headers();
     dio!.interceptors.add(loggingInterceptor);
+    StorefrontScope.publish(_cacheStorefront);
   }
 
   void updateHeader(String? token, String? countryCode) {
     this.token = token ?? this.token;
     this.countryCode = countryCode ?? this.countryCode;
     dio!.options.headers = _headers();
+    StorefrontScope.publish(_cacheStorefront);
   }
 
   /// Every request's headers, built in one place.
@@ -167,6 +171,14 @@ class DioClient {
     ProgressCallback? onReceiveProgress,
   }) async {
     final bool canCache = _shouldCache(uri);
+
+    // Fetch dynamic cache duration once. It is awaited before the key is made, so that nothing that can change the storefront runs
+    // between the key and the request: a storefront chosen while this waits would leave the key naming one storefront and the request
+    // asking for another, and the answer would be filed under the wrong one.
+    if (canCache) {
+      await _ensureCacheDuration();
+    }
+
     final String cacheKey = ApiCacheKey.build(
       uri: uri,
       queryParameters: queryParameters,
@@ -175,9 +187,6 @@ class DioClient {
     );
 
     if (canCache) {
-      // Fetch dynamic cache duration once
-      await _ensureCacheDuration();
-
       // 1. Memory cache (instant)
       if (_memoryCache.containsKey(cacheKey)) {
         if (kDebugMode) print("[CACHE HIT - MEMORY] Returning cached response for: $cacheKey");
@@ -364,5 +373,24 @@ class DioClient {
       }
     }
     if (kDebugMode) print("[CACHE] Disk cache cleared for language switch");
+  }
+
+  /// Forgets every answer cached for [storefrontCode], in memory and on disk, in whatever language it was asked for. The answers of
+  /// every other storefront, and of a build made before storefronts were on, are left where they are.
+  void clearStorefrontCache(String storefrontCode) {
+    _memoryCache.removeWhere((String key, Response answer) =>
+        StorefrontCacheKey.isScopedTo(key, storefrontCode: storefrontCode));
+
+    for (final String key in sharedPreferences.getKeys().toList()) {
+      if (!key.startsWith('api_cache_')) continue;
+
+      final String answerKey = key.endsWith('_time')
+          ? key.substring(0, key.length - '_time'.length)
+          : key;
+      if (StorefrontCacheKey.isScopedTo(answerKey,
+          storefrontCode: storefrontCode)) {
+        sharedPreferences.remove(key);
+      }
+    }
   }
 }

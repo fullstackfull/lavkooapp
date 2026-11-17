@@ -5,6 +5,7 @@ import 'package:syriapharmacy/features/product/domain/models/product_model.dart'
 import 'package:syriapharmacy/features/search_product/domain/models/author_model.dart';
 import 'package:syriapharmacy/features/search_product/domain/models/suggestion_product_model.dart';
 import 'package:syriapharmacy/features/search_product/domain/services/search_product_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -12,9 +13,14 @@ import 'package:provider/provider.dart';
 
 import '../../../services/meta_tracking_service.dart';
 
-class SearchProductController with ChangeNotifier {
+class SearchProductController with ChangeNotifier, StorefrontChangeAware {
   final SearchProductServiceInterface? searchProductServiceInterface;
-  SearchProductController({required this.searchProductServiceInterface});
+  SearchProductController({
+    required this.searchProductServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   int _filterIndex = 0;
   List<String> _historyList = [];
@@ -427,6 +433,34 @@ class SearchProductController with ChangeNotifier {
     _sellerAuthorsList = [];
     _sellerPublishingHouseList = [];
     _sellerPublishingHouseIds = [];
+  }
+
+  /// The customer is on another storefront: the products a search found, the suggestions it made and the authors and publishing houses
+  /// to filter by belong to the one they left. The authors and publishing houses the dashboard loaded are loaded again. What the customer
+  /// typed in earlier searches is theirs, not the storefront's, and stays.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadAuthors = _authorsList != null;
+    final bool hadPublishingHouses = _publishingHouseList != null;
+
+    searchedProduct = null;
+    suggestionModel = null;
+    nameList = [];
+    idList = [];
+    _authorsList = null;
+    _publishingHouseList = null;
+    _sellerAuthorsList = null;
+    _sellerPublishingHouseList = null;
+    _selectedAuthorIds.clear();
+    _publishingHouseIds.clear();
+    _selectedSellerAuthorIds = [];
+    _sellerPublishingHouseIds = [];
+    notifyListeners();
+
+    await Future.wait(<Future<void>>[
+      if (hadAuthors) getAuthorList(null),
+      if (hadPublishingHouses) getPublishingHouseList(null),
+    ]);
   }
 
   Future<void> resetChecked(String? slug, bool fromShop) async {

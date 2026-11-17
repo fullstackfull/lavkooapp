@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/setting/widgets/select_language_bottom_sheet_widget.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/widgets/storefront_settings_entry.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
 import 'package:syriapharmacy/utill/dimensions.dart';
@@ -59,6 +60,7 @@ class SettingsScreen extends StatelessWidget {
                         context: context,
                         builder: (_) =>
                             const SelectCurrencyBottomSheetWidget())),
+                const StorefrontSettingsEntry(),
               ],
             )),
           ])),

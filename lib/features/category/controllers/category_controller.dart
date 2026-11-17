@@ -5,6 +5,8 @@ import 'package:syriapharmacy/data/model/image_full_url.dart';
 import 'package:syriapharmacy/features/category/domain/models/category_model.dart';
 import 'package:syriapharmacy/features/category/domain/services/category_service_interface.dart';
 import 'package:syriapharmacy/features/product/controllers/seller_product_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:syriapharmacy/main.dart';
@@ -12,9 +14,14 @@ import 'package:syriapharmacy/features/banner/domain/models/banner_model.dart';
 import 'package:syriapharmacy/features/brand/controllers/brand_controller.dart';
 import 'package:provider/provider.dart';
 
-class CategoryController extends ChangeNotifier {
+class CategoryController extends ChangeNotifier with StorefrontChangeAware {
   final CategoryServiceInterface? categoryServiceInterface;
-  CategoryController({required this.categoryServiceInterface});
+  CategoryController({
+    required this.categoryServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   final List<CategoryModel> _filteredCategoryList = [];
   final List<CategoryModel> _categoryList = [];
@@ -71,8 +78,12 @@ class CategoryController extends ChangeNotifier {
     _loadingHeaderCategories.add(categoryId);
     notifyListeners();
 
+    final String? storefront = StorefrontScope.current;
     ApiResponseModel apiResponse =
         await categoryServiceInterface!.getCategoryPageHeader(categoryId);
+
+    // The header of a category of the storefront the customer has left is not kept.
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
@@ -242,6 +253,23 @@ class CategoryController extends ChangeNotifier {
             .subCategories![subCategoryIndex]
             .isSelected!;
     notifyListeners();
+  }
+
+  /// The customer is on another storefront: the categories, their banners and what was ticked belong to the one they left.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _categoryList.clear();
+    _filteredCategoryList.clear();
+    _sellerWiseCategoryList.clear();
+    _selectedCategoryIds.clear();
+    _categorySelectedIndex = null;
+    _categoryBannerMap.clear();
+    _categoryHeroMap.clear();
+    _categorySubCategoriesMap.clear();
+    _loadingHeaderCategories.clear();
+    notifyListeners();
+
+    await getCategoryList(true);
   }
 
   Future<void> resetChecked(String? slug, bool fromShop) async {

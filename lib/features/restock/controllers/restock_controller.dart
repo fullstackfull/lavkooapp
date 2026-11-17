@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/restock/domain/services/restock_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'dart:async';
@@ -8,9 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import '../domain/models/restock_product_model.dart';
 
-class RestockController with ChangeNotifier {
+class RestockController with ChangeNotifier, StorefrontChangeAware {
   final RestockServiceInterface restockServiceInterface;
-  RestockController({required this.restockServiceInterface});
+  RestockController({
+    required this.restockServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -88,6 +94,21 @@ class RestockController with ChangeNotifier {
       }
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// The customer is on another storefront: the products they asked to be told about belong to the one they left. A signed-in customer's
+  /// requests are asked for again; a guest has none, and asking would sign them out.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadRequests = restockProductModel != null;
+
+    restockProductModel = null;
+    _isLoading = false;
+    notifyListeners();
+
+    if (change.signedIn && hadRequests) {
+      await getRestockProductList(1, getAll: true);
     }
   }
 

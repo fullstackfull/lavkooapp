@@ -3,13 +3,19 @@ import 'package:syriapharmacy/features/compare/domain/models/attribute_model.dar
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/compare/domain/models/compare_model.dart';
 import 'package:syriapharmacy/features/compare/domain/services/compare_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 
-class CompareController extends ChangeNotifier {
+class CompareController extends ChangeNotifier with StorefrontChangeAware {
   final CompareServiceInterface compareServiceInterface;
-  CompareController({required this.compareServiceInterface});
+  CompareController({
+    required this.compareServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   void addCompareList(int productID) async {
     ApiResponseModel apiResponse =
@@ -76,6 +82,21 @@ class CompareController extends ChangeNotifier {
           snackBarType: SnackBarType.error);
     }
     notifyListeners();
+  }
+
+  /// The customer is on another storefront: the products they were comparing belong to the one they left. A signed-in customer's list is
+  /// asked for again; a guest has none, and asking would sign them out.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadList = compareModel != null || compIds.isNotEmpty;
+
+    compIds = [];
+    compareModel = null;
+    notifyListeners();
+
+    if (change.signedIn && hadList) {
+      getCompareList();
+    }
   }
 
   List<AttributeModel>? attributeList = [];

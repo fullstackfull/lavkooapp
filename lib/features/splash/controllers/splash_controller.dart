@@ -9,6 +9,8 @@ import 'package:syriapharmacy/features/splash/domain/models/business_pages_model
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -20,11 +22,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../services/meta_tracking_service.dart';
 
-class SplashController extends ChangeNotifier {
+class SplashController extends ChangeNotifier with StorefrontChangeAware {
   final SplashServiceInterface? splashServiceInterface;
-  SplashController({required this.splashServiceInterface}) {
+
+  /// The database the config is kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  SplashController({
+    required this.splashServiceInterface,
+    this.localDatabase,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
     loadPricingMode();
   }
+
+  AppDatabase get _database => localDatabase ?? database;
 
   bool _isNewPricingMode = false;
   bool get isNewPricingMode => _isNewPricingMode;
@@ -80,8 +93,13 @@ class SplashController extends ChangeNotifier {
     final ThemeController themeController =
         Provider.of<ThemeController>(context, listen: false);
 
+    // The config is read and kept for the storefront the customer is on now; if they choose another while an answer is on its way, that
+    // answer is neither used nor kept.
+    final String? storefront = StorefrontScope.current;
+
     var configLocalData =
-        await database.getCacheResponseById(AppConstants.configUri);
+        await _database.getCacheResponseById(AppConstants.configUri);
+    if (!StorefrontScope.isCurrent(storefront)) return false;
 
     bool localMaintainanceMode = false;
 
@@ -118,6 +136,7 @@ class SplashController extends ChangeNotifier {
 
     _hasConnection = true;
     ApiResponseModel apiResponse = await splashServiceInterface!.getConfig();
+    if (!StorefrontScope.isCurrent(storefront)) return false;
 
     // _configModel = ConfigModel.fromJson(apiResponse.response!.data);
     bool isSuccess;
@@ -191,7 +210,7 @@ class SplashController extends ChangeNotifier {
       }
 
       if (configLocalData != null) {
-        await database.updateCacheResponse(
+        await _database.updateCacheResponse(
             AppConstants.configUri,
             CacheResponseCompanion(
               endPoint: const Value(AppConstants.configUri),
@@ -199,7 +218,7 @@ class SplashController extends ChangeNotifier {
               response: Value(jsonEncode(apiResponse.response!.data)),
             ));
       } else {
-        await database.insertCacheResponse(
+        await _database.insertCacheResponse(
           CacheResponseCompanion(
             endPoint: const Value(AppConstants.configUri),
             header: Value(jsonEncode(apiResponse.response!.headers.map)),
@@ -222,6 +241,17 @@ class SplashController extends ChangeNotifier {
     notifyListeners();
 
     return isSuccess;
+  }
+
+  /// The customer is on another storefront: the shop's config, with its currencies and payment methods, is asked for again, the way the
+  /// home does on every refresh. What is held stays on screen until the new answer replaces it, because the app cannot run without a
+  /// config; it is never dropped, only replaced, and an answer for the storefront the customer left is not used.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final BuildContext? context = Get.context;
+    if (context == null) return;
+
+    await initConfig(context, null, null);
   }
 
   void setFirstTimeConnectionCheck(bool isChecked) {

@@ -40,6 +40,20 @@ class StorefrontController extends ChangeNotifier {
         storefrontMaySell: storefrontChoice.canSell(storefrontChoice.current()),
       );
 
+  /// The storefront the customer is on.
+  StorefrontCountry get current => storefrontChoice.current();
+
+  /// The storefronts the shop serves, as the server last said. Empty while storefronts are off.
+  List<StorefrontCountry> get available => storefrontChoice.available();
+
+  /// Whether the customer has a storefront to choose: storefronts are on and the server lists more than one. A shop that serves one
+  /// storefront, or a build with storefronts off, shows no chooser.
+  bool get canChoose => available.length > 1;
+
+  /// Whether a sale may start on [storefront], as the checkout would decide it on that storefront.
+  bool canSell(StorefrontCountry storefront) =>
+      storefrontChoice.canSell(storefront);
+
   /// Asks the server which storefronts may sell yet. It runs in the background and never throws: a refresh that fails leaves the
   /// last stored answer in force.
   Future<void> refresh() async {

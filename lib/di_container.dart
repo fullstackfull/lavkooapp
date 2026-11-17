@@ -164,6 +164,7 @@ import 'package:syriapharmacy/features/storefront/domain/repositories/storefront
 import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/support/domain/repositories/support_ticket_repository.dart';
@@ -181,6 +182,7 @@ import 'package:syriapharmacy/features/wishlist/domain/repositories/wishlist_rep
 import 'package:syriapharmacy/features/wishlist/domain/services/wishlist_service.dart';
 import 'package:syriapharmacy/features/wishlist/domain/services/wishlist_service_interface.dart';
 import 'package:syriapharmacy/helper/network_info.dart';
+import 'package:syriapharmacy/main.dart' show database;
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/features/brand/controllers/brand_controller.dart';
 import 'package:syriapharmacy/features/cart/controllers/cart_controller.dart';
@@ -211,6 +213,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => NetworkInfo(sl()));
   sl.registerLazySingleton(() => DioClient(AppConstants.baseUrl, sl(),
       loggingInterceptor: sl(), sharedPreferences: sl()));
+
+  // What a change of storefront clears and whom it tells: the controllers below join it when they are built.
+  sl.registerLazySingleton(() => StorefrontChangeNotifier(
+        clearHttpCache: sl<DioClient>().clearStorefrontCache,
+        clearLocalCache: database.deleteCacheResponsesOfStorefront,
+        isSignedIn: () => sl<AuthServiceInterface>().isLoggedIn(),
+      ));
 
   DataSyncRepoInterface dataSyncRepoInterface =
       DataSyncRepo(dioClient: sl(), sharedPreferences: sl());
@@ -270,33 +279,56 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RestockRepository(dioClient: sl()));
 
   // Provider
-  sl.registerFactory(() => CategoryController(categoryServiceInterface: sl()));
-  sl.registerFactory(() => ShopController(shopServiceInterface: sl()));
-  sl.registerFactory(
-      () => FlashDealController(flashDealServiceInterface: sl()));
-  sl.registerFactory(
-      () => FeaturedDealController(featuredDealServiceInterface: sl()));
-  sl.registerFactory(() => BrandController(brandRepo: sl()));
-  sl.registerFactory(() => ProductController(productServiceInterface: sl()));
-  sl.registerFactory(() => BannerController(bannerServiceInterface: sl()));
+  sl.registerFactory(() => CategoryController(
+      categoryServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => ShopController(
+      shopServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => FlashDealController(
+      flashDealServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => FeaturedDealController(
+      featuredDealServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => BrandController(
+      brandRepo: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => ProductController(
+      productServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => BannerController(
+      bannerServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(
       () => OnBoardingController(onBoardingServiceInterface: sl()));
   sl.registerFactory(() => AuthController(authServiceInterface: sl()));
-  sl.registerFactory(
-      () => ProductDetailsController(productDetailsServiceInterface: sl()));
-  sl.registerFactory(
-      () => SearchProductController(searchProductServiceInterface: sl()));
+  sl.registerFactory(() => ProductDetailsController(
+      productDetailsServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => SearchProductController(
+      searchProductServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => OrderController(orderServiceInterface: sl()));
-  sl.registerFactory(() => CouponController(couponRepo: sl()));
+  sl.registerFactory(() => CouponController(
+      couponRepo: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => ChatController(chatServiceInterface: sl()));
   sl.registerFactory(
       () => NotificationController(notificationServiceInterface: sl()));
   sl.registerFactory(() => ProfileController(profileServiceInterface: sl()));
-  sl.registerFactory(() => WishListController(wishlistServiceInterface: sl()));
-  sl.registerFactory(() => SplashController(splashServiceInterface: sl()));
-  sl.registerLazySingleton(
-      () => DynamicThemeController(dynamicThemeServiceInterface: sl()));
-  sl.registerFactory(() => CartController(cartServiceInterface: sl()));
+  sl.registerFactory(() => WishListController(
+      wishlistServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => SplashController(
+      splashServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerLazySingleton(() => DynamicThemeController(
+      dynamicThemeServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
+  sl.registerFactory(() => CartController(
+      cartServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(
       () => SupportTicketController(supportTicketServiceInterface: sl()));
   sl.registerFactory(
@@ -306,22 +338,29 @@ Future<void> init() async {
   sl.registerFactory(() => FacebookLoginController());
   sl.registerFactory(() => AddressController(addressServiceInterface: sl()));
   sl.registerFactory(() => WalletController(walletServiceInterface: sl()));
-  sl.registerFactory(() => CompareController(compareServiceInterface: sl()));
+  sl.registerFactory(() => CompareController(
+      compareServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(
       () => LoyaltyPointController(loyaltyPointServiceInterface: sl()));
   sl.registerFactory(() => CheckoutController(checkoutServiceInterface: sl()));
   sl.registerFactory(() => LocationController(locationServiceInterface: sl()));
-  sl.registerFactory(() => ShippingController(shippingServiceInterface: sl()));
+  sl.registerFactory(() => ShippingController(
+      shippingServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(
       () => ContactUsController(contactUsServiceInterface: sl()));
   sl.registerFactory(() => ReviewController(reviewServiceInterface: sl()));
-  sl.registerFactory(
-      () => SellerProductController(sellerProductServiceInterface: sl()));
+  sl.registerFactory(() => SellerProductController(
+      sellerProductServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(
       () => OrderDetailsController(orderDetailsServiceInterface: sl()));
   sl.registerFactory(() => RefundController(refundServiceInterface: sl()));
   sl.registerFactory(() => ReOrderController(reOrderServiceInterface: sl()));
-  sl.registerFactory(() => RestockController(restockServiceInterface: sl()));
+  sl.registerFactory(() => RestockController(
+      restockServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => StorefrontController(
         storefrontServiceInterface: sl(),
         storefrontChoice: StorefrontChoice(sl()),
