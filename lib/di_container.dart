@@ -159,6 +159,10 @@ import 'package:syriapharmacy/features/splash/domain/repositories/splash_reposit
 import 'package:syriapharmacy/features/splash/domain/repositories/splash_repository_interface.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository.dart';
+import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository_interface.dart';
+import 'package:syriapharmacy/features/storefront/domain/services/storefront_service.dart';
+import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/support/domain/repositories/support_ticket_repository.dart';
 import 'package:syriapharmacy/features/support/domain/repositories/support_ticket_repository_interface.dart';
@@ -569,6 +573,13 @@ Future<void> init() async {
   RestockServiceInterface restockServiceInterface =
       RestockService(restockRepositoryInterface: sl());
   sl.registerLazySingleton(() => restockServiceInterface);
+
+  StorefrontRepositoryInterface storefrontRepositoryInterface =
+      StorefrontRepository(dioClient: sl(), sharedPreferences: sl());
+  sl.registerLazySingleton(() => storefrontRepositoryInterface);
+  StorefrontServiceInterface storefrontServiceInterface =
+      StorefrontService(storefrontRepositoryInterface: sl());
+  sl.registerLazySingleton(() => storefrontServiceInterface);
 
   // DataSyncRepoInterface dataSyncRepoInterface = DataSyncRepo(dioClient: sl(), sharedPreferences: sl());
   // sl.registerLazySingleton(() => dataSyncRepoInterface);
