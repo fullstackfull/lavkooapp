@@ -72,6 +72,10 @@ class AppConstants {
   /// banner tap is not a navigation the server could ever observe.
   static const String analyticsEventsUri = '/api/v1/analytics/events';
 
+  /// The storefronts the shop serves, each with the currency it sells in and whether it may sell yet. Public, and asked only while GCC
+  /// storefronts are on in this build.
+  static const String storefrontsUri = '/api/v1/storefronts';
+
   static const String pendingCrashCount = 'pending_crash_count';
 
   static const String logOut = '/api/v1/auth/logout';
@@ -304,6 +308,7 @@ class AppConstants {
   static const String langKey = 'lang';
   static const String storefrontCountry = 'gcc_storefront_country';
   static const String storefrontHeader = 'X-Storefront';
+  static const String storefrontList = 'gcc_storefront_list';
   static const String intro = 'intro';
   static const String userLogData = 'user_log_data';
   static const pi = 3.14;
