@@ -100,7 +100,9 @@ class StorefrontChangeNotifier {
     try {
       clearHttpCache(storefrontCode);
     } catch (error) {
-      if (kDebugMode) debugPrint('[storefront] http cache not cleared: $error');
+      if (kDebugMode) {
+        debugPrint('[storefront] http cache not cleared: ${error.runtimeType}');
+      }
     }
   }
 
@@ -110,7 +112,8 @@ class StorefrontChangeNotifier {
     } catch (error) {
       // The rows of a storefront the customer left are only unreachable, never wrong, so failing to delete them costs nothing but space.
       if (kDebugMode) {
-        debugPrint('[storefront] local cache not cleared: $error');
+        debugPrint(
+            '[storefront] local cache not cleared: ${error.runtimeType}');
       }
     }
   }
@@ -122,7 +125,9 @@ class StorefrontChangeNotifier {
     try {
       await listener.onStorefrontChanged(change);
     } catch (error) {
-      if (kDebugMode) debugPrint('[storefront] a listener failed: $error');
+      if (kDebugMode) {
+        debugPrint('[storefront] a listener failed: ${error.runtimeType}');
+      }
     }
   }
 }
