@@ -18,6 +18,8 @@ import 'package:syriapharmacy/features/deal/domain/services/flash_deal_service_i
 import 'package:syriapharmacy/features/dynamic_theme/domain/repositories/dynamic_theme_repository.dart';
 import 'package:syriapharmacy/features/order/controllers/order_controller.dart';
 import 'package:syriapharmacy/features/order/domain/services/order_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/features/shop/controllers/shop_controller.dart';
 import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
@@ -126,6 +128,13 @@ Map<String, Object?> _productPage(String label) => <String, Object?>{
       'products': <Object>[
         <String, Object?>{'id': 1, 'name': label},
       ],
+    };
+
+Map<String, Object?> _runningFlashDeal(int id) => <String, Object?>{
+      'id': id,
+      'title': 'deal $id',
+      'start_date': '2000-01-01',
+      'end_date': '2999-01-01',
     };
 
 Map<String, Object?> _flashDeal(int id) => <String, Object?>{
@@ -610,6 +619,34 @@ void main() {
         await loadFor(null, 1);
 
         expect(await shownFromTable('SA'), isNull);
+      });
+
+      testWidgets('the countdown of the deal the customer left stops',
+          (tester) async {
+        StorefrontScope.publish('SA');
+        service.deal =
+            () async => ApiResponseModel.withSuccess(_ok(_runningFlashDeal(1)));
+        await controller.getFlashDealList(true, true);
+        int ticks = 0;
+        controller.addListener(() => ticks++);
+
+        await tester.pump(const Duration(seconds: 2));
+        expect(ticks, 2, reason: 'the countdown is running');
+
+        StorefrontScope.publish('AE');
+        service.deal = () async => ApiResponseModel.withSuccess(_ok(null));
+        await controller.onStorefrontChanged(const StorefrontChange(
+          previous: StorefrontCountry.saudiArabia,
+          current: StorefrontCountry.unitedArabEmirates,
+          signedIn: false,
+        ));
+        final int afterTheChange = ticks;
+        await tester.pump(const Duration(seconds: 5));
+
+        expect(ticks, afterTheChange,
+            reason: 'nothing counts down for a deal the customer left');
+        expect(controller.flashDeal, isNull);
+        expect(controller.duration, isNull);
       });
 
       test(
