@@ -23,6 +23,16 @@ class StorefrontChoice {
     return StorefrontConfig.resolve(_preferences);
   }
 
+  /// The storefronts the server last said the shop serves, in the order it gave them. Empty while storefronts are off, and before the
+  /// server has answered once: there is then nothing to choose from.
+  List<StorefrontCountry> available() {
+    if (!enabled) {
+      return const <StorefrontCountry>[];
+    }
+
+    return StoredStorefronts(_preferences).read();
+  }
+
   /// While storefronts are off every storefront is the Saudi one, which may sell as before. While they are on, the server's last stored
   /// answer decides: a storefront it marks sellable may sell and every other one it lists is browse-only. A storefront the answer does not
   /// list, or no answer yet, keeps the storefront's own default, so only Saudi Arabia may sell. A browse-only storefront can still be
