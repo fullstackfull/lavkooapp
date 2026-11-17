@@ -47,7 +47,9 @@ import 'package:syriapharmacy/features/dynamic_theme/engine/section_renderer_reg
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/screens/splash_screen.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_switcher.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/wallet/controllers/wallet_controller.dart';
 import 'package:syriapharmacy/features/wishlist/controllers/wishlist_controller.dart';
@@ -216,6 +218,14 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (context) => di.sl<RestockController>()),
       ChangeNotifierProvider(
           create: (context) => di.sl<StorefrontController>()),
+      // What the storefront chooser does with a choice: it uses the controller above, so the screens that listen to it hear the choice.
+      Provider<StorefrontSwitcher>(
+          create: (context) => StorefrontSwitcher(
+                storefrontController:
+                    Provider.of<StorefrontController>(context, listen: false),
+                applyHeaders: () => di.sl<DioClient>().updateHeader(null, null),
+                changeNotifier: di.sl<StorefrontChangeNotifier>(),
+              )),
     ],
     child: MyApp(body: body, route: path),
   ));

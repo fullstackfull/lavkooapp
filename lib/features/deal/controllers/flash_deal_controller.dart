@@ -8,20 +8,26 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/deal/domain/models/flash_deal_model.dart';
 import 'package:syriapharmacy/features/deal/domain/services/flash_deal_service_interface.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:intl/intl.dart';
 
-class FlashDealController extends ChangeNotifier {
+class FlashDealController extends ChangeNotifier with StorefrontChangeAware {
   final FlashDealServiceInterface flashDealServiceInterface;
 
   /// The database the deal is kept in: the app's one, unless a test hands in another.
   final AppDatabase? localDatabase;
 
-  FlashDealController(
-      {required this.flashDealServiceInterface, this.localDatabase});
+  FlashDealController({
+    required this.flashDealServiceInterface,
+    this.localDatabase,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   AppDatabase get _database => localDatabase ?? database;
 
@@ -215,6 +221,20 @@ class FlashDealController extends ChangeNotifier {
         ApiChecker.checkApi(apiResponse);
       }
     }
+  }
+
+  /// The customer is on another storefront: the deal, its products and the countdown to its end belong to the one they left.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _timer?.cancel();
+    _timer = null;
+    _flashDeal = null;
+    _flashDealList.clear();
+    _duration = null;
+    _currentIndex = null;
+    notifyListeners();
+
+    await getFlashDealList(true, true);
   }
 
   void setCurrentIndex(int index) {

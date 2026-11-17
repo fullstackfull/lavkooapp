@@ -3,11 +3,18 @@ import 'package:syriapharmacy/common/enums/data_source_enum.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/brand/domain/models/brand_model.dart';
 import 'package:syriapharmacy/features/brand/domain/repositories/brand_repository.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 
-class BrandController extends ChangeNotifier {
+class BrandController extends ChangeNotifier with StorefrontChangeAware {
   final BrandRepository? brandRepo;
-  BrandController({required this.brandRepo});
+  BrandController({
+    required this.brandRepo,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   Brand? _brandModel;
   Brand? _sellerWiseBrandModel;
@@ -46,8 +53,12 @@ class BrandController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel apiResponse = await brandRepo!
           .getBrandList(offset: offset, source: DataSourceEnum.client);
+
+      // A page of the brands of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse.response?.statusCode == 200) {
         final Brand parsedBrand = Brand.fromJson(apiResponse.response?.data);
@@ -61,6 +72,19 @@ class BrandController extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  /// The customer is on another storefront: the brands, with the product counts they carry, belong to the one they left.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _brandModel = null;
+    _sellerWiseBrandModel = null;
+    _brandList.clear();
+    _brandListSorted = null;
+    _selectedBrandIds.clear();
+    notifyListeners();
+
+    await getBrandList(offset: 1, isUpdate: false);
   }
 
   Future<void> getSellerWiseBrandList(String slug) async {

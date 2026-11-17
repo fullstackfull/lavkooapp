@@ -9,6 +9,7 @@ import 'package:syriapharmacy/features/splash/domain/models/business_pages_model
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
@@ -21,9 +22,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../services/meta_tracking_service.dart';
 
-class SplashController extends ChangeNotifier {
+class SplashController extends ChangeNotifier with StorefrontChangeAware {
   final SplashServiceInterface? splashServiceInterface;
-  SplashController({required this.splashServiceInterface}) {
+  SplashController({
+    required this.splashServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
     loadPricingMode();
   }
 
@@ -229,6 +234,17 @@ class SplashController extends ChangeNotifier {
     notifyListeners();
 
     return isSuccess;
+  }
+
+  /// The customer is on another storefront: the shop's config, with its currencies and payment methods, is asked for again, the way the
+  /// home does on every refresh. What is held stays on screen until the new answer replaces it, because the app cannot run without a
+  /// config; it is never dropped, only replaced, and an answer for the storefront the customer left is not used.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final BuildContext? context = Get.context;
+    if (context == null) return;
+
+    await initConfig(context, null, null);
   }
 
   void setFirstTimeConnectionCheck(bool isChecked) {
