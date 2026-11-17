@@ -665,6 +665,42 @@ void main() {
         expect(controller.duration, isNull);
       });
 
+      test('the deal and its products are dropped before the new answer comes',
+          () async {
+        service.deal =
+            () async => ApiResponseModel.withSuccess(_ok(_flashDeal(1)));
+        service.products = <Object>[
+          <String, Object>{'id': 1, 'name': 'saudi product'},
+        ];
+        StorefrontScope.publish('SA');
+        await controller.getFlashDealList(true, true);
+        expect(controller.flashDealList, hasLength(1));
+        expect(controller.currentIndex, 0);
+
+        final Completer<dynamic> unanswered = Completer<dynamic>();
+        addTearDown(() {
+          if (!unanswered.isCompleted) {
+            unanswered.complete(ApiResponseModel.withSuccess(_ok(null)));
+          }
+        });
+        service.deal = () => unanswered.future;
+        StorefrontScope.publish('AE');
+        final Future<void> told =
+            controller.onStorefrontChanged(const StorefrontChange(
+          previous: StorefrontCountry.saudiArabia,
+          current: StorefrontCountry.unitedArabEmirates,
+          signedIn: false,
+        ));
+
+        expect(controller.flashDeal, isNull);
+        expect(controller.flashDealList, isEmpty);
+        expect(controller.duration, isNull);
+        expect(controller.currentIndex, isNull);
+
+        unanswered.complete(ApiResponseModel.withSuccess(_ok(null)));
+        await told;
+      });
+
       test(
           'a deal that arrives after the customer chose another storefront is neither shown nor filed',
           () async {

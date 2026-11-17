@@ -359,6 +359,29 @@ void main() {
     await pumpEventQueue();
   }
 
+  /// What [read] answers the first time the controller's listeners are told, while [change] runs: what a screen is rebuilt from, which
+  /// is nothing of the storefront the customer left, however the reload that follows goes about its own drops.
+  T? atFirstNotice<T>(
+    ChangeNotifier controller, {
+    required T Function() read,
+    required void Function() change,
+  }) {
+    bool told = false;
+    T? seen;
+    void listener() {
+      if (told) return;
+      told = true;
+      seen = read();
+    }
+
+    controller.addListener(listener);
+    change();
+    controller.removeListener(listener);
+    expect(told, isTrue, reason: 'the screens are told');
+
+    return seen;
+  }
+
   group('categories', () {
     late _FakeCategoryService service;
     late CategoryController controller;
@@ -476,6 +499,24 @@ void main() {
       await told;
       expect(controller.brandList.single.name, 'brand of AE');
     });
+
+    test('hold nothing of the storefront left when the screens are told',
+        () async {
+      final BrandController controller =
+          BrandController(brandRepo: _FakeBrandRepository());
+      await controller.getBrandList(offset: 1);
+      StorefrontScope.publish('AE');
+      late Future<void> told;
+
+      final Object? held = atFirstNotice<Object?>(
+        controller,
+        read: () => controller.brandModel,
+        change: () => told = controller.onStorefrontChanged(_toEmirates),
+      );
+
+      expect(held, isNull);
+      await told;
+    });
   });
 
   group('the featured deal', () {
@@ -554,6 +595,24 @@ void main() {
 
       expect(service.asked, isEmpty);
     });
+
+    test('hold nothing of the storefront left when the screens are told',
+        () async {
+      await controller.getLatestProductList(1);
+      await pumpEventQueue();
+      expect(controller.latestProductModel, isNotNull);
+      StorefrontScope.publish('AE');
+      late Future<void> told;
+
+      final Object? held = atFirstNotice<Object?>(
+        controller,
+        read: () => controller.latestProductModel,
+        change: () => told = controller.onStorefrontChanged(_toEmirates),
+      );
+
+      expect(held, isNull);
+      await told;
+    });
   });
 
   group('the shops', () {
@@ -581,6 +640,26 @@ void main() {
       expect(service.asked, <String>['top']);
       expect(
           controller.topSellerModel?.sellers?.single.fName, 'top seller of AE');
+    });
+
+    test('hold nothing of the storefront left when the screens are told',
+        () async {
+      final ShopController controller =
+          ShopController(shopServiceInterface: _FakeShopService());
+      await controller.getTopSellerList(offset: 1);
+      await pumpEventQueue();
+      expect(controller.topSellerModel, isNotNull);
+      StorefrontScope.publish('AE');
+      late Future<void> told;
+
+      final Object? held = atFirstNotice<Object?>(
+        controller,
+        read: () => controller.topSellerModel,
+        change: () => told = controller.onStorefrontChanged(_toEmirates),
+      );
+
+      expect(held, isNull);
+      await told;
     });
   });
 

@@ -200,6 +200,23 @@ void main() {
       await told;
     });
 
+    test('says it is loading by the time the screens are told', () async {
+      StorefrontScope.publish('AE');
+      bool told = false;
+      bool? loadingWhenTold;
+      controller.addListener(() {
+        if (told) return;
+        told = true;
+        loadingWhenTold = controller.cartLoading;
+      });
+
+      final Future<void> reloading =
+          controller.onStorefrontChanged(_guestToEmirates);
+
+      expect(loadingWhenTold, isTrue);
+      await reloading;
+    });
+
     test('is the new storefront\'s when it has loaded', () async {
       StorefrontScope.publish('AE');
       await controller.onStorefrontChanged(_guestToEmirates);
@@ -310,15 +327,19 @@ void main() {
 
       final Future<void> asked = controller.getWishList('');
       await pumpEventQueue();
+      // The old answer is the only one held: the new storefront's comes first, and the old one arrives after it.
+      service.hold = null;
       StorefrontScope.publish('AE');
       final Future<void> told =
           controller.onStorefrontChanged(_customerToEmirates);
-      await pumpEventQueue();
+      await told;
+      expect(controller.addedIntoWish, <int>[8]);
+
       hold.complete();
       await asked;
-      await told;
 
       expect(controller.addedIntoWish, <int>[8]);
+      expect(controller.wishList?.single.productId, 8);
     });
   });
 

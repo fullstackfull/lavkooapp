@@ -101,6 +101,17 @@ class _ScriptedSwitcher extends StorefrontSwitcher {
   }
 }
 
+/// Says, in the log of the test, when a route is closed: here, the sheet.
+class _ClosingObserver extends NavigatorObserver {
+  _ClosingObserver(this.log);
+
+  final List<String> log;
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      log.add('sheet closed');
+}
+
 const StorefrontCountry _sellableKuwait = StorefrontCountry(
   code: 'KW',
   path: '/kw',
@@ -150,6 +161,7 @@ void main() {
     Locale locale = const Locale('en'),
     double textScale = 1.0,
     bool dark = false,
+    List<NavigatorObserver> navigatorObservers = const <NavigatorObserver>[],
   }) async {
     tester.view.physicalSize = const Size(640, 1280);
     tester.view.devicePixelRatio = 2.0;
@@ -168,6 +180,7 @@ void main() {
           theme: dark ? _dark() : light(),
           locale: locale,
           supportedLocales: const <Locale>[Locale('en'), Locale('ar')],
+          navigatorObservers: navigatorObservers,
           localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
             _FileLocalizationsDelegate(),
             GlobalMaterialLocalizations.delegate,
@@ -215,6 +228,7 @@ void main() {
     Locale locale = const Locale('en'),
     double textScale = 1.0,
     bool dark = false,
+    List<NavigatorObserver> navigatorObservers = const <NavigatorObserver>[],
   }) async {
     await pumpApp(
       tester,
@@ -224,6 +238,7 @@ void main() {
       locale: locale,
       textScale: textScale,
       dark: dark,
+      navigatorObservers: navigatorObservers,
     );
     await openSheet(tester);
   }
@@ -495,15 +510,18 @@ void main() {
     testWidgets(
         'switches to the storefront that was chosen, closes, and then goes home',
         (tester) async {
-      await pumpSheet(tester,
-          controller: await controllerWith(answered: served));
+      await pumpSheet(
+        tester,
+        controller: await controllerWith(answered: served),
+        navigatorObservers: <NavigatorObserver>[_ClosingObserver(log)],
+      );
 
       await tester.tap(find.text('Kuwait'));
       await tester.pump();
       await tester.tap(find.byType(CustomButton));
       await tester.pumpAndSettle();
 
-      expect(log, <String>['switch to KW', 'home']);
+      expect(log, <String>['switch to KW', 'sheet closed', 'home']);
       expect(find.byType(StorefrontChooserSheet), findsNothing);
     });
 
@@ -582,6 +600,11 @@ void main() {
       await tester.tap(find.byType(CustomButton));
       await tester.pump();
       expect(log, <String>['switch to KW']);
+      final double checkY =
+          tester.getCenter(find.byIcon(Icons.check_circle)).dy;
+      expect((checkY - tester.getCenter(find.text('Kuwait')).dy).abs(),
+          lessThan(40),
+          reason: 'the mark stays on the storefront being switched to');
 
       working.complete(StorefrontSwitch.switched);
       await tester.pumpAndSettle();

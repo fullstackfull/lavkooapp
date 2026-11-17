@@ -192,22 +192,28 @@ void main() {
   });
 
   test('a page on its way when the shopper moved on is not kept', () async {
-    final Completer<void> hold = Completer<void>();
-    server.holdPage['offers'] = hold;
+    final Completer<void> offers = Completer<void>();
+    final Completer<void> home = Completer<void>();
+    server.holdPage['offers'] = offers;
     addTearDown(() {
-      if (!hold.isCompleted) hold.complete();
+      if (!offers.isCompleted) offers.complete();
+      if (!home.isCompleted) home.complete();
     });
 
     final Future<void> loading = controller.loadPage('offers');
     await pumpEventQueue();
+    // The refresh the change asks for waits for its own download, which would otherwise drop every page again by itself.
+    server.holdPage['home'] = home;
     StorefrontScope.publish('AE');
     final Future<void> told = controller.onStorefrontChanged(_toEmirates);
-    hold.complete();
+    offers.complete();
     await loading;
-    await told;
 
     expect(controller.page('offers'), isNull);
     expect(controller.pageFailed('offers'), isFalse);
+
+    home.complete();
+    await told;
   });
 
   test(
@@ -235,6 +241,80 @@ void main() {
 
     expect(server.homeAskedFor, <String>['SA', 'AE']);
     expect(controller.payload.checksum, 'home of AE');
+  });
+
+  /// The shopper moves on while a sync is running, held on its download of the home page, and the sync is let go. It was started for the
+  /// storefront they left, so what it fetched is not kept, and the refresh the change asked for runs when it ends: it is held on a download of
+  /// its own, so that what is on screen meanwhile can be read.
+  Future<({Future<void> syncing, Completer<void> refreshHold})>
+      letTheStaleSyncEnd() async {
+    final Completer<void> staleHold = Completer<void>();
+    final Completer<void> refreshHold = Completer<void>();
+    server.holdPage['home'] = staleHold;
+    addTearDown(() {
+      if (!staleHold.isCompleted) staleHold.complete();
+      if (!refreshHold.isCompleted) refreshHold.complete();
+    });
+
+    final Future<void> syncing = controller.sync(force: true);
+    await pumpEventQueue();
+    StorefrontScope.publish('AE');
+    await controller.onStorefrontChanged(_toEmirates);
+    server.holdPage['home'] = refreshHold;
+    staleHold.complete();
+    await pumpEventQueue();
+
+    return (syncing: syncing, refreshHold: refreshHold);
+  }
+
+  test(
+      'the home page a sync fetched for the storefront the shopper left is not kept while the refresh waits',
+      () async {
+    final run = await letTheStaleSyncEnd();
+
+    expect(controller.payload.checksum, isNot('home of SA'));
+    expect(controller.hasPublishedTheme, isFalse);
+
+    run.refreshHold.complete();
+    await run.syncing;
+    expect(controller.payload.checksum, 'home of AE');
+  });
+
+  test(
+      'a sync that was running does not count as the session\'s first, so the new storefront\'s cached home is shown first',
+      () async {
+    server.cached['AE'] = _page('cached home of AE');
+    final run = await letTheStaleSyncEnd();
+
+    expect(controller.payload.checksum, 'cached home of AE');
+
+    run.refreshHold.complete();
+    await run.syncing;
+    expect(controller.payload.checksum, 'home of AE');
+  });
+
+  test(
+      'data a section fetched is dropped at once, also while a sync is running and the refresh has to wait for it',
+      () async {
+    const ThemeSectionSchemaStub stub = ThemeSectionSchemaStub();
+    await controller.loadKeyedData(stub.key, stub.source);
+    expect(controller.keyedData(stub.key)?.response, 'section of SA');
+    final Completer<void> hold = Completer<void>();
+    server.holdPage['home'] = hold;
+    addTearDown(() {
+      if (!hold.isCompleted) hold.complete();
+    });
+    final Future<void> syncing = controller.sync(force: true);
+    await pumpEventQueue();
+
+    StorefrontScope.publish('AE');
+    await controller.onStorefrontChanged(_toEmirates);
+
+    expect(controller.keyedData(stub.key), isNull);
+
+    server.holdPage.remove('home');
+    hold.complete();
+    await syncing;
   });
 
   test('a version check on its way when the shopper moved on is not acted on',
