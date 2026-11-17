@@ -34,6 +34,48 @@ jobs:
           test/storefront_config_test.dart
           test/dio_storefront_header_test.dart
           test/storefront_choice_test.dart
+          lib/data/datasource/remote/exception/api_error_handler.dart
+          lib/di_container.dart
+          lib/features/checkout/controllers/checkout_controller.dart
+          lib/features/checkout/screens/checkout_screen.dart
+          lib/features/splash/screens/splash_screen.dart
+          lib/features/wallet/controllers/wallet_controller.dart
+          lib/main.dart
+          test/api_error_handler_storefront_test.dart
+          test/checkout_sale_gate_test.dart
+          test/storefront_browse_only_notice_test.dart
+          test/storefront_can_sell_test.dart
+          test/storefront_controller_test.dart
+          test/storefront_list_parsing_test.dart
+          test/storefront_repository_test.dart
+          test/storefront_service_test.dart
+          test/stored_storefronts_test.dart
 
-      - name: Test storefront header
-        run: flutter test test/storefront_config_test.dart test/dio_storefront_header_test.dart test/storefront_choice_test.dart
+      # cart_screen.dart already carries two analyzer warnings of its own (two
+      # unused locals), so it cannot join the list above. It is analyzed for
+      # errors only, which is what a wrong name or argument in the lines this
+      # branch added to it would be. Remove this step once those warnings are
+      # fixed and add the file to the list above.
+      - name: Analyze the cart screen for errors only
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/features/cart/screens/cart_screen.dart
+
+      # localization_keys_test.dart is not new, but this branch adds a
+      # translation key it checks. storefront_controller_test.dart has one test
+      # that runs only in a build made with GCC_STOREFRONTS_ENABLED=true; it is
+      # skipped here, as the flag is off by default.
+      - name: Test storefront
+        run: >
+          flutter test
+          test/storefront_config_test.dart
+          test/dio_storefront_header_test.dart
+          test/storefront_choice_test.dart
+          test/api_error_handler_storefront_test.dart
+          test/checkout_sale_gate_test.dart
+          test/localization_keys_test.dart
+          test/storefront_browse_only_notice_test.dart
+          test/storefront_can_sell_test.dart
+          test/storefront_controller_test.dart
+          test/storefront_list_parsing_test.dart
+          test/storefront_repository_test.dart
+          test/storefront_service_test.dart
+          test/stored_storefronts_test.dart
