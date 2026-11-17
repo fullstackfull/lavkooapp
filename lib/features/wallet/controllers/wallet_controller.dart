@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/wallet/domain/models/wallet_transaction_model.dart';
 import 'package:syriapharmacy/features/wallet/domain/models/wallet_bonus_model.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
 import 'package:syriapharmacy/features/wallet/domain/services/wallet_service_interface.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
@@ -99,6 +100,15 @@ class WalletController extends ChangeNotifier {
   }
 
   Future<void> addFundToWallet(String amount, String paymentMethod) async {
+    // Adding funds starts a payment, which a storefront that may not sell yet refuses, so it is refused here before any request.
+    if (!StorefrontController.maySellIn(Get.context)) {
+      showCustomSnackBarWidget(
+          getTranslated('storefront_browse_only_notice', Get.context!),
+          Get.context!,
+          snackBarType: SnackBarType.warning);
+      return;
+    }
+
     _isConvert = true;
     notifyListeners();
     ApiResponseModel apiResponse =
