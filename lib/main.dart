@@ -46,6 +46,8 @@ import 'package:syriapharmacy/features/dynamic_theme/controllers/dynamic_theme_c
 import 'package:syriapharmacy/features/dynamic_theme/engine/section_renderer_registry.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/screens/splash_screen.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/wallet/controllers/wallet_controller.dart';
 import 'package:syriapharmacy/features/wishlist/controllers/wishlist_controller.dart';
@@ -212,6 +214,8 @@ Future<void> main() async {
       ChangeNotifierProvider(
           create: (context) => di.sl<SellerProductController>()),
       ChangeNotifierProvider(create: (context) => di.sl<RestockController>()),
+      ChangeNotifierProvider(
+          create: (context) => di.sl<StorefrontController>()),
     ],
     child: MyApp(body: body, route: path),
   ));
@@ -283,6 +287,11 @@ class _MyAppState extends State<MyApp> {
         Provider.of<SplashController>(context, listen: false)
             .initConfig(context, (_) {}, (ConfigModel? configModel) async {
           if (configModel != null) {
+            // A launch from a link loads the config here and may never reach the splash screen, which asks at its own start.
+            if (StorefrontConfig.enabled) {
+              unawaited(Provider.of<StorefrontController>(context, listen: false)
+                  .refresh());
+            }
             if (authProvider.isLoggedIn()) {
               await authProvider.updateToken(context);
             }

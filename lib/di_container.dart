@@ -159,10 +159,12 @@ import 'package:syriapharmacy/features/splash/domain/repositories/splash_reposit
 import 'package:syriapharmacy/features/splash/domain/repositories/splash_repository_interface.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
 import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository.dart';
 import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/support/domain/repositories/support_ticket_repository.dart';
 import 'package:syriapharmacy/features/support/domain/repositories/support_ticket_repository_interface.dart';
@@ -320,6 +322,10 @@ Future<void> init() async {
   sl.registerFactory(() => RefundController(refundServiceInterface: sl()));
   sl.registerFactory(() => ReOrderController(reOrderServiceInterface: sl()));
   sl.registerFactory(() => RestockController(restockServiceInterface: sl()));
+  sl.registerFactory(() => StorefrontController(
+        storefrontServiceInterface: sl(),
+        storefrontChoice: StorefrontChoice(sl()),
+      ));
 
   //interface
   AddressRepoInterface addressRepoInterface =
