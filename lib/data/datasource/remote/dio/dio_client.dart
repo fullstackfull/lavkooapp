@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:syriapharmacy/data/datasource/remote/dio/api_cache_key.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/logging_interceptor.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -150,30 +151,13 @@ class DioClient {
     return false;
   }
 
-  String _normalizeCacheKey(String uri, Map<String, dynamic>? queryParameters) {
-    try {
-      final parsedUri = Uri.parse(uri);
-      final queryMap = <String, String>{};
-
-      parsedUri.queryParameters.forEach((key, value) {
-        if (value.isNotEmpty) queryMap[key] = value;
-      });
-
-      if (queryParameters != null) {
-        queryParameters.forEach((key, value) {
-          if (value != null) queryMap[key] = value.toString();
-        });
-      }
-
-      final sortedKeys = queryMap.keys.toList()..sort();
-      final sortedParams = sortedKeys.map((k) => '$k=${queryMap[k]}').join('&');
-
-      final baseKey = sortedParams.isEmpty ? parsedUri.path : '${parsedUri.path}?$sortedParams';
-      return '$baseKey#$_language';
-    } catch (_) {
-      return '${uri + (queryParameters?.toString() ?? '')}#$_language';
-    }
-  }
+  /// The storefront a cached answer is filed under: the one the `X-Storefront` header names, and null while storefronts are off, when
+  /// the cache key stays what it always was. It is read from that header, not from the stored choice: between a customer's choice and
+  /// the next [updateHeader] requests still carry the previous storefront, and an answer must be filed under the storefront it was
+  /// fetched for.
+  String? get _cacheStorefront => StorefrontConfig.enabled
+      ? dio!.options.headers[AppConstants.storefrontHeader]?.toString()
+      : null;
 
   Future<Response> get(
     String uri, {
@@ -183,7 +167,12 @@ class DioClient {
     ProgressCallback? onReceiveProgress,
   }) async {
     final bool canCache = _shouldCache(uri);
-    final String cacheKey = _normalizeCacheKey(uri, queryParameters);
+    final String cacheKey = ApiCacheKey.build(
+      uri: uri,
+      queryParameters: queryParameters,
+      languageCode: _language,
+      storefrontCode: _cacheStorefront,
+    );
 
     if (canCache) {
       // Fetch dynamic cache duration once
