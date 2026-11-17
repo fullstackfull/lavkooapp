@@ -19,12 +19,19 @@ import 'package:syriapharmacy/utill/app_constants.dart';
 
 class ShopController extends ChangeNotifier with StorefrontChangeAware {
   final ShopServiceInterface? shopServiceInterface;
+
+  /// The database a shop's clearance products are kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
   ShopController({
     required this.shopServiceInterface,
+    this.localDatabase,
     StorefrontChangeNotifier? storefrontChangeNotifier,
   }) {
     followStorefrontChanges(storefrontChangeNotifier);
   }
+
+  AppDatabase get _database => localDatabase ?? database;
 
   String? _searchText;
   String? get searchText => _searchText;
@@ -273,7 +280,7 @@ class ShopController extends ChangeNotifier with StorefrontChangeAware {
     // on its way, that answer is neither shown nor kept.
     final String? storefront = StorefrontScope.current;
 
-    var localData = await database.getCacheResponseById(
+    var localData = await _database.getCacheResponseById(
         "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type");
     if (!StorefrontScope.isCurrent(storefront)) return;
 
@@ -304,7 +311,7 @@ class ShopController extends ChangeNotifier with StorefrontChangeAware {
       }
 
       if (localData != null) {
-        await database.updateCacheResponse(
+        await _database.updateCacheResponse(
             "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type",
             CacheResponseCompanion(
               endPoint: Value(
@@ -313,7 +320,7 @@ class ShopController extends ChangeNotifier with StorefrontChangeAware {
               response: Value(jsonEncode(apiResponse.response!.data)),
             ));
       } else {
-        await database.insertCacheResponse(
+        await _database.insertCacheResponse(
           CacheResponseCompanion(
             endPoint: Value(
                 "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type"),

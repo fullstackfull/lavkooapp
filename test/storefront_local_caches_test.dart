@@ -19,7 +19,10 @@ import 'package:syriapharmacy/features/dynamic_theme/domain/repositories/dynamic
 import 'package:syriapharmacy/features/order/controllers/order_controller.dart';
 import 'package:syriapharmacy/features/order/domain/services/order_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
+import 'package:syriapharmacy/features/shop/controllers/shop_controller.dart';
+import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
+import 'package:syriapharmacy/helper/db_helper.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
 /// Answers every request from a script, one answer at a time, and remembers what was asked.
@@ -88,6 +91,42 @@ class _FakeOrderService implements OrderServiceInterface {
   Future<dynamic> cancelOrder(int? orderId) async =>
       ApiResponseModel.withError('x');
 }
+
+class _FakeShopService extends Fake implements ShopServiceInterface {
+  Future<dynamic> Function() products =
+      () async => ApiResponseModel.withError('x');
+
+  @override
+  Future<dynamic> getClearanceShopProductList(
+          String type, String offset, String sellerId) =>
+      products();
+}
+
+/// A database that moves the app to another storefront while a row is being looked up: the race the database helper guards.
+class _SwitchingDatabase extends AppDatabase {
+  _SwitchingDatabase() : super.forTesting(NativeDatabase.memory());
+
+  String? switchWhileLookingUp;
+
+  @override
+  Future<CacheResponseData?> getCacheResponseById(String endPoint) async {
+    final CacheResponseData? row = await super.getCacheResponseById(endPoint);
+    if (switchWhileLookingUp != null) {
+      StorefrontScope.publish(switchWhileLookingUp);
+    }
+
+    return row;
+  }
+}
+
+Map<String, Object?> _productPage(String label) => <String, Object?>{
+      'total_size': 1,
+      'limit': 10,
+      'offset': 1,
+      'products': <Object>[
+        <String, Object?>{'id': 1, 'name': label},
+      ],
+    };
 
 Map<String, Object?> _flashDeal(int id) => <String, Object?>{
       'id': id,
@@ -722,5 +761,119 @@ void main() {
         expect(await storedKeys(), <String>['${entry.value}#SA']);
       });
     }
+  });
+
+  group('the clearance products of a shop', () {
+    const String slug = 'a-shop';
+    final String rowKey =
+        '${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=1&offer_type=clearance_sale';
+    late _FakeShopService service;
+    late ShopController controller;
+
+    setUp(() {
+      service = _FakeShopService();
+      controller = ShopController(
+        shopServiceInterface: service,
+        localDatabase: database,
+      );
+    });
+
+    Future<void> loadFor(String? storefront, String label) {
+      StorefrontScope.publish(storefront);
+      service.products =
+          () async => ApiResponseModel.withSuccess(_ok(_productPage(label)));
+      return controller.getClearanceShopProductList(
+          'clearance_sale', '1', slug);
+    }
+
+    /// What a fresh controller shows before the network answers.
+    Future<String?> shownFromTable(String? storefront) async {
+      StorefrontScope.publish(storefront);
+      final Completer<dynamic> neverAnswered = Completer<dynamic>();
+      final _FakeShopService silent = _FakeShopService()
+        ..products = () => neverAnswered.future;
+      final ShopController fresh = ShopController(
+        shopServiceInterface: silent,
+        localDatabase: database,
+      );
+      unawaited(fresh.getClearanceShopProductList('clearance_sale', '1', slug));
+      await pumpEventQueue();
+
+      return fresh.clearanceProductModel?.products?.single.name;
+    }
+
+    test(
+        'while storefronts are off they are filed under the key they always had',
+        () async {
+      await loadFor(null, 'products');
+
+      expect(await storedKeys(), <String>[rowKey]);
+      expect(await shownFromTable(null), 'products');
+    });
+
+    test('while storefronts are on, two storefronts never show each other\'s',
+        () async {
+      await loadFor('SA', 'saudi products');
+
+      expect(await storedKeys(), <String>['$rowKey#SA']);
+      expect(await shownFromTable('AE'), isNull);
+
+      await loadFor('AE', 'emirates products');
+      expect(await shownFromTable('AE'), 'emirates products');
+      expect(await shownFromTable('SA'), 'saudi products');
+    });
+
+    test(
+        'products that arrive after the customer chose another storefront are neither shown nor filed',
+        () async {
+      final Completer<dynamic> held = Completer<dynamic>();
+      addTearDown(() {
+        if (!held.isCompleted) held.complete(ApiResponseModel.withError('x'));
+      });
+      StorefrontScope.publish('SA');
+      service.products = () => held.future;
+
+      final Future<void> loading =
+          controller.getClearanceShopProductList('clearance_sale', '1', slug);
+      await pumpEventQueue();
+      StorefrontScope.publish('AE');
+      held.complete(ApiResponseModel.withSuccess(_ok(_productPage('saudi'))));
+      await loading;
+
+      expect(controller.clearanceProductModel, isNull);
+      expect(await storedKeys(), isEmpty);
+    });
+  });
+
+  group('the database helper', () {
+    CacheResponseCompanion row() => CacheResponseCompanion.insert(
+          endPoint: 'a-key',
+          header: '{}',
+          response: '{}',
+        );
+
+    test('writes a row for the storefront it looked the row up for', () async {
+      StorefrontScope.publish('SA');
+
+      await DbHelper.insertOrUpdate(
+          id: 'a-key', data: row(), localDatabase: database);
+
+      expect(await storedKeys(), <String>['a-key#SA']);
+    });
+
+    test('writes nothing when the customer moved on while it looked', () async {
+      final _SwitchingDatabase switching = _SwitchingDatabase()
+        ..switchWhileLookingUp = 'AE';
+      addTearDown(switching.close);
+      StorefrontScope.publish('SA');
+
+      await DbHelper.insertOrUpdate(
+          id: 'a-key', data: row(), localDatabase: switching);
+
+      StorefrontScope.publish('AE');
+      expect(await switching.getAllCacheResponses(), isEmpty);
+      StorefrontScope.publish('SA');
+      expect(await switching.getAllCacheResponses(), isEmpty);
+    });
   });
 }

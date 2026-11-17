@@ -106,10 +106,14 @@ class _FakeBannerService implements BannerServiceInterface {
 }
 
 class _FakeBrandRepository implements BrandRepository {
+  /// While set, the second page waits for it.
+  Completer<void>? holdSecondPage;
+
   @override
   Future<ApiResponseModel<T>> getBrandList<T>(
       {int offset = 1, required DataSourceEnum source}) async {
     final String who = _who;
+    if (offset == 2) await holdSecondPage?.future;
     return _answer<T>(
         source,
         () => <String, Object>{
@@ -142,6 +146,9 @@ class _FakeFeaturedDealService implements FeaturedDealServiceInterface {
 class _FakeProductService implements ProductServiceInterface {
   final List<String> asked = <String>[];
 
+  /// While set, the second page waits for it.
+  Completer<void>? holdSecondPage;
+
   ApiResponseModel<T> _page<T>(String what, DataSourceEnum source) {
     final String who = _who;
     if (source == DataSourceEnum.client) asked.add(what);
@@ -150,10 +157,14 @@ class _FakeProductService implements ProductServiceInterface {
 
   @override
   Future<ApiResponseModel<T>> getProductModelByType<T>(
-          {required int offset,
-          required ProductType productType,
-          required DataSourceEnum source}) async =>
-      _page<T>(productType.name, source);
+      {required int offset,
+      required ProductType productType,
+      required DataSourceEnum source}) async {
+    final ApiResponseModel<T> answer = _page<T>(productType.name, source);
+    if (offset == 2) await holdSecondPage?.future;
+
+    return answer;
+  }
 
   @override
   Future<ApiResponseModel<T>> getRecommendedProduct<T>(
@@ -244,6 +255,9 @@ class _FakeProductService implements ProductServiceInterface {
 
 class _FakeShopService implements ShopServiceInterface {
   final List<String> asked = <String>[];
+
+  /// While set, the second page waits for it.
+  Completer<void>? holdSecondPage;
 
   @override
   Future<ApiResponseModel<T>> getSellerList<T>(
@@ -517,6 +531,72 @@ void main() {
       expect(service.asked, <String>['top']);
       expect(
           controller.topSellerModel?.sellers?.single.fName, 'top seller of AE');
+    });
+  });
+
+  group('a page that was on its way when the customer moved on', () {
+    test('is not added to the brands of the storefront they are on', () async {
+      final _FakeBrandRepository repository = _FakeBrandRepository();
+      final BrandController controller = BrandController(brandRepo: repository);
+      await controller.getBrandList(offset: 1);
+      final Completer<void> hold = Completer<void>();
+      repository.holdSecondPage = hold;
+      addTearDown(() {
+        if (!hold.isCompleted) hold.complete();
+      });
+
+      final Future<void> paging = controller.getBrandList(offset: 2);
+      await pumpEventQueue();
+      await moveTo(controller);
+      hold.complete();
+      await paging;
+
+      expect(controller.brandList.map((b) => b.name), <String>['brand of AE']);
+    });
+
+    test('is not added to the products of the storefront they are on',
+        () async {
+      final _FakeProductService service = _FakeProductService();
+      final ProductController controller =
+          ProductController(productServiceInterface: service);
+      await controller.getLatestProductList(1);
+      await pumpEventQueue();
+      final Completer<void> hold = Completer<void>();
+      service.holdSecondPage = hold;
+      addTearDown(() {
+        if (!hold.isCompleted) hold.complete();
+      });
+
+      final Future<void> paging = controller.getLatestProductList(2);
+      await pumpEventQueue();
+      await moveTo(controller);
+      hold.complete();
+      await paging;
+
+      expect(controller.latestProductModel?.products?.map((p) => p.name),
+          <String?>['latestProduct of AE']);
+    });
+
+    test('is not added to the shops of the storefront they are on', () async {
+      final _FakeShopService service = _FakeShopService();
+      final ShopController controller =
+          ShopController(shopServiceInterface: service);
+      await controller.getTopSellerList(offset: 1);
+      await pumpEventQueue();
+      final Completer<void> hold = Completer<void>();
+      service.holdSecondPage = hold;
+      addTearDown(() {
+        if (!hold.isCompleted) hold.complete();
+      });
+
+      final Future<void> paging = controller.getTopSellerList(offset: 2);
+      await pumpEventQueue();
+      await moveTo(controller);
+      hold.complete();
+      await paging;
+
+      expect(controller.topSellerModel?.sellers?.map((s) => s.fName),
+          <String?>['top seller of AE']);
     });
   });
 }
