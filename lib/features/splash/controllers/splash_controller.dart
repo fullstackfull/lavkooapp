@@ -24,13 +24,20 @@ import '../../../services/meta_tracking_service.dart';
 
 class SplashController extends ChangeNotifier with StorefrontChangeAware {
   final SplashServiceInterface? splashServiceInterface;
+
+  /// The database the config is kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
   SplashController({
     required this.splashServiceInterface,
+    this.localDatabase,
     StorefrontChangeNotifier? storefrontChangeNotifier,
   }) {
     followStorefrontChanges(storefrontChangeNotifier);
     loadPricingMode();
   }
+
+  AppDatabase get _database => localDatabase ?? database;
 
   bool _isNewPricingMode = false;
   bool get isNewPricingMode => _isNewPricingMode;
@@ -91,7 +98,7 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
     final String? storefront = StorefrontScope.current;
 
     var configLocalData =
-        await database.getCacheResponseById(AppConstants.configUri);
+        await _database.getCacheResponseById(AppConstants.configUri);
     if (!StorefrontScope.isCurrent(storefront)) return false;
 
     bool localMaintainanceMode = false;
@@ -203,7 +210,7 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
       }
 
       if (configLocalData != null) {
-        await database.updateCacheResponse(
+        await _database.updateCacheResponse(
             AppConstants.configUri,
             CacheResponseCompanion(
               endPoint: const Value(AppConstants.configUri),
@@ -211,7 +218,7 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
               response: Value(jsonEncode(apiResponse.response!.data)),
             ));
       } else {
-        await database.insertCacheResponse(
+        await _database.insertCacheResponse(
           CacheResponseCompanion(
             endPoint: const Value(AppConstants.configUri),
             header: Value(jsonEncode(apiResponse.response!.headers.map)),

@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syriapharmacy/common/enums/data_source_enum.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/dio_client.dart';
@@ -23,8 +25,11 @@ import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dar
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/features/shop/controllers/shop_controller.dart';
 import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
+import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:syriapharmacy/helper/db_helper.dart';
+import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
 /// Answers every request from a script, one answer at a time, and remembers what was asked.
@@ -112,6 +117,21 @@ class _FakeShopService extends Fake implements ShopServiceInterface {
   Future<dynamic> getClearanceShopProductList(
           String type, String offset, String sellerId) =>
       products();
+}
+
+class _FakeSplashService extends Fake implements SplashServiceInterface {
+  Future<dynamic> Function() config =
+      () async => ApiResponseModel.withError('x');
+  int configAsked = 0;
+
+  @override
+  Future<dynamic> getConfig() {
+    configAsked++;
+    return config();
+  }
+
+  @override
+  String getCurrency() => '';
 }
 
 /// A database that moves the app to another storefront while a row is being looked up: the race the database helper guards.
@@ -1106,6 +1126,75 @@ void main() {
         expect(reading.clearanceProductModel?.products?.single.name,
             'saudi products');
       });
+    });
+  });
+
+  group('the config of the shop', () {
+    late _FakeSplashService service;
+    late BuildContext context;
+
+    setUp(() => service = _FakeSplashService());
+
+    /// The screen's context, which the config's loader takes to reach the theme.
+    Future<void> pumpContext(WidgetTester tester) => tester.pumpWidget(
+          ChangeNotifierProvider<ThemeController>.value(
+            value: ThemeController(sharedPreferences: preferences),
+            child: Builder(builder: (BuildContext built) {
+              context = built;
+
+              return const SizedBox();
+            }),
+          ),
+        );
+
+    testWidgets(
+        'an answer that arrives after the customer chose another storefront is neither used nor filed',
+        (tester) async {
+      await pumpContext(tester);
+      final SplashController controller = SplashController(
+        splashServiceInterface: service,
+        localDatabase: database,
+      );
+      final Completer<dynamic> held = Completer<dynamic>();
+      addTearDown(() {
+        if (!held.isCompleted) held.complete(ApiResponseModel.withError('x'));
+      });
+      service.config = () => held.future;
+      StorefrontScope.publish('SA');
+
+      final Future<bool> loading = controller.initConfig(context, null, null);
+      await tester.pump();
+      StorefrontScope.publish('AE');
+      held.complete(ApiResponseModel.withSuccess(_ok(<String, Object>{})));
+
+      expect(await loading, isFalse);
+      expect(controller.configModel, isNull);
+      expect(await storedKeys(), isEmpty);
+    });
+
+    testWidgets(
+        'a row that is being read when the customer moves on is not used, and nothing more is asked for',
+        (tester) async {
+      await pumpContext(tester);
+      final _SwitchingDatabase switching = _SwitchingDatabase();
+      addTearDown(switching.close);
+      StorefrontScope.publish('SA');
+      await switching.insertCacheResponse(CacheResponseCompanion.insert(
+        endPoint: AppConstants.configUri,
+        header: '{}',
+        response: '{}',
+      ));
+      switching.switchWhileLookingUp = 'AE';
+      final SplashController controller = SplashController(
+        splashServiceInterface: service,
+        localDatabase: switching,
+      );
+
+      final bool loaded = await controller.initConfig(context, null, null);
+
+      expect(loaded, isFalse);
+      expect(controller.configModel, isNull);
+      expect(service.configAsked, 0);
     });
   });
 
