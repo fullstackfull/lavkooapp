@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
-import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_switcher.dart';
 import 'package:syriapharmacy/helper/network_info.dart';
 import 'package:syriapharmacy/features/splash/widgets/launch_transition_widget.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
@@ -316,15 +316,16 @@ class SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  /// Once the shop's config has loaded, asks the server which storefronts may sell yet. Nothing is asked while storefronts are off.
+  /// Once the shop's config has loaded, asks the server which storefronts it lists and which may sell yet, and moves a customer whose
+  /// storefront was dropped to the default one. Nothing is asked while storefronts are off.
   void _refreshStorefronts() {
     final BuildContext? appContext = Get.context;
     if (!StorefrontConfig.enabled || appContext == null) {
       return;
     }
 
-    unawaited(
-        Provider.of<StorefrontController>(appContext, listen: false).refresh());
+    unawaited(Provider.of<StorefrontSwitcher>(appContext, listen: false)
+        .followTheServersList());
   }
 
   /// Whether this build is too old to run, per the shop's own setting.

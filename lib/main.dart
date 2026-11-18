@@ -299,8 +299,8 @@ class _MyAppState extends State<MyApp> {
           if (configModel != null) {
             // A launch from a link loads the config here and may never reach the splash screen, which asks at its own start.
             if (StorefrontConfig.enabled) {
-              unawaited(Provider.of<StorefrontController>(context, listen: false)
-                  .refresh());
+              unawaited(Provider.of<StorefrontSwitcher>(context, listen: false)
+                  .followTheServersList());
             }
             if (authProvider.isLoggedIn()) {
               await authProvider.updateToken(context);

@@ -50,4 +50,24 @@ class StorefrontSwitcher {
 
     return StorefrontSwitch.switched;
   }
+
+  /// Asks the server which storefronts it lists, then keeps the customer on one of them. The server answers a country it does not list
+  /// as the default storefront, so a customer left on one it dropped would read the default storefront's answers under the dropped one's
+  /// name, currency and caches. They are moved to the default storefront the way a choice moves them: saved, headers rebuilt, what held the
+  /// dropped storefront told. Nothing is done while storefronts are off, before the server has answered once (there is then nothing to
+  /// judge by), or for a customer who is on a storefront the answer lists or on the default one.
+  Future<StorefrontSwitch> followTheServersList() async {
+    await storefrontController.refresh();
+
+    final StorefrontCountry current = storefrontController.current;
+    final List<StorefrontCountry> listed = storefrontController.available;
+    final bool stillListed =
+        listed.any((StorefrontCountry storefront) => storefront.code == current.code);
+
+    if (listed.isEmpty || stillListed) {
+      return StorefrontSwitch.unchanged;
+    }
+
+    return switchTo(StorefrontCountry.defaultCountry);
+  }
 }
