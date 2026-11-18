@@ -15,11 +15,11 @@ class AppConstants {
   ///
   /// It cannot simply be corrected, and the reason is worth reading before touching it. The live
   /// shop publishes `user_app_version_control` = **14.1 with status 1** for both platforms (read
-  /// from /api/v1/config on 2026-11-11), and `_updateIsRequired` in splash_screen.dart demands an
-  /// update whenever that floor is higher than this constant. Set this to the true `3.0.6` and
-  /// 14.1 > 3.0.6, so EVERY build is held at the update screen — and the config ships `link: ""`,
-  /// so there is nowhere for the customer to go. The wrong number is what currently keeps the app
-  /// past its own update gate.
+  /// from /api/v1/config on 2026-11-11), and `UpdateGate.isRequired` (lib/utill/update_gate.dart,
+  /// which the splash screen calls) demands an update whenever that floor is higher than this
+  /// constant. Set this to the true `3.0.6` and 14.1 > 3.0.6, so EVERY build is held at the update
+  /// screen — and the config ships `link: ""`, so there is nowhere for the customer to go. The
+  /// wrong number is what currently keeps the app past its own update gate.
   ///
   /// So the two must move together, and which way is the owner's call:
   ///   * lower the shop's floor to at most the app's real version, then set this to `3.0.6`; or
