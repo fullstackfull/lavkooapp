@@ -1,8 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_money.dart';
 
 class PriceConverter {
+  /// The price written in the currency of the storefront the customer is on, when that storefront trades in its own currency
+  /// (GCC-05, J-05); null while storefronts are off and on the default storefront, which keep the platform's money below.
+  static String? _priceOfOwnCurrency(BuildContext context, double? price,
+      {bool withSymbol = true}) {
+    if (!StorefrontConfig.enabled) {
+      return null;
+    }
+
+    final StorefrontCountry storefront =
+        Provider.of<StorefrontController>(context, listen: false).current;
+    if (!StorefrontMoney.writesPricesOf(storefront, enabled: true)) {
+      return null;
+    }
+
+    if (!withSymbol) {
+      return StorefrontMoney.formatWithoutSymbol(price,
+          currencyCode: storefront.currency);
+    }
+
+    final ConfigModel? configModel =
+        Provider.of<SplashController>(context, listen: false).configModel;
+    String? symbol;
+    for (final CurrencyList currency
+        in configModel?.currencyList ?? const <CurrencyList>[]) {
+      if (currency.code == storefront.currency) {
+        symbol = currency.symbol;
+        break;
+      }
+    }
+
+    return StorefrontMoney.format(price,
+        currencyCode: storefront.currency,
+        symbol: symbol,
+        symbolOnRight: configModel?.currencySymbolPosition == 'right');
+  }
+
   // static String convertPrice(BuildContext context, double? price,
   //     {double? discount, String? discountType}) {
   //   if (discount != null && discountType != null) {
@@ -47,6 +88,11 @@ class PriceConverter {
         price = price! - ((discount / 100) * price);
       }
     }
+    final String? ownCurrencyPrice = _priceOfOwnCurrency(context, price);
+    if (ownCurrencyPrice != null) {
+      return ownCurrencyPrice;
+    }
+
     final splashController =
     Provider.of<SplashController>(context, listen: false);
     final isNewMode = false; // splashController.isNewPricingMode; (Temporarily disabled)
@@ -116,6 +162,11 @@ class PriceConverter {
   }
 
   static String getUnitCurrency(BuildContext context, double? price) {
+    final String? ownCurrencyPrice = _priceOfOwnCurrency(context, price);
+    if (ownCurrencyPrice != null) {
+      return ownCurrencyPrice;
+    }
+
     final splashController =
         Provider.of<SplashController>(context, listen: false);
     final isNewMode = false; // splashController.isNewPricingMode; (Temporarily disabled)
@@ -146,6 +197,12 @@ class PriceConverter {
         price = price! - ((discount / 100) * price);
       }
     }
+    final String? ownCurrencyPrice =
+        _priceOfOwnCurrency(context, price, withSymbol: false);
+    if (ownCurrencyPrice != null) {
+      return ownCurrencyPrice;
+    }
+
     final splashProvider =
         Provider.of<SplashController>(context, listen: false);
     final isNewMode = false; // splashProvider.isNewPricingMode; (Temporarily disabled)
