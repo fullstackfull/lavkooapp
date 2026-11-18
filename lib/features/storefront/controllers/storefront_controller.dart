@@ -60,6 +60,14 @@ class StorefrontController extends ChangeNotifier {
   bool canSell(StorefrontCountry storefront) =>
       storefrontChoice.canSell(storefront);
 
+  /// The server's entry for the storefront the customer is on, with how it is stopped, the message for its customers and the end of the stop. Null while
+  /// storefronts are off, before the server has answered once, and when its answer does not list the storefront.
+  StorefrontCountry? get currentEntry =>
+      storefrontChoice.listedEntryOf(current);
+
+  /// Whether the server has put the storefront the customer is on in maintenance: it is not browsed, and what the customer already has is served elsewhere.
+  bool get inMaintenance => currentEntry?.isInMaintenance ?? false;
+
   /// Asks the server which storefronts may sell yet. It runs in the background and never throws: a refresh that fails leaves the
   /// last stored answer in force.
   Future<void> refresh() async {
