@@ -229,9 +229,8 @@ jobs:
           fi
 
   # J-18: the whole suite, with storefronts off and with them on. The first job above runs the tests that this work touches, so a test anywhere else could fail unseen. Each run lists only
-  # what failed. The run with storefronts off is the app as it ships today and must be green: the two overflows that failed in it (the statistics tile and the shipping cutoff strip of
-  # dynamic_theme_render_matrix_test) are fixed in the widgets. The run with them on still measures: five assumptions of the flag-off suite fail with it on (PR 6 and 7 bodies), and it
-  # does not fail a branch until they are rewritten and its `|| true` is removed.
+  # what failed, and both must be green: the run with storefronts off is the app as it ships today (two layout overflows that failed in it are fixed in the widgets), and the run with them
+  # on is the build that turns them on (the cases that assert the build without the flag are skipped in it, and the render matrix gives its host the storefront controller that a price needs).
   test-whole-suite:
     runs-on: ubuntu-latest
     steps:
@@ -254,15 +253,17 @@ jobs:
           tail -n 160 suite-off.txt
           exit "$status"
 
-      - name: Whole suite, storefronts on (measured, not blocking)
+      - name: Whole suite, storefronts on
         if: always()
         run: |
-          flutter test --reporter failures-only --dart-define=GCC_STOREFRONTS_ENABLED=true > suite-on.txt 2>&1 || true
+          status=0
+          flutter test --reporter failures-only --dart-define=GCC_STOREFRONTS_ENABLED=true > suite-on.txt 2>&1 || status=$?
           echo "---- storefronts on: the end of the report"
           tail -n 160 suite-on.txt
+          exit "$status"
 
       - name: What failed with storefronts on, in detail
-        if: always()
+        if: failure()
         run: |
           # The first exceptions the framework caught, each with the lines that say what it was: a failed test prints only the last of many, and the first one is the cause.
           grep -nE -A6 'EXCEPTION CAUGHT' suite-on.txt | cut -c1-230 | head -n 400 || true
