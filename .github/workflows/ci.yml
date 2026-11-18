@@ -208,6 +208,45 @@ jobs:
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
 
+      # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
+      # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
+      # constant: the groups that need it are skipped in the build without it, and the groups that say what that build does are skipped in the
+      # build with it.
+
+      # J-01 criterion 3: nothing derives the storefront from the IP address, the language or region of the device, or the position.
+      - name: J-01.3 the storefront is never derived from the IP address, the device locale or the position
+        run: |
+          flutter test test/storefront_not_derived_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_not_derived_test.dart
+
+      # J-05 criterion 3: every use of toStringAsFixed is looked at, and none of the files that write a cart, checkout, order, wallet or coupon
+      # amount through PriceConverter formats a number itself. The scan reads the sources and does not depend on the flag.
+      - name: J-05.3 every toStringAsFixed is accounted for and none writes a cart, checkout, order, wallet or coupon amount
+        run: flutter test test/money_formatter_inventory_test.dart
+
+      # J-09 criterion 1, with I2-10 criterion 5 and I2-13 criterion 1: no order, payment or wallet top-up request leaves the app on a browse-only
+      # storefront. The controllers are started by hand; the cart and checkout screens are pinned by their source.
+      - name: J-09.1 no order, payment or wallet top-up request leaves the app on a browse-only storefront
+        run: |
+          flutter test test/storefront_payment_guard_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_payment_guard_test.dart
+
+      # J-11 criterion 3: a push about an order opens the order by its id on any storefront, a browse-only one included.
+      - name: J-11.3 an order push opens the order by its id on any storefront
+        run: |
+          flutter test test/order_push_routing_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_push_routing_test.dart
+
+      # J-13 criterion 2: the sale gate is asked by what starts a sale and by nothing that serves an order the customer already has.
+      - name: J-13.2 the details, tracking, refund, support and chat of an existing order are not gated
+        run: |
+          flutter test test/existing_orders_not_gated_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/existing_orders_not_gated_test.dart
+
+      # I1-16 criterion 5 (the app's half): Arabic is written right to left and English left to right.
+      - name: I1-16.5 Arabic reads right to left and English left to right in the app
+        run: flutter test test/localization_direction_test.dart
+
   # J-18: the whole project is analyzed and no finding may be added. The job above analyzes only the files a branch changes, so a finding added
   # anywhere else went unseen: 255 findings were recorded as the state of the app on 2026-11-18. The number is in tool/analyze_baseline.txt; the
   # job fails when the analyzer finds more than that, or any error, and says how many it found so that a fix can lower the number on purpose.
