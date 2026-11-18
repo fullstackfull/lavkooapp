@@ -6,6 +6,7 @@ import 'package:syriapharmacy/features/storefront/domain/services/storefront_ser
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
 import 'package:syriapharmacy/features/storefront/storefront_switcher.dart';
+import 'package:syriapharmacy/features/storefront/stored_storefronts.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
 /// What the server is asked for after a choice, written into the log of the test so the order of everything the switch does is one list.
@@ -52,9 +53,13 @@ void main() {
   Future<StorefrontSwitcher> switcher({
     bool enabled = true,
     Map<String, Object> stored = const <String, Object>{},
+    List<StorefrontCountry>? listed,
   }) async {
     SharedPreferences.setMockInitialValues(stored);
     preferences = await SharedPreferences.getInstance();
+    if (listed != null) {
+      await StoredStorefronts(preferences).save(listed);
+    }
 
     return StorefrontSwitcher(
       storefrontController: StorefrontController(
@@ -130,5 +135,103 @@ void main() {
     expect(result, StorefrontSwitch.failed);
     expect(log, isEmpty);
     expect(preferences.containsKey(AppConstants.storefrontCountry), isFalse);
+  });
+
+  group('following the list the server answers with (J-01)', () {
+    test(
+        'moves a customer whose storefront the server no longer lists to the default one, the way a choice moves them',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          StorefrontCountry.unitedArabEmirates,
+        ],
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.switched);
+      expect(log, <String>[
+        'server asked, choice then KW',
+        'server asked, choice then SA',
+        'headers rebuilt, choice then SA',
+        'listeners told KW -> SA',
+      ]);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'SA');
+    });
+
+    test('leaves a customer on a storefront the server still lists', () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'AE'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          StorefrontCountry.unitedArabEmirates,
+        ],
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.unchanged);
+      expect(log, <String>['server asked, choice then AE']);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'AE');
+    });
+
+    test('a storefront the server lists as browse-only is still a storefront the customer may stay on',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          StorefrontCountry.kuwait,
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.unchanged);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
+
+    test('does nothing before the server has answered once, because there is then nothing to judge by',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.unchanged);
+      expect(log, <String>['server asked, choice then KW']);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
+
+    test('a customer on the default storefront stays on it even when the list leaves it out',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        listed: <StorefrontCountry>[
+          StorefrontCountry.unitedArabEmirates,
+          StorefrontCountry.kuwait,
+        ],
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.unchanged);
+      expect(log, <String>['server asked, choice then null']);
+      expect(preferences.containsKey(AppConstants.storefrontCountry), isFalse);
+    });
+
+    test('does nothing, and asks nothing, while storefronts are off', () async {
+      final StorefrontSwitcher subject = await switcher(
+        enabled: false,
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[StorefrontCountry.saudiArabia],
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.unchanged);
+      expect(log, isEmpty);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
   });
 }
