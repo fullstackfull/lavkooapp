@@ -23,13 +23,22 @@ class _NoServer implements StorefrontServiceInterface {
 }
 
 class _SplashWithConfig extends SplashController {
-  _SplashWithConfig(this._config) : super(splashServiceInterface: null);
+  _SplashWithConfig(this._config, this._chosenCurrency)
+      : super(splashServiceInterface: null);
 
   final ConfigModel? _config;
+  final CurrencyList? _chosenCurrency;
 
   @override
   ConfigModel? get configModel => _config;
+
+  @override
+  CurrencyList? get myCurrency => _chosenCurrency;
 }
+
+/// The currency the customer chose in the settings (the platform's own choice, which a storefront with its own currency does not use).
+final CurrencyList _saudiRiyal =
+    CurrencyList(id: 1, code: 'SAR', symbol: 'SR', exchangeRate: 3.75);
 
 ConfigModel _configWith({String position = 'left'}) => ConfigModel(
       currencySymbolPosition: position,
@@ -44,6 +53,7 @@ ConfigModel _configWith({String position = 'left'}) => ConfigModel(
 Future<BuildContext> _contextOn({
   required String storefrontCode,
   ConfigModel? config,
+  CurrencyList? chosenCurrency,
 }) async {
   SharedPreferences.setMockInitialValues(
       {AppConstants.storefrontCountry: storefrontCode});
@@ -54,7 +64,8 @@ Future<BuildContext> _contextOn({
   );
 
   late BuildContext captured;
-  await _pump(storefronts, config, (BuildContext context) => captured = context);
+  await _pump(storefronts, config, chosenCurrency,
+      (BuildContext context) => captured = context);
 
   return captured;
 }
@@ -62,13 +73,13 @@ Future<BuildContext> _contextOn({
 late WidgetTester _tester;
 
 Future<void> _pump(StorefrontController storefronts, ConfigModel? config,
-    void Function(BuildContext) capture) async {
+    CurrencyList? chosenCurrency, void Function(BuildContext) capture) async {
   await _tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<StorefrontController>.value(value: storefronts),
         ChangeNotifierProvider<SplashController>.value(
-            value: _SplashWithConfig(config)),
+            value: _SplashWithConfig(config, chosenCurrency)),
       ],
       child: Builder(builder: (BuildContext context) {
         capture(context);
@@ -100,6 +111,30 @@ void main() {
           '180');
       expect(PriceConverter.convertPriceWithoutSymbol(context, 12.5), '12.5');
       expect(PriceConverter.getUnitCurrency(context, 12.5), '12.5');
+    }, skip: StorefrontConfig.enabled);
+
+    testWidgets('the currency to send and to show is the one the customer chose in the settings',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(),
+          chosenCurrency: _saudiRiyal);
+
+      expect(PriceConverter.ownCurrencyCode(context), isNull);
+      expect(PriceConverter.ownCurrencySymbol(context), isNull);
+      expect(PriceConverter.currencyCodeToSend(context), 'SAR');
+      expect(PriceConverter.currencySymbolToShow(context), 'SR');
+    }, skip: StorefrontConfig.enabled);
+
+    testWidgets('and nothing is sent or shown before the config has arrived',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context =
+          await _contextOn(storefrontCode: 'KW', config: null);
+
+      expect(PriceConverter.currencyCodeToSend(context), isNull);
+      expect(PriceConverter.currencySymbolToShow(context), isNull);
     }, skip: StorefrontConfig.enabled);
   });
 
@@ -161,6 +196,48 @@ void main() {
       expect(PriceConverter.convertPrice(context, 12.5), '13');
       expect(PriceConverter.convertPriceWithoutSymbol(context, 12.5), '12.5');
       expect(PriceConverter.getUnitCurrency(context, 12.5), '12.5');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('a Kuwaiti storefront sends and shows its own currency, not the one chosen in the settings',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(),
+          chosenCurrency: _saudiRiyal);
+
+      expect(PriceConverter.ownCurrencyCode(context), 'KWD');
+      expect(PriceConverter.ownCurrencySymbol(context), 'KD');
+      expect(PriceConverter.currencyCodeToSend(context), 'KWD');
+      expect(PriceConverter.currencySymbolToShow(context), 'KD');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('the code stands in for a symbol the server did not send, and before the config arrived',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext bahrain = await _contextOn(
+          storefrontCode: 'BH',
+          config: _configWith(),
+          chosenCurrency: _saudiRiyal);
+      expect(PriceConverter.currencySymbolToShow(bahrain), 'BHD');
+
+      final BuildContext oman = await _contextOn(
+          storefrontCode: 'OM', config: null, chosenCurrency: _saudiRiyal);
+      expect(PriceConverter.currencyCodeToSend(oman), 'OMR');
+      expect(PriceConverter.currencySymbolToShow(oman), 'OMR');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('the default storefront keeps the currency the customer chose',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'SA',
+          config: _configWith(),
+          chosenCurrency: _saudiRiyal);
+
+      expect(PriceConverter.ownCurrencyCode(context), isNull);
+      expect(PriceConverter.currencyCodeToSend(context), 'SAR');
+      expect(PriceConverter.currencySymbolToShow(context), 'SR');
     }, skip: !StorefrontConfig.enabled);
   });
 }

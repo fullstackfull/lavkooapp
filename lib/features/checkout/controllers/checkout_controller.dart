@@ -3,7 +3,7 @@ import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 import 'package:syriapharmacy/features/checkout/domain/services/checkout_service_interface.dart';
 import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
-import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
 import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
@@ -252,11 +252,7 @@ class CheckoutController with ChangeNotifier {
       passwordController.text.trim(),
       cashChangeAmount:
       _cashChangesAmount,
-      currentCurrencyCode:
-      Provider.of<SplashController>(
-        Get.context!,
-        listen: false,
-      ).myCurrency?.code,
+      currentCurrencyCode: PriceConverter.currencyCodeToSend(Get.context!),
       idempotencyKey: attemptKey,
     );
 
@@ -311,10 +307,7 @@ class CheckoutController with ChangeNotifier {
       // In a real implementation, this should be called when user clicks "Proceed to Checkout"
       MetaTrackingService().logInitiateCheckout(
         value: 0.0, // You might want to calculate the actual total value
-        currency: Provider.of<SplashController>(
-          Get.context!,
-          listen: false,
-        ).myCurrency?.code ?? 'SYP',
+        currency: PriceConverter.currencyCodeToSend(Get.context!) ?? 'SYP',
         numItems: 1, // You might want to calculate the actual number of items
       );
 
@@ -791,10 +784,7 @@ class CheckoutController with ChangeNotifier {
       // ✅ Meta Tracking: Initiate Checkout event for digital payment
       MetaTrackingService().logInitiateCheckout(
         value: 0.0, // You might want to calculate the actual total value
-        currency: Provider.of<SplashController>(
-          Get.context!,
-          listen: false,
-        ).myCurrency?.code ?? 'SYP',
+        currency: PriceConverter.currencyCodeToSend(Get.context!) ?? 'SYP',
         numItems: 1, // You might want to calculate the actual number of items
       );
 

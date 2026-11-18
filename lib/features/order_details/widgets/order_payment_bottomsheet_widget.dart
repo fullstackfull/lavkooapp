@@ -11,6 +11,7 @@ import 'package:syriapharmacy/features/offline_payment/domain/models/offline_pay
 import 'package:syriapharmacy/features/order_details/controllers/order_details_controller.dart';
 import 'package:syriapharmacy/features/profile/controllers/profile_contrroller.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/localization/controllers/localization_controller.dart';
@@ -746,7 +747,7 @@ class _ChangeAmountWidgetState extends State<ChangeAmountWidget>
                                           ?.color),
                                 ),
                                 Text(
-                                  ' (${splashController.myCurrency?.symbol ?? ''})',
+                                  ' (${PriceConverter.currencySymbolToShow(context) ?? ''})',
                                   style: titilliumSemiBold.copyWith(
                                       color: Theme.of(context)
                                           .textTheme
