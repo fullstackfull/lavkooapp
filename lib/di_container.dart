@@ -337,12 +337,15 @@ Future<void> init() async {
   sl.registerFactory(() => GoogleSignInController());
   sl.registerFactory(() => FacebookLoginController());
   sl.registerFactory(() => AddressController(addressServiceInterface: sl()));
-  sl.registerFactory(() => WalletController(walletServiceInterface: sl()));
+  sl.registerFactory(() => WalletController(
+      walletServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => CompareController(
       compareServiceInterface: sl(),
       storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
-  sl.registerFactory(
-      () => LoyaltyPointController(loyaltyPointServiceInterface: sl()));
+  sl.registerFactory(() => LoyaltyPointController(
+      loyaltyPointServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => CheckoutController(checkoutServiceInterface: sl()));
   sl.registerFactory(() => LocationController(locationServiceInterface: sl()));
   sl.registerFactory(() => ShippingController(

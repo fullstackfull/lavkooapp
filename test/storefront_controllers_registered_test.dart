@@ -19,6 +19,8 @@ import 'package:syriapharmacy/features/deal/domain/services/featured_deal_servic
 import 'package:syriapharmacy/features/deal/domain/services/flash_deal_service_interface.dart';
 import 'package:syriapharmacy/features/dynamic_theme/controllers/dynamic_theme_controller.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/services/dynamic_theme_service_interface.dart';
+import 'package:syriapharmacy/features/loyaltyPoint/controllers/loyalty_point_controller.dart';
+import 'package:syriapharmacy/features/loyaltyPoint/domain/services/loyalty_point_service_interface.dart';
 import 'package:syriapharmacy/features/product/controllers/product_controller.dart';
 import 'package:syriapharmacy/features/product/controllers/seller_product_controller.dart';
 import 'package:syriapharmacy/features/product/domain/services/product_service_interface.dart';
@@ -37,6 +39,8 @@ import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/wallet/controllers/wallet_controller.dart';
+import 'package:syriapharmacy/features/wallet/domain/services/wallet_service_interface.dart';
 import 'package:syriapharmacy/features/wishlist/controllers/wishlist_controller.dart';
 import 'package:syriapharmacy/features/wishlist/domain/services/wishlist_service_interface.dart';
 
@@ -76,6 +80,11 @@ class _ShippingService extends Fake implements ShippingServiceInterface {}
 class _ShopService extends Fake implements ShopServiceInterface {}
 
 class _SplashService extends Fake implements SplashServiceInterface {}
+
+class _LoyaltyPointService extends Fake
+    implements LoyaltyPointServiceInterface {}
+
+class _WalletService extends Fake implements WalletServiceInterface {}
 
 class _WishlistService extends Fake implements WishlistServiceInterface {}
 
@@ -146,6 +155,13 @@ void main() {
     'SplashController': (StorefrontChangeNotifier notifier) => SplashController(
         splashServiceInterface: _SplashService(),
         storefrontChangeNotifier: notifier),
+    'LoyaltyPointController': (StorefrontChangeNotifier notifier) =>
+        LoyaltyPointController(
+            loyaltyPointServiceInterface: _LoyaltyPointService(),
+            storefrontChangeNotifier: notifier),
+    'WalletController': (StorefrontChangeNotifier notifier) => WalletController(
+        walletServiceInterface: _WalletService(),
+        storefrontChangeNotifier: notifier),
     'WishListController': (StorefrontChangeNotifier notifier) =>
         WishListController(
             wishlistServiceInterface: _WishlistService(),
@@ -180,7 +196,7 @@ void main() {
   }
 
   test('every one of them is the one the inventory says is told', () {
-    expect(builds, hasLength(18));
+    expect(builds, hasLength(20));
   });
 
   test(

@@ -3,6 +3,8 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/wallet/domain/models/wallet_transaction_model.dart';
 import 'package:syriapharmacy/features/wallet/domain/models/wallet_bonus_model.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/features/wallet/domain/services/wallet_service_interface.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
@@ -11,9 +13,14 @@ import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 
-class WalletController extends ChangeNotifier {
+class WalletController extends ChangeNotifier with StorefrontChangeAware {
   final WalletServiceInterface walletServiceInterface;
-  WalletController({required this.walletServiceInterface});
+  WalletController({
+    required this.walletServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   bool _isLoading = false;
   bool _firstLoading = false;
@@ -38,6 +45,10 @@ class WalletController extends ChangeNotifier {
   Set<String>? _selectedEarnByList;
   Set<String>? get selectedEarnByList => _selectedEarnByList;
 
+  /// What the customer has asked for: a storefront change loads again only that, so a customer who never opened the wallet makes no request for it.
+  bool _ledgerWasAsked = false;
+  bool _bonusesWereAsked = false;
+
   Future<void> getTransactionList(
       int offset, {
         bool reload = false,
@@ -47,6 +58,7 @@ class WalletController extends ChangeNotifier {
         DateTime? endDate,
         List<String>? transactionTypes,
       }) async {
+    _ledgerWasAsked = true;
     if (reload || offset == 1) {
       _walletTransactionModel = null;
 
@@ -55,6 +67,7 @@ class WalletController extends ChangeNotifier {
       }
     }
 
+    final String? storefront = StorefrontScope.current;
     ApiResponseModel apiResponse = await walletServiceInterface.getList(
       offset: offset,
       filterBy: filterBy,
@@ -62,6 +75,10 @@ class WalletController extends ChangeNotifier {
       endDate: endDate,
       transactionTypes: transactionTypes,
     );
+
+    // The ledger is read for one storefront: the answer of the storefront the customer has left is never shown as the ledger of the one
+    // they are on.
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (apiResponse.response?.data != null &&
         apiResponse.response?.statusCode == 200) {
@@ -148,8 +165,12 @@ class WalletController extends ChangeNotifier {
 
   WalletBonusModel? walletBonusModel;
   Future<void> getWalletBonusBannerList() async {
+    _bonusesWereAsked = true;
+    final String? storefront = StorefrontScope.current;
     ApiResponseModel apiResponse =
     await walletServiceInterface.getWalletBonusBannerList();
+    if (!StorefrontScope.isCurrent(storefront)) return;
+
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       walletBonusModel = WalletBonusModel.fromJson(apiResponse.response?.data);
@@ -190,6 +211,28 @@ class WalletController extends ChangeNotifier {
 
     if (isUpdate) {
       notifyListeners();
+    }
+  }
+
+  /// The customer is on another storefront, which has a wallet ledger and bonuses of its own: what is held for the one they left is dropped, with the filters that
+  /// belonged to it, and a signed-in customer's ledger and bonuses are loaded again when they had been asked for. A guest has none to ask for, and asking would sign them out.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool reloadLedger = _ledgerWasAsked;
+    final bool reloadBonuses = _bonusesWereAsked;
+    _walletTransactionModel = null;
+    walletBonusModel = null;
+    _selectedFilterBy = null;
+    _selectedEarnByList = null;
+    _startDate = null;
+    _endDate = null;
+    notifyListeners();
+
+    if (change.signedIn) {
+      await Future.wait(<Future<void>>[
+        if (reloadLedger) getTransactionList(1, isUpdate: false),
+        if (reloadBonuses) getWalletBonusBannerList(),
+      ]);
     }
   }
 
