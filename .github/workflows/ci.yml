@@ -46,6 +46,8 @@ jobs:
           test/api_error_handler_storefront_test.dart
           test/checkout_sale_gate_test.dart
           test/dio_cache_storefront_test.dart
+          test/price_converter_storefront_test.dart
+          test/storefront_money_test.dart
           test/storefront_browse_only_notice_test.dart
           test/storefront_can_sell_test.dart
           test/storefront_controller_test.dart
@@ -113,6 +115,8 @@ jobs:
       - name: Test storefront
         run: >
           flutter test
+          test/price_converter_storefront_test.dart
+          test/storefront_money_test.dart
           test/storefront_config_test.dart
           test/dio_storefront_header_test.dart
           test/storefront_choice_test.dart
@@ -149,6 +153,7 @@ jobs:
       - name: Test storefront with storefronts on
         run: >
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true
+          test/price_converter_storefront_test.dart
           test/dio_cache_storefront_test.dart
           test/storefront_controller_test.dart
           test/cache_response_storefront_test.dart
