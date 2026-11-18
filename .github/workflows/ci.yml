@@ -264,6 +264,8 @@ jobs:
       - name: What failed
         if: always()
         run: |
+          # The reporter's last progress line is the verdict ("+582 ~23 -2: Some tests failed."); a failed test is a progress line that ends in [E].
           for run in off on; do
-            echo "storefronts $run: $(grep -cE '^[0-9:]+ \+[0-9]+ (~[0-9]+ )?-[0-9]+: ' suite-$run.txt || true) failure lines; last line: $(grep -E '^[0-9:]+ \+[0-9]+' suite-$run.txt | tail -n 1)"
+            echo "storefronts $run: $(grep -E '^\+[0-9]+' suite-$run.txt | tail -n 1)"
+            grep -E '^\+[0-9]+ .* \[E\]$' suite-$run.txt | sed -E 's/^\+[0-9]+ (~[0-9]+ )?-[0-9]+: //' | sort -u | sed 's/^/  failed: /' || true
           done
