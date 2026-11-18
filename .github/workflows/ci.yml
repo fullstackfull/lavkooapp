@@ -97,6 +97,7 @@ jobs:
           test/storefront_change_notifier_test.dart
           test/storefront_chooser_sheet_test.dart
           test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
           test/storefront_controllers_registered_test.dart
           test/storefront_local_caches_test.dart
           test/storefront_scope_test.dart
@@ -170,6 +171,7 @@ jobs:
           test/storefront_change_notifier_test.dart
           test/storefront_chooser_sheet_test.dart
           test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
           test/storefront_controllers_registered_test.dart
           test/storefront_local_caches_test.dart
           test/storefront_scope_test.dart
@@ -197,6 +199,7 @@ jobs:
           test/storefront_change_notifier_test.dart
           test/storefront_chooser_sheet_test.dart
           test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
           test/storefront_controllers_registered_test.dart
           test/storefront_local_caches_test.dart
           test/storefront_scope_test.dart
