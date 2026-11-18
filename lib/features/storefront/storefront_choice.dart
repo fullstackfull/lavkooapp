@@ -48,6 +48,16 @@ class StorefrontChoice {
     return answered?.sellable ?? storefront.sellable;
   }
 
+  /// What the server's last answer says about [storefront]: its entry, with how it is stopped, the message for its customers and the end of the stop. Null while
+  /// storefronts are off, before the server has answered once, and when the answer does not list it.
+  StorefrontCountry? listedEntryOf(StorefrontCountry storefront) {
+    if (!enabled) {
+      return null;
+    }
+
+    return StoredStorefronts(_preferences).find(storefront.code);
+  }
+
   Future<bool> choose(StorefrontCountry storefront) {
     if (!enabled) {
       return Future<bool>.value(false);
