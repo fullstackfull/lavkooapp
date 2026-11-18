@@ -40,6 +40,7 @@ class ReviewRepository implements ReviewRepositoryInterface {
       'Authorization':
           'Bearer ${Provider.of<AuthController>(Get.context!, listen: false).getUserToken()}'
     });
+    request.headers.addAll(dioClient.storefrontHeaders);
     for (int index = 0; index < files.length; index++) {
       if (files[index].path.isNotEmpty) {
         request.files.add(http.MultipartFile(

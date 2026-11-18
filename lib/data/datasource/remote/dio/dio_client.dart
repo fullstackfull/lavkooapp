@@ -81,6 +81,14 @@ class DioClient {
               StorefrontConfig.resolve(sharedPreferences).code,
       };
 
+  /// What a request that does not go through Dio (a multipart upload of a photo, a review, a refund, a ticket or a chat message) has to
+  /// carry for the storefront the customer is on: `X-Storefront`, and only while storefronts are on. The rest of the headers are the upload's own.
+  Map<String, String> get storefrontHeaders => <String, String>{
+        if (StorefrontConfig.enabled)
+          AppConstants.storefrontHeader:
+              StorefrontConfig.resolve(sharedPreferences).code,
+      };
+
   late final String _clientId;
 
   String _mintClientId() {
