@@ -54,20 +54,43 @@ class StorefrontSwitcher {
   /// Asks the server which storefronts it lists, then keeps the customer on one of them. The server answers a country it does not list
   /// as the default storefront, so a customer left on one it dropped would read the default storefront's answers under the dropped one's
   /// name, currency and caches. They are moved to the default storefront the way a choice moves them: saved, headers rebuilt, what held the
-  /// dropped storefront told. Nothing is done while storefronts are off, before the server has answered once (there is then nothing to
-  /// judge by), or for a customer who is on a storefront the answer lists or on the default one.
+  /// dropped storefront told. A customer on a storefront the server has stopped in the redirect mode is moved the same way to the storefront
+  /// it names, when that one is listed and is not itself redirected (two storefronts that send each other away would move the customer on
+  /// every start); a storefront in any other stop mode keeps its customers. Nothing is done while storefronts are off, before the server has
+  /// answered once (there is then nothing to judge by), or for a customer who is on a storefront the answer lists and does not redirect.
   Future<StorefrontSwitch> followTheServersList() async {
     await storefrontController.refresh();
 
     final StorefrontCountry current = storefrontController.current;
     final List<StorefrontCountry> listed = storefrontController.available;
-    final bool stillListed =
-        listed.any((StorefrontCountry storefront) => storefront.code == current.code);
 
-    if (listed.isEmpty || stillListed) {
+    if (listed.isEmpty) {
       return StorefrontSwitch.unchanged;
     }
 
-    return switchTo(StorefrontCountry.defaultCountry);
+    final StorefrontCountry? entry = _listedAs(listed, current.code);
+    if (entry == null) {
+      return switchTo(StorefrontCountry.defaultCountry);
+    }
+
+    final String? destinationCode = entry.redirectsTo;
+    final StorefrontCountry? destination =
+        destinationCode == null ? null : _listedAs(listed, destinationCode);
+    if (destination == null || destination.redirectsTo != null) {
+      return StorefrontSwitch.unchanged;
+    }
+
+    return switchTo(destination);
+  }
+
+  static StorefrontCountry? _listedAs(
+      List<StorefrontCountry> listed, String code) {
+    for (final StorefrontCountry storefront in listed) {
+      if (storefront.code == code) {
+        return storefront;
+      }
+    }
+
+    return null;
   }
 }

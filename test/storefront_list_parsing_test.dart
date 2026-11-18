@@ -298,6 +298,128 @@ void main() {
     });
   });
 
+  group('a storefront the server has stopped (J-08)', () {
+    StorefrontCountry only(Map<String, Object> entry) {
+      final List<StorefrontCountry> parsed = StorefrontCountry.parseList(
+        answerOf(<Object?>[
+          <String, Object>{
+            'country': 'KW',
+            'path': 'kw',
+            'currency': 'KWD',
+            'sellable': false,
+            ...entry,
+          },
+        ]),
+      );
+      expect(parsed, hasLength(1));
+
+      return parsed.single;
+    }
+
+    test('is read with its mode, message and end', () {
+      final StorefrontCountry storefront = only(<String, Object>{
+        'state': 'paused',
+        'stop_mode': 'maintenance',
+        'stop_message': '  Back on Sunday.  ',
+        'stop_until': '2026-11-22 08:00',
+      });
+
+      expect(storefront.stopMode, StorefrontCountry.maintenanceMode);
+      expect(storefront.isInMaintenance, isTrue);
+      expect(storefront.stopMessage, 'Back on Sunday.');
+      expect(storefront.stopUntil, '2026-11-22 08:00');
+      expect(storefront.redirectsTo, isNull);
+    });
+
+    test('names the storefront it redirects to, only in the redirect mode',
+        () {
+      final StorefrontCountry redirected = only(<String, Object>{
+        'stop_mode': 'redirect',
+        'redirect_to': 'sa',
+      });
+      final StorefrontCountry browseOnly = only(<String, Object>{
+        'stop_mode': 'browse_only',
+        'redirect_to': 'SA',
+      });
+
+      expect(redirected.redirectsTo, 'SA');
+      expect(browseOnly.stopMode, StorefrontCountry.browseOnlyMode);
+      expect(browseOnly.redirectsTo, isNull);
+    });
+
+    test('is not redirected to itself, to nothing, or to what is not a country',
+        () {
+      expect(
+        only(<String, Object>{'stop_mode': 'redirect', 'redirect_to': 'KW'})
+            .redirectsTo,
+        isNull,
+      );
+      expect(
+        only(<String, Object>{'stop_mode': 'redirect'}).redirectsTo,
+        isNull,
+      );
+      expect(
+        only(<String, Object>{'stop_mode': 'redirect', 'redirect_to': 'SAU'})
+            .redirectsTo,
+        isNull,
+      );
+      expect(
+        only(<String, Object>{'stop_mode': 'redirect', 'redirect_to': 7})
+            .redirectsTo,
+        isNull,
+      );
+    });
+
+    test('is not stopped by a mode this app does not know', () {
+      final StorefrontCountry storefront = only(<String, Object>{
+        'stop_mode': 'closed',
+        'stop_message': 'Closed.',
+      });
+
+      expect(storefront.stopMode, isNull);
+      expect(storefront.isInMaintenance, isFalse);
+      expect(storefront.stopMessage, 'Closed.');
+    });
+
+    test('is not stopped when the entry says nothing about it', () {
+      final StorefrontCountry storefront = only(<String, Object>{});
+
+      expect(<Object?>[
+        storefront.stopMode,
+        storefront.stopMessage,
+        storefront.stopUntil,
+        storefront.redirectTo,
+      ], everyElement(isNull));
+    });
+
+    test('is stored and read back with what the server said', () {
+      final StorefrontCountry original = only(<String, Object>{
+        'stop_mode': 'redirect',
+        'stop_message': 'Orders are closed.',
+        'stop_until': '2026-11-22 08:00',
+        'redirect_to': 'SA',
+      });
+
+      final StorefrontCountry? read =
+          StorefrontCountry.tryParse(original.toJson());
+
+      expect(read, isNotNull);
+      expect(read!.toJson(), original.toJson());
+      expect(read.redirectsTo, 'SA');
+      expect(read.stopMessage, 'Orders are closed.');
+    });
+
+    test('adds nothing to the stored shape of a storefront that is not stopped',
+        () {
+      expect(only(<String, Object>{}).toJson().keys.toList(), <String>[
+        'country',
+        'path',
+        'currency',
+        'sellable',
+      ]);
+    });
+  });
+
   group('the built-in storefronts', () {
     test('are unchanged: only Saudi Arabia sells by default', () {
       expect(

@@ -234,4 +234,135 @@ void main() {
       expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
     });
   });
+
+  group('a storefront the server redirects (J-08)', () {
+    StorefrontCountry kuwaitStoppedAs(String mode, {String? redirectTo}) =>
+        StorefrontCountry(
+          code: 'KW',
+          path: '/kw',
+          currency: 'KWD',
+          stopMode: mode,
+          redirectTo: redirectTo,
+        );
+
+    test('moves its customer to the storefront it names, as a choice does',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          kuwaitStoppedAs(StorefrontCountry.redirectMode, redirectTo: 'SA'),
+        ],
+      );
+
+      final StorefrontSwitch result = await subject.followTheServersList();
+
+      expect(result, StorefrontSwitch.switched);
+      expect(log, <String>[
+        'server asked, choice then KW',
+        'server asked, choice then SA',
+        'headers rebuilt, choice then SA',
+        'listeners told KW -> SA',
+      ]);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'SA');
+    });
+
+    test('moves the customer of any other storefront to the one it names',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          StorefrontCountry.unitedArabEmirates,
+          kuwaitStoppedAs(StorefrontCountry.redirectMode, redirectTo: 'AE'),
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.switched);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'AE');
+    });
+
+    test('keeps the customer of a storefront stopped in any other mode',
+        () async {
+      for (final String mode in <String>[
+        StorefrontCountry.browseOnlyMode,
+        StorefrontCountry.maintenanceMode,
+      ]) {
+        final StorefrontSwitcher subject = await switcher(
+          stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+          listed: <StorefrontCountry>[
+            StorefrontCountry.saudiArabia,
+            kuwaitStoppedAs(mode, redirectTo: 'SA'),
+          ],
+        );
+
+        expect(await subject.followTheServersList(), StorefrontSwitch.unchanged,
+            reason: mode);
+        expect(preferences.getString(AppConstants.storefrontCountry), 'KW',
+            reason: mode);
+      }
+    });
+
+    test('keeps the customer when the storefront it names is not listed',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          kuwaitStoppedAs(StorefrontCountry.redirectMode, redirectTo: 'OM'),
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.unchanged);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
+
+    test('keeps the customer when the storefront it names is redirected too',
+        () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          StorefrontCountry(
+            code: 'AE',
+            path: '/ae',
+            currency: 'AED',
+            stopMode: StorefrontCountry.redirectMode,
+            redirectTo: 'KW',
+          ),
+          kuwaitStoppedAs(StorefrontCountry.redirectMode, redirectTo: 'AE'),
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.unchanged);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
+
+    test('keeps the customer when the server sends no destination', () async {
+      final StorefrontSwitcher subject = await switcher(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          kuwaitStoppedAs(StorefrontCountry.redirectMode),
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.unchanged);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+    });
+
+    test('does nothing while storefronts are off', () async {
+      final StorefrontSwitcher subject = await switcher(
+        enabled: false,
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        listed: <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          kuwaitStoppedAs(StorefrontCountry.redirectMode, redirectTo: 'SA'),
+        ],
+      );
+
+      expect(await subject.followTheServersList(), StorefrontSwitch.unchanged);
+      expect(log, isEmpty);
+    });
+  });
 }
