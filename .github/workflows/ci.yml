@@ -207,9 +207,9 @@ jobs:
 
       - name: Analyze the whole project, no finding added
         run: |
-          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt || true
-          tail -n 3 analyze.txt
-          found=$(sed -nE 's/^([0-9]+) issues? found.*/\1/p' analyze.txt | tail -n 1)
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
+          grep -nE 'issues? found|No issues' analyze.txt || true
+          found=$(grep -oE '[0-9]+ issues? found' analyze.txt | tail -n 1 | grep -oE '^[0-9]+' || true)
           found=${found:-0}
           errors=$(grep -cE '^\s*error • ' analyze.txt || true)
           recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
