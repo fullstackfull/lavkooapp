@@ -261,6 +261,12 @@ jobs:
           echo "---- storefronts on: the end of the report"
           tail -n 160 suite-on.txt
 
+      - name: What failed with storefronts on, in detail
+        if: always()
+        run: |
+          # The first exceptions the framework caught, each with the lines that say what it was: a failed test prints only the last of many, and the first one is the cause.
+          grep -nE -A6 'EXCEPTION CAUGHT' suite-on.txt | cut -c1-230 | head -n 400 || true
+
       - name: What failed
         if: always()
         run: |
