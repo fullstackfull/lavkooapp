@@ -238,6 +238,9 @@ void main() {
       'lib/features/shop/controllers/shop_controller.dart': null,
       'lib/features/splash/controllers/splash_controller.dart': null,
       'lib/features/wishlist/controllers/wishlist_controller.dart': null,
+      'lib/features/loyaltyPoint/controllers/loyalty_point_controller.dart':
+          null,
+      'lib/features/wallet/controllers/wallet_controller.dart': null,
       // not told, and why
       'lib/features/address/controllers/address_controller.dart':
           'the customer\'s saved addresses; the home reloads them on every refresh',
@@ -257,8 +260,6 @@ void main() {
           'the health feature\'s news feed, which is not the shop',
       'lib/features/location/controllers/location_controller.dart':
           'the map and the places searched',
-      'lib/features/loyaltyPoint/controllers/loyalty_point_controller.dart':
-          'the customer\'s own points ledger, loaded when its screen opens',
       'lib/features/notification/controllers/notification_controller.dart':
           'the customer\'s notifications',
       'lib/features/onboarding/controllers/onboarding_controller.dart':
@@ -281,8 +282,6 @@ void main() {
           'the storefront itself',
       'lib/features/support/controllers/support_ticket_controller.dart':
           'the customer\'s own tickets',
-      'lib/features/wallet/controllers/wallet_controller.dart':
-          'the customer\'s own wallet ledger, loaded when its screen opens',
       'lib/localization/controllers/localization_controller.dart':
           'the language',
       'lib/theme/controllers/theme_controller.dart': 'dark mode',

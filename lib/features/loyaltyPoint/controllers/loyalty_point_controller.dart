@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/loyaltyPoint/domain/models/loyalty_point_model.dart';
 import 'package:syriapharmacy/features/loyaltyPoint/domain/services/loyalty_point_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 
-class LoyaltyPointController extends ChangeNotifier {
+class LoyaltyPointController extends ChangeNotifier
+    with StorefrontChangeAware {
   final LoyaltyPointServiceInterface loyaltyPointServiceInterface;
-  LoyaltyPointController({required this.loyaltyPointServiceInterface});
+  LoyaltyPointController({
+    required this.loyaltyPointServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   bool _isConvert = false;
   bool get isConvert => _isConvert;
@@ -38,6 +46,25 @@ class LoyaltyPointController extends ChangeNotifier {
     DateTime? startDate,
     DateTime? endDate,
     List<String>? transactionTypes,
+  }) =>
+      _loadLedger(
+        offset,
+        reload: reload,
+        isUpdate: isUpdate,
+        filterBy: filterBy,
+        startDate: startDate,
+        endDate: endDate,
+        transactionTypes: transactionTypes,
+      );
+
+  Future<void> _loadLedger(
+    int offset, {
+    bool reload = false,
+    bool isUpdate = true,
+    String? filterBy,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<String>? transactionTypes,
   }) async {
     if (reload || offset == 1) {
       _loyaltyPointModel = null;
@@ -47,6 +74,7 @@ class LoyaltyPointController extends ChangeNotifier {
       }
     }
 
+    final String? storefront = StorefrontScope.current;
     ApiResponseModel apiResponse = await loyaltyPointServiceInterface.getList(
       offset: offset,
       filterBy: filterBy,
@@ -54,6 +82,10 @@ class LoyaltyPointController extends ChangeNotifier {
       endDate: endDate,
       transactionTypes: transactionTypes,
     );
+
+    // The points are read for one storefront: the answer of the storefront the customer has left is never shown as the points of the one
+    // they are on.
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (apiResponse.response?.data != null &&
         apiResponse.response?.statusCode == 200) {
@@ -124,6 +156,22 @@ class LoyaltyPointController extends ChangeNotifier {
 
     if (isUpdate) {
       notifyListeners();
+    }
+  }
+
+  /// The customer is on another storefront, which has a points ledger of its own: what is held for the one they left is dropped, with the filters
+  /// that belonged to it, and a signed-in customer's points are loaded again. A guest has none to ask for, and asking would sign them out.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _loyaltyPointModel = null;
+    _selectedFilterBy = null;
+    _selectedEarnByList = null;
+    _startDate = null;
+    _endDate = null;
+    notifyListeners();
+
+    if (change.signedIn) {
+      await _loadLedger(1, isUpdate: false);
     }
   }
 
