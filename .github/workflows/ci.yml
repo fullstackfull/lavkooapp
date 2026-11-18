@@ -48,6 +48,9 @@ jobs:
           test/dio_cache_storefront_test.dart
           test/price_converter_storefront_test.dart
           test/storefront_money_test.dart
+          test/storefront_currency_sites_test.dart
+          lib/features/order_details/controllers/order_details_controller.dart
+          lib/features/wallet/widgets/add_fund_dialogue_widget.dart
           test/storefront_browse_only_notice_test.dart
           test/storefront_can_sell_test.dart
           test/storefront_controller_test.dart
@@ -117,6 +120,7 @@ jobs:
           flutter test
           test/price_converter_storefront_test.dart
           test/storefront_money_test.dart
+          test/storefront_currency_sites_test.dart
           test/storefront_config_test.dart
           test/dio_storefront_header_test.dart
           test/storefront_choice_test.dart

@@ -9,7 +9,7 @@ import 'package:syriapharmacy/features/order_details/domain/models/order_details
 import 'package:syriapharmacy/features/order_details/domain/models/track_order_details_model.dart';
 import 'package:syriapharmacy/features/order_details/domain/services/order_details_service_interface.dart';
 import 'package:syriapharmacy/features/review/controllers/review_controller.dart';
-import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
@@ -566,9 +566,7 @@ class OrderDetailsController with ChangeNotifier {
             paymentMethod,
             guestId,
             orderDuePaymentNote,
-            Provider.of<SplashController>(Get.context!, listen: false)
-                .myCurrency
-                ?.code);
+            PriceConverter.currencyCodeToSend(Get.context!));
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       RouterHelper.getDigitalPaymentScreenRoute(
