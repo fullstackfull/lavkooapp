@@ -18,10 +18,16 @@ class StorefrontController extends ChangeNotifier {
   StorefrontController({
     required this.storefrontServiceInterface,
     required this.storefrontChoice,
+    this.answerWait = const Duration(seconds: 5),
   });
 
   final StorefrontServiceInterface storefrontServiceInterface;
   final StorefrontChoice storefrontChoice;
+
+  /// How long a choice waits for the server's answer about the new storefront before it lets the customer through. On a bad network the
+  /// request can take a minute; the customer is not held in the loader for it. The answer, when it comes, is still stored and the screens are
+  /// still told: until then the storefront is judged by the last answer, so a storefront the server has just opened stays browse-only a little longer.
+  final Duration answerWait;
 
   /// Whether the storefront the customer is on may start a sale, for the controllers that place an order or start a payment and have
   /// no widget to listen from. While storefronts are off it answers yes without looking anything up. With no context to look the
@@ -72,13 +78,13 @@ class StorefrontController extends ChangeNotifier {
     }
   }
 
-  /// Saves the customer's choice and asks for the answer about it. False when the choice was not saved, which is always the case while
-  /// storefronts are off.
+  /// Saves the customer's choice and asks for the answer about it, waiting for it for [answerWait] at most. False when the choice was not saved,
+  /// which is always the case while storefronts are off.
   Future<bool> choose(StorefrontCountry storefront) async {
     final bool saved = await storefrontChoice.choose(storefront);
     if (saved) {
       notifyListeners();
-      await refresh();
+      await refresh().timeout(answerWait, onTimeout: () {});
     }
 
     return saved;
