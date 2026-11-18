@@ -187,3 +187,38 @@ jobs:
           test/storefront_switcher_test.dart
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
+
+  # J-18: the whole project is analyzed and no finding may be added. The job above analyzes only the files a branch changes, so a finding added
+  # anywhere else went unseen: 255 findings were recorded as the state of the app on 2026-11-18. The number is in tool/analyze_baseline.txt; the
+  # job fails when the analyzer finds more than that, or any error, and says how many it found so that a fix can lower the number on purpose.
+  analyze-whole-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze the whole project, no finding added
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
+          grep -nE 'issues? found|No issues' analyze.txt || true
+          found=$(grep -oE '[0-9]+ issues? found' analyze.txt | tail -n 1 | grep -oE '^[0-9]+' || true)
+          found=${found:-0}
+          errors=$(grep -cE '^\s*error • ' analyze.txt || true)
+          recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
+          echo "The analyzer found $found findings ($errors errors); the recorded state is $recorded."
+          if [ "$errors" -gt 0 ]; then
+            echo "::error::The analyzer reports errors."
+            exit 1
+          fi
+          if [ "$found" -gt "$recorded" ]; then
+            echo "::error::$((found - recorded)) finding(s) were added to the $recorded recorded in tool/analyze_baseline.txt. Fix them; lowering the number is welcome, raising it needs a reason."
+            exit 1
+          fi
