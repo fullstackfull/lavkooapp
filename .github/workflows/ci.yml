@@ -222,3 +222,30 @@ jobs:
             echo "::error::$((found - recorded)) finding(s) were added to the $recorded recorded in tool/analyze_baseline.txt. Fix them; lowering the number is welcome, raising it needs a reason."
             exit 1
           fi
+
+  # J-18: the whole flutter test suite runs in CI, with the storefront flag off (the build every customer has today) and with it on.
+  test-whole-suite:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        storefronts: ['off', 'on']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: The whole suite, storefronts ${{ matrix.storefronts }}
+        run: |
+          if [ "${{ matrix.storefronts }}" = "on" ]; then
+            flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true --reporter expanded
+          else
+            flutter test --reporter expanded
+          fi
