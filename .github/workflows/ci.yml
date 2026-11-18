@@ -209,8 +209,9 @@ jobs:
         run: |
           flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt || true
           tail -n 3 analyze.txt
-          found=$(grep -cE '^\s+(info|warning|error) • ' analyze.txt || true)
-          errors=$(grep -cE '^\s+error • ' analyze.txt || true)
+          found=$(sed -nE 's/^([0-9]+) issues? found.*/\1/p' analyze.txt | tail -n 1)
+          found=${found:-0}
+          errors=$(grep -cE '^\s*error • ' analyze.txt || true)
           recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
           echo "The analyzer found $found findings ($errors errors); the recorded state is $recorded."
           if [ "$errors" -gt 0 ]; then
