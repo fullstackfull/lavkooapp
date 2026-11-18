@@ -308,6 +308,73 @@ void main() {
     });
   });
 
+  group('what the customer never asked for', () {
+    test('is not asked for when they move to another storefront: the wallet and its bonuses', () async {
+      final _FakeWalletService service = _FakeWalletService();
+      final WalletController controller =
+          WalletController(walletServiceInterface: service);
+      addTearDown(controller.dispose);
+
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.ledgerAsked, 0);
+      expect(service.bonusesAsked, 0);
+      expect(controller.walletTransactionModel, isNull);
+      expect(controller.walletBonusModel, isNull);
+    });
+
+    test('is not asked for when only the other half was: the ledger alone is loaded again, and the bonuses are not',
+        () async {
+      final _FakeWalletService service = _FakeWalletService();
+      final WalletController controller =
+          WalletController(walletServiceInterface: service);
+      addTearDown(controller.dispose);
+      await controller.getTransactionList(1);
+      service.ledgerAsked = 0;
+
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.ledgerAsked, 1);
+      expect(service.bonusesAsked, 0);
+      expect(controller.walletTransactionModel?.totalWalletBalance, 200);
+      expect(controller.walletBonusModel, isNull);
+    });
+
+    test('is not asked for when only the bonuses were: they are loaded again, and the ledger is not',
+        () async {
+      final _FakeWalletService service = _FakeWalletService();
+      final WalletController controller =
+          WalletController(walletServiceInterface: service);
+      addTearDown(controller.dispose);
+      await controller.getWalletBonusBannerList();
+      service.bonusesAsked = 0;
+
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.ledgerAsked, 0);
+      expect(service.bonusesAsked, 1);
+      expect(controller.walletBonusModel?.bonusList?.single.title, 'bonus of AE');
+      expect(controller.walletTransactionModel, isNull);
+    });
+
+    test('is not asked for when it is the points: a customer who never opened them makes no request for them',
+        () async {
+      final _FakeLoyaltyPointService service = _FakeLoyaltyPointService();
+      final LoyaltyPointController controller =
+          LoyaltyPointController(loyaltyPointServiceInterface: service);
+      addTearDown(controller.dispose);
+
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.asked, 0);
+      expect(controller.loyaltyPointModel, isNull);
+    });
+  });
+
   group('with storefronts off', () {
     test('a ledger asked for while no storefront is published is kept as it always was',
         () async {

@@ -37,6 +37,9 @@ class LoyaltyPointController extends ChangeNotifier
   Set<String>? _selectedEarnByList;
   Set<String>? get selectedEarnByList => _selectedEarnByList;
 
+  /// Whether the customer has asked for their points: a storefront change loads them again only then, so a customer who never opened the points makes no request for them.
+  bool _ledgerWasAsked = false;
+
   Future<void> getLoyaltyPointList(
     BuildContext context,
     int offset, {
@@ -66,6 +69,7 @@ class LoyaltyPointController extends ChangeNotifier
     DateTime? endDate,
     List<String>? transactionTypes,
   }) async {
+    _ledgerWasAsked = true;
     if (reload || offset == 1) {
       _loyaltyPointModel = null;
 
@@ -160,9 +164,10 @@ class LoyaltyPointController extends ChangeNotifier
   }
 
   /// The customer is on another storefront, which has a points ledger of its own: what is held for the one they left is dropped, with the filters
-  /// that belonged to it, and a signed-in customer's points are loaded again. A guest has none to ask for, and asking would sign them out.
+  /// that belonged to it, and a signed-in customer's points are loaded again when they had been asked for. A guest has none to ask for, and asking would sign them out.
   @override
   Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool reloadLedger = _ledgerWasAsked;
     _loyaltyPointModel = null;
     _selectedFilterBy = null;
     _selectedEarnByList = null;
@@ -170,7 +175,7 @@ class LoyaltyPointController extends ChangeNotifier
     _endDate = null;
     notifyListeners();
 
-    if (change.signedIn) {
+    if (change.signedIn && reloadLedger) {
       await _loadLedger(1, isUpdate: false);
     }
   }
