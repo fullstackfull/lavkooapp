@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/dio_client.dart';
 import 'package:syriapharmacy/data/datasource/remote/dio/logging_interceptor.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
 /// With storefronts off, every request must carry exactly the headers it carried before they
@@ -46,7 +47,7 @@ void main() {
     expect(dio.options.headers, isNot(contains(AppConstants.storefrontHeader)));
     expect(dio.options.headers,
         equals(expectedHeaders(token: 'token-before-login')));
-  });
+  }, skip: _assertsTheBuildWithoutTheFlag);
 
   test('updateHeader with no new values leaves the headers as they were', () {
     dioClient.updateHeader(null, null);
@@ -54,7 +55,7 @@ void main() {
     expect(dio.options.headers, isNot(contains(AppConstants.storefrontHeader)));
     expect(dio.options.headers,
         equals(expectedHeaders(token: 'token-before-login')));
-  });
+  }, skip: _assertsTheBuildWithoutTheFlag);
 
   test('a login rewrites only the token and still sends no storefront header',
       () {
@@ -63,5 +64,9 @@ void main() {
     expect(dio.options.headers, isNot(contains(AppConstants.storefrontHeader)));
     expect(dio.options.headers,
         equals(expectedHeaders(token: 'token-after-login')));
-  });
+  }, skip: _assertsTheBuildWithoutTheFlag);
 }
+
+/// These cases pin the build as it ships today. In a build made with the flag a request does carry the header, which the storefront cases of the other suites pin.
+final String? _assertsTheBuildWithoutTheFlag =
+    StorefrontConfig.enabled ? 'asserts the build made without GCC_STOREFRONTS_ENABLED' : null;
