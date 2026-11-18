@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +37,25 @@ class _FakeStorefrontService implements StorefrontServiceInterface {
     }
 
     return StoredStorefronts(_preferences).save(newAnswer);
+  }
+}
+
+/// A service whose answer the test releases, to stand for a network that has not answered yet.
+class _GatedStorefrontService implements StorefrontServiceInterface {
+  _GatedStorefrontService(this._preferences);
+
+  final SharedPreferences _preferences;
+
+  final Completer<void> gate = Completer<void>();
+  List<StorefrontCountry> answer = const <StorefrontCountry>[];
+  int refreshes = 0;
+
+  @override
+  Future<bool> refreshStorefronts() async {
+    refreshes++;
+    await gate.future;
+
+    return StoredStorefronts(_preferences).save(answer);
   }
 }
 
@@ -305,6 +326,56 @@ void main() {
       expect(service.refreshes, 1);
       expect(notifications, 2,
           reason: 'once for the choice, once for the answer about it');
+      expect(controller.saleGate.storefrontMaySell, isTrue);
+    });
+
+    test(
+        'a choice waits only a bounded time for a server that does not answer, and the choice is saved',
+        () async {
+      final preferences = await preferencesWith({});
+      final service = _GatedStorefrontService(preferences);
+      final controller = StorefrontController(
+        storefrontServiceInterface: service,
+        storefrontChoice: StorefrontChoice(preferences, enabled: true),
+        answerWait: const Duration(milliseconds: 20),
+      );
+
+      final saved =
+          await controller.choose(StorefrontCountry.unitedArabEmirates);
+
+      expect(saved, isTrue);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'AE');
+      expect(service.refreshes, 1);
+      expect(service.gate.isCompleted, isFalse,
+          reason: 'the choice returned before the server answered');
+    });
+
+    test(
+        'the answer that arrives after the wait is still kept and still tells the screens',
+        () async {
+      final preferences = await preferencesWith({});
+      final service = _GatedStorefrontService(preferences)
+        ..answer = <StorefrontCountry>[
+          StorefrontCountry.saudiArabia,
+          _sellableEmirates,
+        ];
+      final controller = StorefrontController(
+        storefrontServiceInterface: service,
+        storefrontChoice: StorefrontChoice(preferences, enabled: true),
+        answerWait: const Duration(milliseconds: 20),
+      );
+      var notifications = 0;
+      controller.addListener(() => notifications++);
+
+      await controller.choose(StorefrontCountry.unitedArabEmirates);
+
+      expect(notifications, 1, reason: 'only the choice, so far');
+      expect(controller.saleGate.storefrontMaySell, isFalse);
+
+      service.gate.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(notifications, 2);
       expect(controller.saleGate.storefrontMaySell, isTrue);
     });
 
