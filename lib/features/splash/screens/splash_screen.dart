@@ -13,6 +13,7 @@ import 'package:syriapharmacy/push_notification/models/notification_body.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
+import 'package:syriapharmacy/utill/update_gate.dart';
 import 'package:syriapharmacy/common/basewidget/no_internet_screen_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -328,51 +329,13 @@ class SplashScreenState extends State<SplashScreen> {
         .followTheServersList());
   }
 
-  /// Whether this build is too old to run, per the shop's own setting.
-  ///
-  /// Two things decide it, and only one of them used to be read. The shop stores a minimum version
-  /// AND a switch next to it, and the switch was ignored here: a merchant who turned forced updates
-  /// off in Admin -> Business Settings -> App Settings watched the app go on forcing them, with no
-  /// way from the panel to stop it.
-  ///
-  /// The comparison is only meaningful when both numbers come from the same release line. A shop
-  /// whose minimum still carries an older lineage's numbering (the installer's default is 14.1)
-  /// will hold back a perfectly current build until that field is set to this app's own numbering.
-  bool _updateIsRequired(UserAppVersionControl? control) {
-    final platform = Platform.isIOS ? control?.forIos : control?.forAndroid;
-
-    if (platform == null || platform.status != 1) {
-      return false;
-    }
-
-    final minimum = platform.version;
-    if (minimum == null || minimum.trim().isEmpty) {
-      return false;
-    }
-
-    return compareVersions(minimum, AppConstants.appVersion) == 1;
-  }
-
-  int compareVersions(String version1, String version2) {
-    List<String> v1Components = version1.split('.');
-    List<String> v2Components = version2.split('.');
-
-    int maxLength = v1Components.length > v2Components.length
-        ? v1Components.length
-        : v2Components.length;
-
-    for (int i = 0; i < maxLength; i++) {
-      int v1Part =
-      i < v1Components.length ? int.tryParse(v1Components[i]) ?? 0 : 0;
-      int v2Part =
-      i < v2Components.length ? int.tryParse(v2Components[i]) ?? 0 : 0;
-
-      if (v1Part > v2Part) return 1;
-      if (v1Part < v2Part) return -1;
-    }
-
-    return 0;
-  }
+  /// Whether this build is too old to run, per the shop's own setting (see [UpdateGate.isRequired], which holds the rule and its tests).
+  bool _updateIsRequired(UserAppVersionControl? control) =>
+      UpdateGate.isRequired(
+        control: control,
+        isIos: Platform.isIOS,
+        installedVersion: AppConstants.appVersion,
+      );
 
   @override
   Widget build(BuildContext context) {

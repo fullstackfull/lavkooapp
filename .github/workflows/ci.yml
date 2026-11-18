@@ -39,6 +39,9 @@ jobs:
           lib/features/checkout/controllers/checkout_controller.dart
           lib/features/checkout/screens/checkout_screen.dart
           lib/features/splash/screens/splash_screen.dart
+          lib/utill/update_gate.dart
+          test/release_version_test.dart
+          test/update_gate_test.dart
           lib/features/wallet/controllers/wallet_controller.dart
           lib/main.dart
           lib/data/datasource/remote/dio/api_cache_key.dart
@@ -164,6 +167,8 @@ jobs:
           test/storefront_switcher_test.dart
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
+          test/release_version_test.dart
+          test/update_gate_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
       # hold in both settings.
