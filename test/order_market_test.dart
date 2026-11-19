@@ -280,6 +280,24 @@ void main() {
       expect(line.order!.isShippingFree, 0);
     });
 
+    test(
+        'are read when the answer carries no order at all, so a screen writes the line as before',
+        () {
+      final OrderDetailsModel line =
+          OrderDetailsModel.fromJson(<String, dynamic>{
+        'id': 9001,
+        'order_id': 4217,
+        'qty': 2,
+        'price': 6.25,
+        'tax': 0,
+        'discount': 0,
+      });
+
+      expect(line.order, isNull);
+      expect(line.price, 6.25);
+      expect(line.qty, 2);
+    });
+
     test('are read when the snapshot is wrong, and say nothing of it', () {
       final OrderDetailsModel line =
           OrderDetailsModel.fromJson(_line(snapshot: <String, dynamic>{
