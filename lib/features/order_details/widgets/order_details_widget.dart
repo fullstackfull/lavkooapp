@@ -190,8 +190,9 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
 
                         Row(children: [
                           Text(
-                            PriceConverter.convertPrice(
-                                context, widget.orderDetailsModel.price),
+                            PriceConverter.convertOrderPrice(
+                                context, widget.orderDetailsModel.price,
+                                market: widget.orderDetailsModel.order?.market),
                             style: titilliumSemiBold.copyWith(
                                 color: Theme.of(context)
                                     .textTheme

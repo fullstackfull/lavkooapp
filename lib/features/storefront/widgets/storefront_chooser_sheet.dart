@@ -44,6 +44,13 @@ class StorefrontChooserSheet extends StatefulWidget {
     'OM': 'storefront_name_om',
   };
 
+  /// The name of the country with [code] in the language of the app, or the code itself when the app has no name for it.
+  static String nameOf(BuildContext context, String code) {
+    final String? key = nameKeys[code];
+
+    return (key == null ? null : getTranslated(key, context)) ?? code;
+  }
+
   @override
   State<StorefrontChooserSheet> createState() => _StorefrontChooserSheetState();
 }
@@ -59,12 +66,8 @@ class _StorefrontChooserSheetState extends State<StorefrontChooserSheet> {
         Provider.of<StorefrontController>(context, listen: false).current.code;
   }
 
-  String _nameOf(StorefrontCountry storefront) {
-    final String? key = StorefrontChooserSheet.nameKeys[storefront.code];
-
-    return (key == null ? null : getTranslated(key, context)) ??
-        storefront.code;
-  }
+  String _nameOf(StorefrontCountry storefront) =>
+      StorefrontChooserSheet.nameOf(context, storefront.code);
 
   Future<void> _choose(List<StorefrontCountry> storefronts) async {
     final StorefrontCountry? chosen = storefronts

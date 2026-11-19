@@ -243,6 +243,25 @@ jobs:
           flutter test test/existing_orders_not_gated_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/existing_orders_not_gated_test.dart
 
+      # J-13 criterion 1: an order is written in the currency it was sold in, and says the storefront it was sold on. The model reads three keys
+      # the server writes on an order and the rules read the flag as a parameter, so that test does not depend on the build; the money and the
+      # screens are tested in both settings, because the flag is a compile-time constant.
+      - name: J-13.1 an order carries what it was sold in, and an order that says nothing is read as before
+        run: flutter test test/order_market_test.dart
+
+      - name: J-13.1 an amount of an order is written in the currency of the order, with its decimals and no conversion
+        run: |
+          flutter test test/order_price_converter_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_price_converter_test.dart
+
+      - name: J-13.1 the list item, the billing summary, the lines and the order again card write the currency and the country of the order
+        run: |
+          flutter test test/order_screens_currency_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_screens_currency_test.dart
+
+      - name: J-13.1 every amount the screens of an order write is accounted for, in the currency of the order or with the reason it is not
+        run: flutter test test/order_amounts_inventory_test.dart
+
       # I1-16 criterion 5 (the app's half): Arabic is written right to left and English left to right.
       - name: I1-16.5 Arabic reads right to left and English left to right in the app
         run: flutter test test/localization_direction_test.dart
