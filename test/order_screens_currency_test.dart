@@ -318,6 +318,24 @@ void main() {
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
+        'writes the amount of a Saudi order the way the platform does, never in the money of the storefront the customer is on',
+        (WidgetTester tester) async {
+      for (final String customerOn in _twelveAndAHalf.keys) {
+        await _pump(tester,
+            customerOn: customerOn,
+            child: itemOf(_order(snapshot: _snapshot('SA'))));
+
+        expect(find.text('13'), findsOneWidget,
+            reason: 'a Saudi order on the screen of a customer on $customerOn');
+        expect(find.text('Saudi Arabia'), findsOneWidget, reason: customerOn);
+        for (final String written in _twelveAndAHalf.values) {
+          expect(find.text(written), findsNothing,
+              reason: '$written on $customerOn');
+        }
+      }
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
         'says no country and writes its amount as before for an order that says nothing of what it was sold in',
         (WidgetTester tester) async {
       await _pump(tester, child: itemOf(_order()));
@@ -425,6 +443,29 @@ void main() {
         expect(find.text(_nameInEnglish[country]!), findsOneWidget,
             reason: country);
       }
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
+        'writes the amounts of a Saudi order the way the platform does, on the screen of a customer on another storefront',
+        (WidgetTester tester) async {
+      final OrderDetailsController controller =
+          await _controllerOf(order: _order(snapshot: _snapshot('SA')));
+
+      await _pump(tester,
+          customerOn: 'KW',
+          child: OrderAmountCalculation(
+            itemTotalAmount: 12.5,
+            discount: 0,
+            eeDiscount: 0,
+            tax: 0,
+            shippingCost: 0,
+            referAndEarnDiscount: 0,
+            orderProvider: controller,
+          ));
+
+      expect(find.text('Saudi Arabia'), findsOneWidget);
+      expect(find.text('13'), findsWidgets, reason: 'the sub total');
+      expect(find.text('KD 12.500'), findsNothing);
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(

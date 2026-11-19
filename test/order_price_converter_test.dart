@@ -133,6 +133,25 @@ void main() {
     }, skip: StorefrontConfig.enabled);
 
     testWidgets(
+        'an order of one storefront read on another is written as the app has always written an amount',
+        (WidgetTester tester) async {
+      for (final String customerOn in _currencyOf.keys) {
+        final BuildContext context = await _contextOn(tester,
+            storefrontCode: customerOn,
+            config: _config(),
+            chosenCurrency: _saudiRiyal);
+
+        for (final String country in _currencyOf.keys) {
+          expect(
+              PriceConverter.convertOrderPrice(context, 12.5,
+                  market: _orderOf(country)),
+              PriceConverter.convertPrice(context, 12.5),
+              reason: 'an order of $country read by a customer on $customerOn');
+        }
+      }
+    }, skip: StorefrontConfig.enabled);
+
+    testWidgets(
         'and it is what convertPrice writes, for a whole amount, a missing amount and an order with no record',
         (WidgetTester tester) async {
       final BuildContext context =
@@ -288,6 +307,61 @@ void main() {
           PriceConverter.convertOrderPrice(context, 12.5,
               market: const OrderMarket(country: 'SA')),
           '13');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
+        'an order of the default storefront is never written in the money of the storefront the customer is on',
+        (WidgetTester tester) async {
+      for (final String customerOn in _twelveAndAHalf.keys) {
+        final BuildContext context = await _contextOn(tester,
+            storefrontCode: customerOn,
+            config: _config(),
+            chosenCurrency: _saudiRiyal);
+
+        expect(
+            PriceConverter.convertOrderPrice(context, 12.5,
+                market: _orderOf('SA')),
+            '13',
+            reason:
+                'the riyals of a Saudi order read by a customer on $customerOn');
+        expect(
+            PriceConverter.convertOrderPrice(context, 12.5,
+                market: const OrderMarket(country: 'SA')),
+            '13',
+            reason: 'a Saudi order that names no currency, on $customerOn');
+      }
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
+        'an order of another storefront whose currency the server could not vouch for is not written in the money of the storefront the customer is on',
+        (WidgetTester tester) async {
+      final BuildContext onKuwait = await _contextOn(tester,
+          storefrontCode: 'KW', config: _config(), chosenCurrency: _saudiRiyal);
+
+      // The dirhams of an order of a storefront whose currency was not active, and those of one whose rate the server did not record as one.
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 12.5,
+              market: const OrderMarket(country: 'AE')),
+          '13');
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 12.5,
+              market: _orderOf('AE', rate: 3.67)),
+          '13');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
+        'an order of the storefront the customer is on keeps the money of that storefront when its currency is not recorded',
+        (WidgetTester tester) async {
+      final BuildContext onKuwait = await _contextOn(tester,
+          storefrontCode: 'KW', config: _config(), chosenCurrency: _saudiRiyal);
+
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 12.5,
+              market: const OrderMarket(country: 'KW')),
+          'KD 12.500');
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 12.5, market: null),
+          PriceConverter.convertPrice(onKuwait, 12.5));
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
