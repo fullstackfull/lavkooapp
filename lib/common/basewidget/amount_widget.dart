@@ -96,9 +96,12 @@ class AmountWidget extends StatelessWidget {
               ],
             ],
           ),
-          Text(
-            amount,
-            style: amountStyle ?? defaultAmountStyle,
+          Flexible(
+            child: Text(
+              amount,
+              textAlign: TextAlign.end,
+              style: amountStyle ?? defaultAmountStyle,
+            ),
           ),
         ],
       ),

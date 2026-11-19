@@ -194,10 +194,12 @@ class PriceConverter {
   /// (GCC-05, J-13.1): the amount as it is stored, with the decimals of that currency, whatever storefront the customer is on now and whatever
   /// currency they chose in the settings.
   ///
-  /// An order whose currency the app cannot tell keeps the money the app has always written, which on a storefront with its own currency is
-  /// that storefront's — but only for an order that was sold on it. An order that names another storefront was not, so its amounts are written
-  /// the way the platform writes one rather than in a currency they are not in. An order that names no storefront at all, and every build with
-  /// storefronts off, is written by [convertPrice] exactly as it always was.
+  /// An order of the default storefront keeps the platform's money, as every price of that storefront does, for a customer who is on it. For a
+  /// customer who is on a storefront with its own currency the money of that storefront is not the order's, so the amounts are written in the
+  /// currency the order records for them, and, when it records none the app can read, the way the platform writes an amount — which converts at
+  /// the rate of the currency the customer chose, as it always has, rather than putting a number beside a currency it is not in.
+  ///
+  /// An order that names no storefront at all, and every build with storefronts off, is written by [convertPrice] exactly as it always was.
   static String convertOrderPrice(BuildContext context, double? price,
       {required OrderMarket? market}) {
     final String? currencyCode = market?.currencyToWrite();
@@ -205,20 +207,31 @@ class PriceConverter {
       return _priceIn(context, price, currencyCode: currencyCode);
     }
 
-    return _wasSoldOnAnotherStorefront(context, market: market)
-        ? _priceOfThePlatform(context, price)
-        : convertPrice(context, price);
+    if (!_notTheMoneyOfTheStorefront(context, market: market)) {
+      return convertPrice(context, price);
+    }
+
+    final String? recorded = market?.currencyOfItsAmounts();
+
+    return recorded != null
+        ? _priceIn(context, price, currencyCode: recorded)
+        : _priceOfThePlatform(context, price);
   }
 
-  /// Whether the order says it was sold on a storefront other than the one the customer is on now, while that storefront trades in its own
-  /// currency. The amounts of such an order are not in that storefront's money, and writing them in it would put a number beside a currency it
-  /// is not in.
-  static bool _wasSoldOnAnotherStorefront(BuildContext context,
+  /// Whether the money of the storefront the customer is on is not the money the amounts of the order are in, while that storefront trades in
+  /// its own currency: the order says it was sold on another storefront, or it records a rate that is not the one its amounts are stored at, so
+  /// the app cannot read them as that storefront's money. Writing them in it would put a number beside a currency it is not in.
+  static bool _notTheMoneyOfTheStorefront(BuildContext context,
       {required OrderMarket? market}) {
-    final String? country = market?.country;
     final StorefrontCountry? storefront = _storefrontOfOwnCurrency(context);
+    if (market == null || storefront == null) {
+      return false;
+    }
 
-    return country != null && storefront != null && country != storefront.code;
+    final String? country = market.country;
+
+    return (country != null && country != storefront.code) ||
+        market.recordsAnotherRate();
   }
 
   static double? convertWithDiscount(BuildContext context, double? price,

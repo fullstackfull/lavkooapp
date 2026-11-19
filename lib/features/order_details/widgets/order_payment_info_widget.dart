@@ -243,7 +243,7 @@ class OrderPaymentInfoWidget extends StatelessWidget {
                             ),
                             TextSpan(
                               text:
-                                  '${PriceConverter.convertPrice(context, orderProvider.orders?.bringChangeAmount ?? 0)} ',
+                                  '${PriceConverter.convertOrderPrice(context, orderProvider.orders?.bringChangeAmount ?? 0, market: orderProvider.orders?.market)} ',
                               style: titilliumBold.copyWith(
                                 fontSize: Dimensions.fontSizeSmall,
                                 color: Theme.of(context)

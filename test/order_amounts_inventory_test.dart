@@ -42,28 +42,34 @@ const Map<String, _Looked> _looked = <String, _Looked>{
     reason: 'the total of a delivered order on the order again card',
   ),
   'lib/features/order_details/widgets/order_payment_info_widget.dart': (
-    writers: <String, int>{'convertPrice': 1},
-    markets: <String>[],
+    writers: <String, int>{'convertOrderPrice': 1},
+    markets: <String>['orderProvider.orders?.market'],
     reason:
-        'the change the customer asked the courier to bring: the order records the currency of that amount on its own, which this does not read',
+        'the change the customer asked the courier to bring, an amount of the order, on the same screen as the billing summary',
   ),
   'lib/features/order_details/widgets/order_offline_payment_screen.dart': (
-    writers: <String, int>{'convertPrice': 1},
-    markets: <String>[],
+    writers: <String, int>{'convertOrderPrice': 1},
+    markets: <String>['orderDetailsController.orders?.market'],
     reason:
-        'the amount of the payment the customer is making now for what is still due, which is a payment and not a total of the order',
+        'what is still due on the order, the same amount the billing summary and the card of what is due write, carried to the screen the customer pays it from',
   ),
   'lib/features/order_details/widgets/order_payment_bottomsheet_widget.dart': (
     writers: <String, int>{'currencySymbolToShow': 1},
     markets: <String>[],
     reason:
-        'the mark beside the amount the customer types when paying what is still due, not an amount of the order',
+        'the mark beside the amount the customer types when paying what is still due: the money the payment itself is made in, which is the storefront the customer is on, not the currency the order was sold in',
   ),
   'lib/features/order_details/controllers/order_details_controller.dart': (
     writers: <String, int>{'currencyCodeToSend': 1},
     markets: <String>[],
     reason:
-        'the currency a payment of what is still due is sent with, which is not written on a screen',
+        'the currency a payment of what is still due is sent with, which is not written on a screen: the storefront the customer is on, as the mark on the field they type in says',
+  ),
+  'lib/features/review/widgets/review_dialog_widget.dart': (
+    writers: <String, int>{'convertOrderPrice': 1, 'percentageCalculation': 1},
+    markets: <String>['widget.orderDetailsModel.order?.market'],
+    reason:
+        'the price of the line the customer is reviewing, the same line the details screen they came from writes; the badge on it writes the discount of its product, an amount in the platform\'s money, and is not changed',
   ),
   'lib/features/order_details/widgets/refund_product_widget.dart': (
     writers: <String, int>{'convertPrice': 1, 'percentageCalculation': 2},
@@ -90,8 +96,8 @@ const Map<String, _Looked> _looked = <String, _Looked>{
 ///
 /// This is the source scan of J-13 criterion 1. What it proves is where each amount is written and by what; that the order's currency is
 /// what `convertOrderPrice` writes is proved by order_price_converter_test.dart, and that each screen passes it the order's own record, for
-/// the screens that can be built with fakes, by order_screens_currency_test.dart. The two cards of what is due and what is to be returned
-/// on the details screen are covered by this scan alone: the screen itself is not built by a test.
+/// the screens that can be built with fakes, by order_screens_currency_test.dart. The two cards of what is due and what is to be returned on
+/// the details screen, and the screen the customer pays what is due from, are covered by this scan alone: neither is built by a test.
 ///
 /// A line that is a comment is not a use. The scan sees a call written `PriceConverter.name(`, wherever the formatter breaks the line; an
 /// amount a screen writes by interpolating a number into a string is not seen by it, which is what money_formatter_inventory_test.dart
@@ -108,6 +114,7 @@ void main() {
     'order',
     'order_details',
     'refund',
+    'review',
     'tracking',
     'reorder',
   ];

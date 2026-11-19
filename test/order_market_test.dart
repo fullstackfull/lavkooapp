@@ -58,9 +58,10 @@ const List<String> _withTheirOwnCurrency = <String>[
 
 /// J-13 criterion 1, the model half: the order list, the order and the details of an order carry the three columns of the storefront snapshot
 /// the server writes on an order (`storefront_country`, `currency_code`, `currency_rate`), and the app reads them without ever failing on an
-/// order that has none. The answers below are written by hand from the audit of the backend: the order list, the order by its id, the
-/// tracking and the details of an order serialise every column of the order, and the snapshot is written once, when the order is saved, by
-/// `OrderStorefrontSnapshot`, from the products the order holds. They are not recorded from a real server.
+/// order that has none. The answers below are written by hand from the audit of the backend: the order list, the order by its id, the tracking
+/// and the details of an order serialise every column of the order, and the snapshot is written once, when an order is saved by a path that
+/// records it, by `OrderStorefrontSnapshot`, from the products the order holds. They are not recorded from a real server, and no test on
+/// either side asserts that the keys are in an answer.
 ///
 /// The server writes one of four things: the three columns for an order of a storefront with its own currency (the rate is one and a MySQL
 /// decimal arrives as the text `1.00000000`), the three for the default storefront of a platform with a single currency, the country alone
@@ -346,6 +347,89 @@ void main() {
           const OrderMarket(currencyCode: 'KWD', currencyRate: 1)
               .countryToShow(enabled: true),
           isNull);
+    });
+  });
+
+  group('the currency the amounts of an order are in', () {
+    test('is none while storefronts are off, whatever the order says', () {
+      for (final MapEntry<String, String> storefront
+          in _currencyOfStorefront.entries) {
+        final OrderMarket market =
+            OrderMarket.fromJson(_snapshot(storefront.key, storefront.value));
+
+        expect(market.currencyOfItsAmounts(enabled: false), isNull,
+            reason: storefront.key);
+      }
+    });
+
+    test(
+        'is the currency the order records, for every storefront, the default one included',
+        () {
+      for (final MapEntry<String, String> storefront
+          in _currencyOfStorefront.entries) {
+        final OrderMarket market =
+            OrderMarket.fromJson(_snapshot(storefront.key, storefront.value));
+
+        expect(market.currencyOfItsAmounts(enabled: true), storefront.value,
+            reason: storefront.key);
+      }
+    });
+
+    test(
+        'is none when the order records no currency, and none when its rate is not the one its amounts are stored at',
+        () {
+      expect(
+          const OrderMarket(country: 'SA', currencyRate: 1)
+              .currencyOfItsAmounts(enabled: true),
+          isNull);
+      expect(const OrderMarket().currencyOfItsAmounts(enabled: true), isNull);
+      expect(
+          const OrderMarket(country: 'SA', currencyCode: 'SAR')
+              .currencyOfItsAmounts(enabled: true),
+          isNull,
+          reason: 'a currency with no rate');
+
+      for (final double rate in <double>[0, -1, 0.307, 3.75, 1.00000001]) {
+        expect(
+            OrderMarket(country: 'SA', currencyCode: 'SAR', currencyRate: rate)
+                .currencyOfItsAmounts(enabled: true),
+            isNull,
+            reason: '$rate');
+      }
+    });
+  });
+
+  group('whether an order records a rate that is not the one of its amounts',
+      () {
+    test('is no while storefronts are off, whatever the order says', () {
+      expect(
+          const OrderMarket(
+                  country: 'KW', currencyCode: 'KWD', currencyRate: 3.75)
+              .recordsAnotherRate(enabled: false),
+          isFalse);
+    });
+
+    test('is no for the rate its amounts are stored at, and for no rate at all',
+        () {
+      expect(
+          OrderMarket.fromJson(_snapshot('KW', 'KWD'))
+              .recordsAnotherRate(enabled: true),
+          isFalse);
+      expect(
+          const OrderMarket(country: 'KW', currencyCode: 'KWD')
+              .recordsAnotherRate(enabled: true),
+          isFalse);
+      expect(const OrderMarket().recordsAnotherRate(enabled: true), isFalse);
+    });
+
+    test('is yes for every other rate, which the app cannot read', () {
+      for (final double rate in <double>[0, -1, 0.307, 3.75, 1.00000001]) {
+        expect(
+            OrderMarket(country: 'KW', currencyCode: 'KWD', currencyRate: rate)
+                .recordsAnotherRate(enabled: true),
+            isTrue,
+            reason: '$rate');
+      }
     });
   });
 

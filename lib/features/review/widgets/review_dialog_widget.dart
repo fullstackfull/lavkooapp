@@ -583,8 +583,10 @@ class _OrderDetailsState extends State<OrderDetails> {
                             ),
 
                             Text(
-                              PriceConverter.convertPrice(
-                                  context, widget.orderDetailsModel.price),
+                              PriceConverter.convertOrderPrice(
+                                  context, widget.orderDetailsModel.price,
+                                  market:
+                                      widget.orderDetailsModel.order?.market),
                               maxLines: 1,
                               style: titilliumSemiBold.copyWith(
                                   color: Theme.of(context)

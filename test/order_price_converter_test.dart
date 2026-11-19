@@ -17,6 +17,8 @@ class _NoServer implements StorefrontServiceInterface {
   Future<bool> refreshStorefronts() async => false;
 }
 
+/// The three the platform needs to write an amount: the list, the currency the customer chose and the dollar it converts through. The controller
+/// reads the last one from the list when the config arrives, which no test can make it do, so the fake answers all three.
 class _SplashWithConfig extends SplashController {
   _SplashWithConfig(this._config, this._chosenCurrency)
       : super(splashServiceInterface: null);
@@ -29,11 +31,22 @@ class _SplashWithConfig extends SplashController {
 
   @override
   CurrencyList? get myCurrency => _chosenCurrency;
+
+  @override
+  CurrencyList? get usdCurrency => _chosenCurrency == null ? null : _usDollar;
 }
 
 /// The currency the customer chose in the settings: a platform currency, which the money of an order never follows.
 final CurrencyList _saudiRiyal =
     CurrencyList(id: 1, code: 'SAR', symbol: 'SR', exchangeRate: 3.75);
+
+/// The currency the platform converts through, as the controller takes it from the list of the server.
+final CurrencyList _usDollar =
+    CurrencyList(id: 9, code: 'USD', symbol: '\$', exchangeRate: 1);
+
+/// 12.5 as the platform writes it when the customer chose the riyal: the rate of the riyal in the list of the server over the rate of the
+/// dollar, with the mark of the chosen currency and no decimals (12.5 x 3.75 / 1 = 46.875).
+const String _twelveAndAHalfThePlatformWay = 'SR47';
 
 /// The server's currency list. The Qatari riyal and the Bahraini dinar are left out, so that the code stands in for their mark.
 ConfigModel _config({String position = 'left'}) => ConfigModel(
@@ -101,19 +114,60 @@ Future<BuildContext> _contextOn(
 }
 
 /// J-13 criterion 1, the money half: an amount of an order is written in the currency the order was sold in, with the decimals of that
-/// currency, whatever storefront the customer is on and whatever currency they chose in the settings, and an amount is never multiplied by a
-/// rate. Storefronts are a build flag (`--dart-define=GCC_STOREFRONTS_ENABLED=true`), so the groups that write an order in its own currency
+/// currency, whatever storefront the customer is on and whatever currency they chose in the settings, and such an amount is never multiplied by
+/// a rate. Storefronts are a build flag (`--dart-define=GCC_STOREFRONTS_ENABLED=true`), so the groups that write an order in its own currency
 /// run only in a build that has it on, and the group that says nothing changes without it runs only in the default build.
 ///
-/// An order of the default storefront keeps the platform's money, as every price of that storefront does; an order that says nothing of what
-/// it was sold in, and one whose rate is not one, are orders whose currency the app cannot tell, and it does not guess it. All three are
-/// written by `convertPrice`, as every order always was, which on a storefront with its own currency is the money of that storefront: the
-/// tests pin that they are written exactly as `convertPrice` writes them, not that this is the right money for them.
+/// An order of the default storefront keeps the platform's money for a customer who is on that storefront, as every price of it does. An order
+/// that says nothing of what it was sold in, and one whose rate is not one, are orders whose amounts the app cannot read, and it does not guess
+/// them: they are written the way the platform writes an amount, which does multiply by the rate of the currency the customer chose. The first
+/// group pins that way of writing on its own, so that the amount the customer reads for such an order is an amount a test has looked at.
 ///
 ///   flutter test test/order_price_converter_test.dart
 ///   flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_price_converter_test.dart
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('the way the platform writes an amount', () {
+    testWidgets(
+        'is the amount at the rate of the currency the customer chose, over the rate of the dollar, with no decimals',
+        (WidgetTester tester) async {
+      final BuildContext onTheDefault = await _contextOn(tester,
+          storefrontCode: 'SA', config: _config(), chosenCurrency: _saudiRiyal);
+
+      // The riyal is 3.75 in the list of the server and the dollar is 1: 12.5 x 3.75 / 1 = 46.875, and 1234.5 x 3.75 = 4629.375.
+      expect(PriceConverter.convertPrice(onTheDefault, 12.5), 'SR47');
+      expect(PriceConverter.convertPrice(onTheDefault, 1234.5), 'SR4,629');
+    });
+
+    testWidgets(
+        'is what an order whose amounts the app cannot read is written as, on a storefront with its own currency',
+        (WidgetTester tester) async {
+      final BuildContext onKuwait = await _contextOn(tester,
+          storefrontCode: 'KW', config: _config(), chosenCurrency: _saudiRiyal);
+
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 12.5,
+              market: const OrderMarket(country: 'AE')),
+          'SR47');
+      expect(
+          PriceConverter.convertOrderPrice(onKuwait, 1234.5,
+              market: const OrderMarket(country: 'AE')),
+          'SR4,629');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets(
+        'is a bare number until the config and the currency the customer chose have arrived',
+        (WidgetTester tester) async {
+      final BuildContext withoutConfig =
+          await _contextOn(tester, storefrontCode: 'SA', config: null);
+      final BuildContext withoutACurrency = await _contextOn(tester,
+          storefrontCode: 'SA', config: _config(), chosenCurrency: null);
+
+      expect(PriceConverter.convertPrice(withoutConfig, 12.5), '13');
+      expect(PriceConverter.convertPrice(withoutACurrency, 12.5), '13');
+    });
+  });
 
   group('with storefronts off (the default build), whatever the order says',
       () {
@@ -127,7 +181,7 @@ void main() {
         expect(
             PriceConverter.convertOrderPrice(context, 12.5,
                 market: _orderOf(country)),
-            '13',
+            _twelveAndAHalfThePlatformWay,
             reason: country);
       }
     }, skip: StorefrontConfig.enabled);
@@ -152,8 +206,9 @@ void main() {
     }, skip: StorefrontConfig.enabled);
 
     testWidgets(
-        'and it is what convertPrice writes, for a whole amount, a missing amount and an order with no record',
+        'and it is what convertPrice writes, for a whole amount, a missing amount and an order with no record, before the config has arrived',
         (WidgetTester tester) async {
+      // No config and no currency chosen: the platform writes the bare number, as it does on a device whose config has not arrived.
       final BuildContext context =
           await _contextOn(tester, storefrontCode: 'KW', config: null);
 
@@ -275,26 +330,38 @@ void main() {
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
-        'an order whose rate is not one is written as before, never in its currency and never multiplied',
+        'an order whose rate is not one is written the way the platform writes an amount, never in its currency, on every storefront',
         (WidgetTester tester) async {
-      final BuildContext context = await _contextOn(tester,
+      // Its amounts are not the number they are stored as in the currency it names, so they are written as the app wrote every amount before
+      // storefronts: the currency the customer chose, at the rate of the list. On the storefront the order itself names too, which is the one
+      // storefront where the money the app would otherwise fall back to is the currency of the order.
+      for (final String customerOn in _currencyOf.keys) {
+        final BuildContext context = await _contextOn(tester,
+            storefrontCode: customerOn,
+            config: _config(),
+            chosenCurrency: _saudiRiyal);
+
+        for (final double rate in <double>[0.307, 3.75]) {
+          expect(
+              PriceConverter.convertOrderPrice(context, 12.5,
+                  market: _orderOf('KW', rate: rate)),
+              _twelveAndAHalfThePlatformWay,
+              reason: 'a rate of $rate read by a customer on $customerOn');
+        }
+      }
+
+      final BuildContext onTheDefault = await _contextOn(tester,
           storefrontCode: 'SA', config: _config(), chosenCurrency: _saudiRiyal);
 
-      for (final double rate in <double>[0.307, 3.75]) {
-        expect(
-            PriceConverter.convertOrderPrice(context, 12.5,
-                market: _orderOf('KW', rate: rate)),
-            '13',
-            reason: 'a rate of $rate');
-      }
+      // An order that records a currency but no rate records nothing the app can read, and is written as an order that says nothing is.
       expect(
-          PriceConverter.convertOrderPrice(context, 12.5,
+          PriceConverter.convertOrderPrice(onTheDefault, 12.5,
               market: const OrderMarket(country: 'KW', currencyCode: 'KWD')),
-          '13');
+          _twelveAndAHalfThePlatformWay);
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
-        'an order of the default storefront is written as before, in the way of the platform and not in riyals with two decimals',
+        'an order of the default storefront is written for a customer on it exactly as the platform writes every amount of that storefront',
         (WidgetTester tester) async {
       final BuildContext context = await _contextOn(tester,
           storefrontCode: 'SA', config: _config(), chosenCurrency: _saudiRiyal);
@@ -302,15 +369,15 @@ void main() {
       expect(
           PriceConverter.convertOrderPrice(context, 12.5,
               market: _orderOf('SA')),
-          '13');
+          _twelveAndAHalfThePlatformWay);
       expect(
           PriceConverter.convertOrderPrice(context, 12.5,
               market: const OrderMarket(country: 'SA')),
-          '13');
+          PriceConverter.convertPrice(context, 12.5));
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
-        'an order of the default storefront is never written in the money of the storefront the customer is on',
+        'an order of the default storefront is written in the riyals it records, and never in the money of the storefront the customer is on',
         (WidgetTester tester) async {
       for (final String customerOn in _twelveAndAHalf.keys) {
         final BuildContext context = await _contextOn(tester,
@@ -321,13 +388,13 @@ void main() {
         expect(
             PriceConverter.convertOrderPrice(context, 12.5,
                 market: _orderOf('SA')),
-            '13',
+            'SR 12.50',
             reason:
                 'the riyals of a Saudi order read by a customer on $customerOn');
         expect(
             PriceConverter.convertOrderPrice(context, 12.5,
                 market: const OrderMarket(country: 'SA')),
-            '13',
+            _twelveAndAHalfThePlatformWay,
             reason: 'a Saudi order that names no currency, on $customerOn');
       }
     }, skip: !StorefrontConfig.enabled);
@@ -342,11 +409,11 @@ void main() {
       expect(
           PriceConverter.convertOrderPrice(onKuwait, 12.5,
               market: const OrderMarket(country: 'AE')),
-          '13');
+          _twelveAndAHalfThePlatformWay);
       expect(
           PriceConverter.convertOrderPrice(onKuwait, 12.5,
               market: _orderOf('AE', rate: 3.67)),
-          '13');
+          _twelveAndAHalfThePlatformWay);
     }, skip: !StorefrontConfig.enabled);
 
     testWidgets(
@@ -383,7 +450,7 @@ void main() {
             PriceConverter.convertPrice(onTheDefault, 12.5));
       }
       expect(PriceConverter.convertOrderPrice(onTheDefault, 12.5, market: null),
-          '13');
+          _twelveAndAHalfThePlatformWay);
 
       final BuildContext onKuwait = await _contextOn(tester,
           storefrontCode: 'KW', config: _config(), chosenCurrency: _saudiRiyal);
