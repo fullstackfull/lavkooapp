@@ -9,7 +9,8 @@ import 'package:syriapharmacy/features/storefront/domain/models/storefront_count
 ///
 /// The default storefront keeps the platform's money and the way the app has always written it, so turning storefronts on changes
 /// nothing for a Saudi customer. This class is only asked for while storefronts are on and the customer is on another storefront
-/// ([writesPricesOf]); with them off it is never reached.
+/// ([writesPricesOf]), or to write the amounts of an order that says it was sold on one (`OrderMarket.currencyToWrite`); with them off it
+/// is never reached.
 class StorefrontMoney {
   const StorefrontMoney._();
 

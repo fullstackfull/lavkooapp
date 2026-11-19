@@ -1,5 +1,6 @@
 import 'package:syriapharmacy/data/model/image_full_url.dart';
 import 'package:syriapharmacy/features/shop/domain/models/seller_model.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/order_market.dart';
 
 class OrderModel {
   int? totalSize;
@@ -78,6 +79,7 @@ class Orders {
   int? editedStatus;
   double? editDueAmount;
   double? editReturnAmount;
+  OrderMarket? market;
 
   Orders(
       {this.id,
@@ -134,7 +136,8 @@ class Orders {
       this.taxModel,
       this.editedStatus,
       this.editDueAmount,
-      this.editReturnAmount});
+      this.editReturnAmount,
+      this.market});
 
   Orders.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -233,6 +236,7 @@ class Orders {
     editReturnAmount = json['edit_return_amount'] != null
         ? double.tryParse(json['edit_return_amount'].toString())
         : null;
+    market = OrderMarket.fromJson(json);
   }
 }
 

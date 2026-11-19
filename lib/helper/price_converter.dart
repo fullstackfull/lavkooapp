@@ -3,6 +3,7 @@ import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart
 import 'package:provider/provider.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/order_market.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/features/storefront/storefront_money.dart';
@@ -82,12 +83,19 @@ class PriceConverter {
           currencyCode: storefront.currency);
     }
 
+    return _priceIn(context, price, currencyCode: storefront.currency);
+  }
+
+  /// The price written in [currencyCode], with the decimals of that currency and the mark of the server's currency list (the code when the
+  /// server sent none), on the side the config says.
+  static String _priceIn(BuildContext context, double? price,
+      {required String currencyCode}) {
     final ConfigModel? configModel =
         Provider.of<SplashController>(context, listen: false).configModel;
 
     return StorefrontMoney.format(price,
-        currencyCode: storefront.currency,
-        symbol: _symbolOf(configModel, storefront.currency),
+        currencyCode: currencyCode,
+        symbol: _symbolOf(configModel, currencyCode),
         symbolOnRight: configModel?.currencySymbolPosition == 'right');
   }
 
@@ -177,6 +185,20 @@ class PriceConverter {
       return price.toString();
     }
   }
+
+  /// An amount of an order, written in the currency the order was sold in when the order says it was sold on a storefront with its own currency
+  /// (GCC-05, J-13.1): the amount as it is stored, with the decimals of that currency, whatever storefront the customer is on now and whatever
+  /// currency they chose in the settings. Every other order, an order of the default storefront and one that says nothing included, and
+  /// every build with storefronts off, is written by [convertPrice] as it always was.
+  static String convertOrderPrice(BuildContext context, double? price,
+      {required OrderMarket? market}) {
+    final String? currencyCode = market?.currencyToWrite();
+
+    return currencyCode == null
+        ? convertPrice(context, price)
+        : _priceIn(context, price, currencyCode: currencyCode);
+  }
+
   static double? convertWithDiscount(BuildContext context, double? price,
       double? discount, String? discountType) {
     if (discountType == 'amount' || discountType == 'flat') {

@@ -2,6 +2,7 @@ import 'package:syriapharmacy/data/model/image_full_url.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
 import 'package:syriapharmacy/features/product_details/domain/models/product_details_model.dart';
 import 'package:syriapharmacy/features/shop/domain/models/seller_model.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/order_market.dart';
 
 class OrderDetailsModel {
   int? _id;
@@ -225,6 +226,7 @@ class Order {
   double? referAndEarnDiscount;
   int? editedStatus;
   OfflinePayments? offlinePayments;
+  OrderMarket? market;
 
   Order(
       {this.isShippingFree,
@@ -232,7 +234,8 @@ class Order {
       this.status,
       this.deliveryManReview,
       this.referAndEarnDiscount,
-      this.editedStatus});
+      this.editedStatus,
+      this.market});
 
   Order.fromJson(Map<String, dynamic> json) {
     try {
@@ -252,6 +255,7 @@ class Order {
     offlinePayments = json['offline_payments'] != null
         ? OfflinePayments.fromJson(json['offline_payments'])
         : null;
+    market = OrderMarket.fromJson(json);
   }
 }
 
