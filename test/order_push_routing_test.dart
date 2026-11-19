@@ -15,6 +15,7 @@ import 'package:syriapharmacy/features/storefront/controllers/storefront_control
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/features/storefront/stored_storefronts.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/main.dart' show navigatorKey;
@@ -71,7 +72,9 @@ typedef _Storefront = ({String? chosen, List<StorefrontCountry>? listed});
 /// showed (a message that came while it was not). They are reached here the way the app reaches them: the plugin is a stand-in that keeps the
 /// function it is given, and the message goes into the stream that Firebase's own code feeds. The route table is a stand-in too: the real one
 /// builds the order screen, which needs the providers of the whole app, so what is looked at is the route asked for, by the real
-/// `RouterHelper`, with the id.
+/// `RouterHelper`, with the id. The storefront is set the three ways the app knows it, the choice the customer saved, the list the server last
+/// answered with, and the code the HTTP client publishes for the requests (`StorefrontScope`), so a hold-back written on any of them is in
+/// the way.
 ///
 /// A push that started the app is routed by the splash screen, which is not driven here (it is the screen of the update gate, and is read and
 /// not touched): its two order branches and the absence of a gate in it are pinned by the source.
@@ -97,6 +100,8 @@ void main() {
     if (listed != null) {
       await StoredStorefronts(preferences).save(listed);
     }
+    StorefrontScope.publish(chosen ?? StorefrontCountry.defaultCountry.code);
+    addTearDown(() => StorefrontScope.publish(null));
 
     await tester.pumpWidget(
       ChangeNotifierProvider<StorefrontController>.value(

@@ -16,9 +16,12 @@ import 'package:syriapharmacy/features/order_details/domain/services/order_detai
 import 'package:syriapharmacy/features/refund/controllers/refund_controller.dart';
 import 'package:syriapharmacy/features/refund/domain/services/refund_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
+import 'package:syriapharmacy/features/storefront/stored_storefronts.dart';
 import 'package:syriapharmacy/features/support/controllers/support_ticket_controller.dart';
 import 'package:syriapharmacy/features/support/domain/models/support_ticket_body.dart';
 import 'package:syriapharmacy/features/support/domain/services/support_ticket_service_interface.dart';
@@ -184,14 +187,40 @@ final List<_Call> _calls = <_Call>[
   ),
 ];
 
+/// A storefront the customer chose that may not sell, and the list the server last answered with (null while it was never asked). An app knows
+/// a storefront is browse-only in two ways: its own answer for a storefront that is not Saudi Arabia, which may not sell until the server says
+/// it may, and the entry the server sent for it, with the stop mode browse_only. A gate could be written on either, so the calls are made on both.
+typedef _BrowseOnly = ({String chosen, List<StorefrontCountry>? listed});
+
+final Map<String, _BrowseOnly> _browseOnlyStorefronts = <String, _BrowseOnly>{
+  'the Emirates, which are browse-only until the server opens them': (
+    chosen: 'AE',
+    listed: null,
+  ),
+  'the Emirates, which the server lists with the stop mode browse_only': (
+    chosen: 'AE',
+    listed: <StorefrontCountry>[
+      StorefrontCountry.saudiArabia,
+      const StorefrontCountry(
+        code: 'AE',
+        path: '/ae',
+        currency: 'AED',
+        stopMode: StorefrontCountry.browseOnlyMode,
+      ),
+    ],
+  ),
+};
+
 /// J-13 criterion 2: the details, the tracking, the refund, the support and the chat of an order the customer already has work on any
 /// storefront, a browse-only one included. The sale gate is for what starts a sale (the cart's Proceed, the checkout, a payment, a top-up of
 /// the wallet); an order that exists is not asked.
 ///
 /// The scan lists every file that refers to the gate, with what it does with it, and fails for one that was not looked at; and none of the
-/// sources of the order list, the order, its tracking, its refund, its support tickets and its chat refers to it. The behaviour is the
-/// controllers of the order screens started by hand on a browse-only storefront: each makes its request. The behaviour runs only in a build with
-/// storefronts on, where a storefront can be browse-only:
+/// sources of the order list, the order, its tracking, its refund, its support tickets and its chat refers to it, or reads the state of the
+/// storefront (its controller, its choice, the server's entry for it, its stop mode) to hold a request back in a way of its own. They know the
+/// storefront only as the code a request was made for (`StorefrontScope`) and as the headers of the HTTP client. The behaviour is the
+/// controllers of the order screens started by hand on a browse-only storefront, on each of the two ways an app knows it is browse-only: each
+/// makes its request. The behaviour runs only in a build with storefronts on, where a storefront can be browse-only:
 ///
 ///   flutter test test/existing_orders_not_gated_test.dart
 ///   flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/existing_orders_not_gated_test.dart
@@ -217,6 +246,12 @@ void main() {
         RegExp(r'class (\w+)').firstMatch(sources[gateFile]!)!.group(1)!;
     final RegExp mentionsTheGate = RegExp(
         '$gateClass|checkout_sale_gate|saleGate|storefrontMaySell|maySellIn|showsBrowseOnlyNotice|BrowseOnlyNotice|browse_only_notice|canSell|sellable|StorefrontRefusal|not_sellable|\\.permits\\(');
+
+    /// What a source would name to hold a request back on a browse-only storefront without naming the gate: anything of the storefront
+    /// feature but StorefrontScope (the controller, the choice, the country, the stored list), the stop mode the server sends for a
+    /// storefront, and the entry or the maintenance read from it.
+    final RegExp readsTheStorefrontState = RegExp(
+        r'Storefront(?!Scope\b)|stopMode|browseOnlyMode|maintenanceMode|redirectMode|currentEntry|listedEntryOf|[iI]nMaintenance');
 
     /// Each file that refers to the gate or to the flag it reads, and what it does with it.
     const Map<String, String> looked = <String, String>{
@@ -257,7 +292,7 @@ void main() {
     });
 
     test(
-        'is by no source of the order list, the order, its tracking, its refund, its support tickets or its chat',
+        'is by no source of the order list, the order, its tracking, its refund, its support tickets or its chat, and none of them reads the state of the storefront in a way of its own',
         () {
       const List<String> features = <String>[
         'order',
@@ -273,12 +308,16 @@ void main() {
           for (final String path in sources.keys)
             if (path.startsWith('lib/features/$feature/')) path,
         ];
-        final Map<String, String> found = <String, String>{
-          for (final String path in paths)
-            if (mentionsTheGate.firstMatch(codeOf(sources[path]!)) != null)
-              path:
-                  mentionsTheGate.firstMatch(codeOf(sources[path]!))!.group(0)!,
-        };
+        final Map<String, String> found = <String, String>{};
+        for (final String path in paths) {
+          final String code = codeOf(sources[path]!);
+          final String? asked = (mentionsTheGate.firstMatch(code) ??
+                  readsTheStorefrontState.firstMatch(code))
+              ?.group(0);
+          if (asked != null) {
+            found[path] = asked;
+          }
+        }
 
         expect(paths, isNotEmpty, reason: feature);
         expect(found, isEmpty, reason: feature);
@@ -286,40 +325,57 @@ void main() {
     });
   });
 
+  Future<void> browseOnly(WidgetTester tester,
+      {required _BrowseOnly storefront}) async {
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{AppConstants.storefrontCountry: storefront.chosen});
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
+    final List<StorefrontCountry>? listed = storefront.listed;
+    if (listed != null) {
+      await StoredStorefronts(preferences).save(listed);
+    }
+    StorefrontScope.publish(storefront.chosen);
+    addTearDown(() => StorefrontScope.publish(null));
+
+    final StorefrontController storefronts = StorefrontController(
+      storefrontServiceInterface: _NoServer(),
+      storefrontChoice: StorefrontChoice(preferences, enabled: true),
+    );
+    await tester.pumpWidget(
+      ChangeNotifierProvider<StorefrontController>.value(
+        value: storefronts,
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          home: const Scaffold(),
+        ),
+      ),
+    );
+
+    expect(storefronts.saleGate.storefrontMaySell, isFalse);
+    expect(storefronts.currentEntry?.stopMode,
+        listed == null ? isNull : StorefrontCountry.browseOnlyMode);
+  }
+
   group('on a browse-only storefront', () {
-    for (final _Call call in _calls) {
-      testWidgets('${call.name} reaches the server',
-          (WidgetTester tester) async {
-        SharedPreferences.setMockInitialValues(
-            <String, Object>{AppConstants.storefrontCountry: 'AE'});
-        final SharedPreferences preferences =
-            await SharedPreferences.getInstance();
-        final StorefrontController storefronts = StorefrontController(
-          storefrontServiceInterface: _NoServer(),
-          storefrontChoice: StorefrontChoice(preferences, enabled: true),
-        );
-        await tester.pumpWidget(
-          ChangeNotifierProvider<StorefrontController>.value(
-            value: storefronts,
-            child: MaterialApp(
-              navigatorKey: navigatorKey,
-              home: const Scaffold(),
-            ),
-          ),
-        );
-        expect(storefronts.saleGate.storefrontMaySell, isFalse);
+    for (final MapEntry<String, _BrowseOnly> storefront
+        in _browseOnlyStorefronts.entries) {
+      for (final _Call call in _calls) {
+        testWidgets('${call.name} reaches the server on ${storefront.key}',
+            (WidgetTester tester) async {
+          await browseOnly(tester, storefront: storefront.value);
 
-        // The support controller asks for a translation when it is built, so it needs the app's context first.
-        final _Controllers controllers = _Controllers();
-        addTearDown(controllers.orderDetails.dispose);
-        addTearDown(controllers.refund.dispose);
-        addTearDown(controllers.support.dispose);
-        addTearDown(controllers.chat.dispose);
+          // The support controller asks for a translation when it is built, so it needs the app's context first.
+          final _Controllers controllers = _Controllers();
+          addTearDown(controllers.orderDetails.dispose);
+          addTearDown(controllers.refund.dispose);
+          addTearDown(controllers.support.dispose);
+          addTearDown(controllers.chat.dispose);
 
-        await call.make(controllers);
+          await call.make(controllers);
 
-        expect(controllers.requests.made, <Symbol>[call.request]);
-      });
+          expect(controllers.requests.made, <Symbol>[call.request]);
+        });
+      }
     }
   }, skip: !StorefrontConfig.enabled);
 }

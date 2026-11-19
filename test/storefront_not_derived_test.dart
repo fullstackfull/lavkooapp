@@ -35,7 +35,8 @@ class _Server implements StorefrontServiceInterface {
 /// The scan finds that by absence, in the sources: who imports the location packages, and whether any file that resolves, stores or reads
 /// the storefront reads the device's locale, a position or an address on the network. The behaviour is the answer under three devices
 /// (Arabic in the Emirates, English in Kuwait, French in France): it is always the same storefront. A read of `PlatformDispatcher.instance`
-/// or of `Platform.localeName` is not changed by the test value of the locale, so only the scan sees those.
+/// or of `Platform.localeName` is not changed by the test value of the locale, so only the scan sees those. The scan looks for the spellings
+/// of such a read: one made through a variable that holds the dispatcher, in a file that is not of the storefront feature, is not one of them.
 void main() {
   final Map<String, String> sources = <String, String>{
     for (final FileSystemEntity entity
@@ -44,9 +45,12 @@ void main() {
         entity.path: entity.readAsStringSync(),
   };
 
+  /// The code of a source, without its comments: the lines that are one, the end of a line that has one, and the blocks. A `//` after a colon
+  /// is the one of an address inside a string, and stays.
   String codeOf(String source) => source
+      .replaceAll(RegExp(r'/\*[\s\S]*?\*/'), '')
       .split('\n')
-      .where((String line) => !line.trimLeft().startsWith('//'))
+      .map((String line) => line.replaceFirst(RegExp(r'(?<!:)//.*'), ''))
       .join('\n');
 
   Set<String> importersOf(String package) {
