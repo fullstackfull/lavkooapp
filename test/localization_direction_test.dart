@@ -16,7 +16,8 @@ import 'package:syriapharmacy/utill/app_constants.dart';
 /// The MaterialApp those tests build is a copy of the app's, configured the way the app's is. The app's own (`MaterialApp.router` in
 /// `lib/main.dart`) needs the providers of the whole app and the router of the whole app, so it is not built here: the last group pins by
 /// the source the lines of it that give the app its direction (the controller's locale, the delegate that turns a locale into a direction, the
-/// list of languages, and no direction forced on what the router shows). Nothing was run on a device.
+/// list of languages, no direction forced on what the router shows, and no other locale put in the place of the controller's). Nothing was
+/// run on a device.
 void main() {
   const Map<String, bool> isLeftToRight = <String, bool>{
     'ar': false,
@@ -181,6 +182,16 @@ void main() {
       expect(appSource.indexOf('Directionality('),
           lessThan(appSource.indexOf('MaterialApp.router(')),
           reason: 'it is not inside the router');
+    });
+
+    test(
+        'puts no other locale in the place of the controller\'s: nothing resolves the locale and nothing overrides it',
+        () {
+      expect(
+          RegExp(r'locale(?:List)?ResolutionCallback|Localizations\.override')
+              .firstMatch(appSource)
+              ?.group(0),
+          isNull);
     });
   });
 }
