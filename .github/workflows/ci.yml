@@ -270,9 +270,9 @@ jobs:
         run: flutter test test/localization_direction_test.dart
 
       # J-17 criterion 4: the update screen offers a target that works when the shop configures no link, which is what the live shop
-      # publishes. The button is run on the real screen with the launcher answering through the plugin's own channel; the store page it falls
-      # back to is built from the id the build carries, and the test holds that id to the Android build, the manifest and the iOS Firebase
-      # settings. Nothing here reads the storefronts flag, so the file runs once.
+      # publishes. The button is run on the real screen, on both platforms, with the launcher answering through the plugin's own channel; the
+      # store it falls back to is built from the id the build carries, and the test holds that id to the Android build, the manifest and the
+      # iOS Firebase settings. Nothing here reads the storefronts flag, so the file runs once.
       - name: J-17.4 the update screen offers a store page when the shop configures no link
         run: flutter test test/update_target_test.dart
 

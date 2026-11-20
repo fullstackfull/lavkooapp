@@ -14,6 +14,7 @@ import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/update/screen/update_screen.dart';
 import 'package:syriapharmacy/localization/app_localization.dart';
 import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
+import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:syriapharmacy/utill/update_target.dart';
 
 Map<String, dynamic> _languageFile(String code) =>
@@ -107,9 +108,13 @@ List<String> _candidatesFor(String? link, {bool isIos = false}) =>
 
 bool _anythingOpens(String address) => true;
 
+const String _playStoreApp = 'market://details?id=com.lavkoo.app';
 const String _playStorePage =
     'https://play.google.com/store/apps/details?id=com.lavkoo.app';
-const String _appStoreSearch = 'https://apps.apple.com/search?term=LAVKOO';
+const String _appStoreSearch =
+    'https://apps.apple.com/sa/search?media=software&term=LAVKOO';
+const List<String> _androidStore = <String>[_playStoreApp, _playStorePage];
+const List<String> _iosStore = <String>[_appStoreSearch];
 
 /// The one line of a Gradle, Kotlin or plist file that carries the id, as the file writes it.
 String _fileValue(String path, RegExp pattern) {
@@ -126,13 +131,14 @@ String _fileValue(String path, RegExp pattern) {
 /// The decision is pinned on the helper it was extracted into, for both platforms and for every shape of link the shop can publish, the way
 /// test/update_gate_test.dart pins the rule that puts the customer on this screen in the first place. The screen itself is then run, with the
 /// device's launcher answering through the plugin's own channel, so what is pinned is what the button does and not only what the helper
-/// returns.
+/// returns — on both platforms: the screen reads `defaultTargetPlatform`, which `debugDefaultTargetPlatformOverride` can move, so the iOS
+/// road is driven through the real button too.
 ///
-/// What this does not cover: the screen was run on the test host, where `Platform.isIOS` is false, so the button is only ever seen taking the
-/// Android road; the iOS road is pinned on the helper alone. Whether the two addresses answer is Google's and Apple's business and is not
-/// asked here. That the Android id in the Dart sources is the id the Android build really carries is read from build.gradle.kts and the
-/// manifest; `PRODUCT_BUNDLE_IDENTIFIER` in ios/Runner.xcodeproj/project.pbxproj says `com.ksacosmetics.app`, which is neither read nor
-/// changed here.
+/// What this does not cover: whether the two store addresses answer is Google's and Apple's business and is not asked here. The iOS address
+/// is the App Store's search for the app by name, not the app's own page, because Apple addresses a page by a number no source in this
+/// repository carries — the iOS half of this criterion is closed only that far. That the Android id in the Dart sources is the id the Android
+/// build really carries is read from build.gradle.kts and the manifest; `PRODUCT_BUNDLE_IDENTIFIER` in ios/Runner.xcodeproj/project.pbxproj
+/// says `com.ksacosmetics.app`, which is neither read nor changed here.
 ///
 ///   flutter test test/update_target_test.dart
 void main() {
@@ -148,52 +154,56 @@ void main() {
       }
     });
 
-    test('is the store page when the shop configures an empty link', () {
-      expect(_candidatesFor(''), <String>[_playStorePage]);
-      expect(_candidatesFor('', isIos: true), <String>[_appStoreSearch]);
+    test('is the store when the shop configures an empty link', () {
+      expect(_candidatesFor(''), _androidStore);
+      expect(_candidatesFor('', isIos: true), _iosStore);
     });
 
-    test('is the store page when the shop configures only blank space', () {
+    test('is the store when the shop configures only blank space', () {
       for (final String link in <String>[' ', '   ', '\n', '\t ']) {
-        expect(_candidatesFor(link), <String>[_playStorePage],
-            reason: 'link "$link"');
-        expect(_candidatesFor(link, isIos: true), <String>[_appStoreSearch],
+        expect(_candidatesFor(link), _androidStore, reason: 'link "$link"');
+        expect(_candidatesFor(link, isIos: true), _iosStore,
             reason: 'link "$link" on iOS');
       }
     });
 
-    test('is the store page when the shop configures no link at all', () {
-      expect(_candidatesFor(null), <String>[_playStorePage]);
-      expect(_candidatesFor(null, isIos: true), <String>[_appStoreSearch]);
+    test('is the store when the shop configures no link at all', () {
+      expect(_candidatesFor(null), _androidStore);
+      expect(_candidatesFor(null, isIos: true), _iosStore);
     });
 
-    test('is the store page when the shop sends no row for the platform', () {
+    test('is the store when the shop sends no row for the platform', () {
       expect(
         UpdateTarget.candidates(
             control: UserAppVersionControl(forIos: _row('https://lavkoo.com')),
             isIos: false),
-        <String>[_playStorePage],
+        _androidStore,
       );
       expect(
         UpdateTarget.candidates(
             control:
                 UserAppVersionControl(forAndroid: _row('https://lavkoo.com')),
             isIos: true),
-        <String>[_appStoreSearch],
+        _iosStore,
       );
     });
 
-    test('is the store page when the shop sends no setting at all', () {
+    test('is the store when the shop sends no setting at all', () {
       expect(UpdateTarget.candidates(control: null, isIos: false),
-          <String>[_playStorePage]);
-      expect(UpdateTarget.candidates(control: null, isIos: true),
-          <String>[_appStoreSearch]);
+          _androidStore);
+      expect(UpdateTarget.candidates(control: null, isIos: true), _iosStore);
     });
 
     test('names this build on the store of the platform it runs on', () {
-      expect(UpdateTarget.storePage(isIos: false), _playStorePage);
-      expect(UpdateTarget.storePage(isIos: true), _appStoreSearch);
-      expect(UpdateTarget.applicationId, 'com.lavkoo.app');
+      expect(UpdateTarget.storeTargets(isIos: false), _androidStore);
+      expect(UpdateTarget.storeTargets(isIos: true), _iosStore);
+    });
+
+    test('asks the Play app before the Play web page, and only on Android', () {
+      expect(UpdateTarget.storeTargets(isIos: false).first, startsWith('market://'));
+      expect(UpdateTarget.storeTargets(isIos: false).last, startsWith('https://play.google.com/'));
+      expect(UpdateTarget.storeTargets(isIos: true),
+          everyElement(startsWith('https://apps.apple.com/')));
     });
 
     test('each platform reads its own link', () {
@@ -204,14 +214,17 @@ void main() {
 
       expect(UpdateTarget.candidates(control: control, isIos: false).first,
           'https://lavkoo.com/android');
-      expect(UpdateTarget.candidates(control: control, isIos: true),
-          <String>[_appStoreSearch]);
+      expect(UpdateTarget.candidates(control: control, isIos: true), _iosStore);
     });
 
-    test('ends at the store page even when the shop configures a link', () {
+    test('ends at the store even when the shop configures a link', () {
       expect(
         _candidatesFor('https://lavkoo.com/app'),
-        <String>['https://lavkoo.com/app', _playStorePage],
+        <String>['https://lavkoo.com/app', ..._androidStore],
+      );
+      expect(
+        _candidatesFor('https://lavkoo.com/app', isIos: true),
+        <String>['https://lavkoo.com/app', ..._iosStore],
       );
     });
 
@@ -236,20 +249,27 @@ void main() {
       expect(
         _fileValue('android/app/build.gradle.kts',
             RegExp(r'applicationId\s*=\s*"([^"]+)"')),
-        UpdateTarget.applicationId,
+        AppConstants.androidApplicationId,
         reason: 'the Android build',
       );
       expect(
         _fileValue('android/app/src/main/AndroidManifest.xml',
             RegExp(r'package="([^"]+)"')),
-        UpdateTarget.applicationId,
+        AppConstants.androidApplicationId,
         reason: 'the Android manifest',
       );
       expect(
         _fileValue('ios/Runner/GoogleService-Info.plist',
             RegExp(r'<key>BUNDLE_ID</key>\s*<string>([^<]+)</string>')),
-        UpdateTarget.applicationId,
+        AppConstants.androidApplicationId,
         reason: 'the iOS Firebase settings',
+      );
+    });
+
+    test('is what both Android store addresses name', () {
+      expect(
+        UpdateTarget.storeTargets(isIos: false),
+        everyElement(endsWith('?id=${AppConstants.androidApplicationId}')),
       );
     });
   });
@@ -259,7 +279,12 @@ void main() {
       WidgetTester tester, {
       required ConfigModel? config,
       bool Function(String address) canOpen = _anythingOpens,
+      bool onIos = false,
     }) async {
+      if (onIos) {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      }
+
       SharedPreferences.setMockInitialValues(<String, Object>{});
       final SharedPreferences preferences =
           await SharedPreferences.getInstance();
@@ -299,17 +324,31 @@ void main() {
 
       await tester.tap(find.text(_words('en', 'update_now')));
       await tester.pumpAndSettle();
+      // The screen has read the platform by now, and the test framework refuses to end a test body that left this override standing.
+      debugDefaultTargetPlatformOverride = null;
 
       return launcher;
     }
 
-    testWidgets('opens the store page when the shop configures an empty link',
+    testWidgets('opens the Play page when the shop configures an empty link',
         (WidgetTester tester) async {
       final _Launcher launcher = await tapUpdate(tester,
           config: ConfigModel(userAppVersionControl: _liveControl()));
 
-      expect(launcher.opened, <String>[_playStorePage]);
+      expect(launcher.opened, <String>[_playStoreApp]);
       expect(launcher.asked, isNot(contains('')));
+    });
+
+    testWidgets('opens the Play web page when the device has no Play app',
+        (WidgetTester tester) async {
+      final _Launcher launcher = await tapUpdate(
+        tester,
+        config: ConfigModel(userAppVersionControl: _liveControl()),
+        canOpen: (String address) => address != _playStoreApp,
+      );
+
+      expect(launcher.asked, _androidStore);
+      expect(launcher.opened, <String>[_playStorePage]);
     });
 
     testWidgets('opens the link the shop configured',
@@ -326,7 +365,7 @@ void main() {
         (WidgetTester tester) async {
       final _Launcher launcher = await tapUpdate(tester, config: null);
 
-      expect(launcher.opened, <String>[_playStorePage]);
+      expect(launcher.opened, <String>[_playStoreApp]);
     });
 
     testWidgets('opens the store page when the configured link cannot be opened',
@@ -339,21 +378,47 @@ void main() {
         canOpen: (String address) => address != 'lavkoo://update',
       );
 
-      expect(launcher.asked, <String>['lavkoo://update', _playStorePage]);
-      expect(launcher.opened, <String>[_playStorePage]);
+      expect(launcher.asked, <String>['lavkoo://update', _playStoreApp]);
+      expect(launcher.opened, <String>[_playStoreApp]);
     });
 
-    testWidgets('says what it could not open when the device opens nothing',
+    testWidgets('on iOS opens the App Store when the shop configures an empty link',
+        (WidgetTester tester) async {
+      final _Launcher launcher = await tapUpdate(tester,
+          config: ConfigModel(userAppVersionControl: _liveControl()),
+          onIos: true);
+
+      expect(launcher.opened, _iosStore);
+    });
+
+    testWidgets('on iOS opens the link the shop configured for iOS',
         (WidgetTester tester) async {
       final _Launcher launcher = await tapUpdate(
         tester,
-        config: ConfigModel(userAppVersionControl: _liveControl()),
+        config: ConfigModel(
+            userAppVersionControl: UserAppVersionControl(
+                forAndroid: _row('https://lavkoo.com/android'),
+                forIos: _row('https://lavkoo.com/ios'))),
+        onIos: true,
+      );
+
+      expect(launcher.opened, <String>['https://lavkoo.com/ios']);
+    });
+
+    testWidgets('says every address it could not open when the device opens nothing',
+        (WidgetTester tester) async {
+      final _Launcher launcher = await tapUpdate(
+        tester,
+        config: ConfigModel(
+            userAppVersionControl:
+                UserAppVersionControl(forAndroid: _row('lavkoo://update'))),
         canOpen: (String address) => false,
       );
 
       expect(launcher.opened, isEmpty);
       expect(
-        find.text('${_words('en', 'can_not_launch')}  $_playStorePage'),
+        find.text('${_words('en', 'can_not_launch')}  '
+            '${<String>['lavkoo://update', ..._androidStore].join(', ')}'),
         findsOneWidget,
       );
     });

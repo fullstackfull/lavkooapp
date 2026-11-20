@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/common/basewidget/custom_button_widget.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
@@ -53,7 +52,7 @@ class UpdateScreen extends StatelessWidget {
                             listen: false)
                         .configModel
                         ?.userAppVersionControl,
-                    isIos: Platform.isIOS,
+                    isIos: defaultTargetPlatform == TargetPlatform.iOS,
                   );
 
                   for (final String target in targets) {
@@ -66,7 +65,7 @@ class UpdateScreen extends StatelessWidget {
 
                   if (context.mounted) {
                     showCustomSnackBarWidget(
-                        '${getTranslated('can_not_launch', context)!}  ${targets.last}',
+                        '${getTranslated('can_not_launch', context)!}  ${targets.join(', ')}',
                         context,
                         snackBarType: SnackBarType.error);
                   }
