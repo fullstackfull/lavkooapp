@@ -38,6 +38,12 @@ class AppConstants {
 
   static const String baseUrl = 'https://lavkoo.com';
 
+  /// The id the Android build ships under, recorded here because nothing in the Dart sources can read it from the build itself: it is
+  /// `applicationId` in android/app/build.gradle.kts and `package` in android/app/src/main/AndroidManifest.xml, and the same string is
+  /// `BUNDLE_ID` in ios/Runner/GoogleService-Info.plist. Google Play addresses an app by it, so it is how the app names its own page on the
+  /// store. Changing this line renames nothing — it only stops matching the build, which test/update_target_test.dart refuses.
+  static const String androidApplicationId = 'com.lavkoo.app';
+
   static const String googleServerClientId =
       '225848042220-6bpr48i5cvs6sbtff1dunn3s3v07odl3.apps.googleusercontent.com';
   static const String userId = 'userId';
