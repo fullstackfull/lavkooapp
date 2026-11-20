@@ -206,9 +206,13 @@ class StorefrontCountry {
   /// the list with no default; and null when it does not carry the key at all, which is the stored list, whose default is kept on the entry
   /// itself. A code naming a country the answer does not list also matches no entry.
   static String? _defaultCodeOf(Map body) {
+    if (!body.containsKey('default_country')) {
+      return null;
+    }
+
     final String code = _text(body['default_country'])?.toUpperCase() ?? '';
 
-    return _countryCodePattern.hasMatch(code) ? code : null;
+    return _countryCodePattern.hasMatch(code) ? code : '';
   }
 
   static StorefrontCountry? _builtInFor(String code) {
