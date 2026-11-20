@@ -219,6 +219,14 @@ jobs:
           flutter test test/storefront_not_derived_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_not_derived_test.dart
 
+      # J-01 criterion 4: the storefront the app falls back to is the one the server's list names its default, and Saudi Arabia while it names
+      # none. The parse, the stored list and the move all take the flag as a parameter, so the file holds in both settings of the build flag
+      # and is run in both.
+      - name: J-01.4 the fallback storefront is the default the server's list names
+        run: |
+          flutter test test/storefront_server_default_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_server_default_test.dart
+
       # J-05 criterion 3: every use of toStringAsFixed is looked at, and none of the files that write a cart, checkout, order, wallet or coupon
       # amount through PriceConverter formats a number itself. The scan reads the sources and does not depend on the flag.
       - name: J-05.3 every toStringAsFixed is accounted for and none writes a cart, checkout, order, wallet or coupon amount

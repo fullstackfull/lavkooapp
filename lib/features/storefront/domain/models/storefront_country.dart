@@ -7,6 +7,11 @@ class StorefrontCountry {
   /// browsed, and checkout is not offered for it. Being listed never implies permission to pay.
   final bool sellable;
 
+  /// Whether the server's answer names this storefront the default one of the list, in `default_country` or in the entry's own
+  /// `is_default`. It is the storefront a customer falls back to when the one they chose is not listed, read through [fallbackAmong].
+  /// An answer that names none leaves it false on every entry, and the fallback is then [defaultCountry].
+  final bool isDefault;
+
   /// How the server has stopped the storefront: [browseOnlyMode], [maintenanceMode] or [redirectMode]. Null while it is not stopped, and for
   /// a mode this app does not know, so an answer this app cannot read never stops a storefront it does not have to.
   final String? stopMode;
@@ -25,6 +30,7 @@ class StorefrontCountry {
     required this.path,
     required this.currency,
     this.sellable = false,
+    this.isDefault = false,
     this.stopMode,
     this.stopMessage,
     this.stopUntil,
@@ -83,6 +89,19 @@ class StorefrontCountry {
     oman,
   ];
 
+  /// The storefront a customer falls back to when the one they chose is not one of [storefronts]: the one the server's answer named its
+  /// default, and [defaultCountry] when it named none, named a country it did not list, or has not answered yet. The constant is the
+  /// floor, so a customer is never left without a storefront.
+  static StorefrontCountry fallbackAmong(List<StorefrontCountry> storefronts) {
+    for (final StorefrontCountry storefront in storefronts) {
+      if (storefront.isDefault) {
+        return storefront;
+      }
+    }
+
+    return defaultCountry;
+  }
+
   static final RegExp _countryCodePattern = RegExp(r'^[A-Z]{2}$');
 
   /// Reads one entry of `GET /api/v1/storefronts`: `{country, path, currency, is_default, sellable}`.
@@ -91,9 +110,16 @@ class StorefrontCountry {
   /// missing or is not a boolean keeps the built-in answer for that country (Saudi Arabia may sell, every other storefront is
   /// browse-only), so an answer that says nothing never opens a storefront.
   ///
+  /// [answeredDefaultCode] is what the answer the entry came in says its default storefront is: a country code, or the empty code when it
+  /// speaks about its default and names none this app can read. Either way it is what says which entry is the default, and the entries' own
+  /// `is_default` is not read, so an answer whose `default_country` has moved on, or has been cleared, does not keep an older default as
+  /// well. Null is an answer that does not speak about its default at all, as the stored list does not: those entries go by their own
+  /// `is_default`.
+  ///
   /// Null when the entry cannot be used: it is not an object, it has no two-letter country code, or it names a country this app does not
   /// know and gives no currency.
-  static StorefrontCountry? tryParse(Object? entry) {
+  static StorefrontCountry? tryParse(Object? entry,
+      {String? answeredDefaultCode}) {
     if (entry is! Map) {
       return null;
     }
@@ -112,6 +138,7 @@ class StorefrontCountry {
     }
 
     final Object? rawSellable = entry['sellable'];
+    final Object? rawIsDefault = entry['is_default'];
     final String? stopMode = _text(entry['stop_mode']);
     final String? destination = _text(entry['redirect_to'])?.toUpperCase();
 
@@ -121,6 +148,9 @@ class StorefrontCountry {
       currency: currency,
       sellable:
           rawSellable is bool ? rawSellable : (builtIn?.sellable ?? false),
+      isDefault: answeredDefaultCode != null
+          ? code == answeredDefaultCode
+          : rawIsDefault is bool && rawIsDefault,
       stopMode: stopMode != null && _stopModes.contains(stopMode)
           ? stopMode
           : null,
@@ -132,9 +162,9 @@ class StorefrontCountry {
     );
   }
 
-  /// Reads the whole answer of `GET /api/v1/storefronts`: an object whose `storefronts` is a list of entries. Entries that cannot be
-  /// read are left out. Any other shape gives an empty list, so an answer that cannot be understood never looks like a list of
-  /// storefronts.
+  /// Reads the whole answer of `GET /api/v1/storefronts`: an object whose `storefronts` is a list of entries, and whose `default_country`
+  /// names the storefront its customers fall back to. Entries that cannot be read are left out. Any other shape gives an empty list, so an
+  /// answer that cannot be understood never looks like a list of storefronts.
   static List<StorefrontCountry> parseList(Object? body) {
     if (body is! Map) {
       return const <StorefrontCountry>[];
@@ -145,9 +175,11 @@ class StorefrontCountry {
       return const <StorefrontCountry>[];
     }
 
+    final String? answeredDefaultCode = _defaultCodeOf(body);
     final List<StorefrontCountry> storefronts = <StorefrontCountry>[];
     for (final Object? entry in entries) {
-      final StorefrontCountry? storefront = tryParse(entry);
+      final StorefrontCountry? storefront =
+          tryParse(entry, answeredDefaultCode: answeredDefaultCode);
       if (storefront != null) {
         storefronts.add(storefront);
       }
@@ -161,12 +193,27 @@ class StorefrontCountry {
         'country': code,
         'path': path,
         'currency': currency,
+        if (isDefault) 'is_default': true,
         'sellable': sellable,
         if (stopMode != null) 'stop_mode': stopMode!,
         if (stopMessage != null) 'stop_message': stopMessage!,
         if (stopUntil != null) 'stop_until': stopUntil!,
         if (redirectTo != null) 'redirect_to': redirectTo!,
       };
+
+  /// What an answer says its default storefront is: the two-letter code of its `default_country`; the empty code when it carries the key but
+  /// names nothing this app can read (it is not text, is blank, or is not a two-letter country code), which matches no entry and so leaves
+  /// the list with no default; and null when it does not carry the key at all, which is the stored list, whose default is kept on the entry
+  /// itself. A code naming a country the answer does not list also matches no entry.
+  static String? _defaultCodeOf(Map body) {
+    if (!body.containsKey('default_country')) {
+      return null;
+    }
+
+    final String code = _text(body['default_country'])?.toUpperCase() ?? '';
+
+    return _countryCodePattern.hasMatch(code) ? code : '';
+  }
 
   static StorefrontCountry? _builtInFor(String code) {
     for (final StorefrontCountry storefront in all) {

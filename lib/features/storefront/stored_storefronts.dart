@@ -11,14 +11,34 @@ class StoredStorefronts {
 
   final SharedPreferences _preferences;
 
+  /// The answer last read, kept so that reading it again does not decode and parse the same text afresh. It is read on every request's
+  /// headers and behind every price the app writes, through the storefront a customer who has chosen none falls back to. The text itself is
+  /// the key, so the list a saved answer gives is parsed once and an older one is never served: there is nothing to invalidate.
+  static String? _parsedText;
+  static List<StorefrontCountry> _parsedStorefronts =
+      const <StorefrontCountry>[];
+
   List<StorefrontCountry> read() {
     final Object? stored = _preferences.get(AppConstants.storefrontList);
     if (stored is! String) {
       return const <StorefrontCountry>[];
     }
 
+    if (stored == _parsedText) {
+      return _parsedStorefronts;
+    }
+
+    final List<StorefrontCountry> storefronts = _parse(stored);
+    _parsedText = stored;
+    _parsedStorefronts = storefronts;
+
+    return storefronts;
+  }
+
+  static List<StorefrontCountry> _parse(String stored) {
     try {
-      return StorefrontCountry.parseList(jsonDecode(stored));
+      return List<StorefrontCountry>.unmodifiable(
+          StorefrontCountry.parseList(jsonDecode(stored)));
     } on FormatException {
       return const <StorefrontCountry>[];
     }
