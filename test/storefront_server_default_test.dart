@@ -7,24 +7,36 @@ import 'package:syriapharmacy/features/storefront/domain/models/storefront_count
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/features/storefront/storefront_switcher.dart';
 import 'package:syriapharmacy/features/storefront/stored_storefronts.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
-/// What the server is asked for after a choice, written into the log of the test so the order of everything a move does is one list. The
-/// stored list is left as the test saved it: a refresh that reports nothing new leaves the last answer in force.
+/// What the server is asked for after a choice, written into the log of the test so the order of everything a move does is one list.
+///
+/// A service built with [movesTo] stores that answer when it is asked, the way the real one stores an answer it could read: it is the
+/// server moving its `default_country` under a customer. One built without it leaves the stored list as the test saved it, the way a
+/// refresh that brings nothing new does.
 class _RecordingService implements StorefrontServiceInterface {
-  _RecordingService(this._log, this._preferences);
+  _RecordingService(this._log, this._preferences, {this.movesTo});
 
   final List<String> _log;
   final SharedPreferences _preferences;
+  final Object? movesTo;
 
   @override
   Future<bool> refreshStorefronts() async {
     _log.add(
         'server asked, choice then ${_preferences.getString(AppConstants.storefrontCountry)}');
 
-    return false;
+    final Object? answer = movesTo;
+    if (answer == null) {
+      return false;
+    }
+
+    return StoredStorefronts(_preferences)
+        .save(StorefrontCountry.parseList(answer));
   }
 }
 
@@ -71,7 +83,6 @@ void main() {
   Map<String, Object?> answerNaming(Object? defaultCountry,
           {List<Map<String, Object>> entries = _threeStorefronts}) =>
       <String, Object?>{
-        'enabled': true,
         'default_country': defaultCountry,
         'storefronts': entries,
       };
@@ -79,7 +90,7 @@ void main() {
   /// The same answer with no `default_country` in it at all.
   Map<String, Object?> answerNamingNothing(
           {List<Map<String, Object>> entries = _threeStorefronts}) =>
-      <String, Object?>{'enabled': true, 'storefronts': entries};
+      <String, Object?>{'storefronts': entries};
 
   /// The device of a customer, with [answer] stored the way the service stores it: read into storefronts, then kept as the last answer.
   Future<SharedPreferences> deviceWith({
@@ -99,15 +110,22 @@ void main() {
   String fallbackOf(SharedPreferences preferences) =>
       StorefrontChoice(preferences, enabled: true).current().code;
 
+  /// A switcher whose `applyHeaders` does what the HTTP client's does: it resolves the storefront afresh, writes it where `X-Storefront`
+  /// goes — the log — and publishes it as the storefront the app's requests are being made for, which is what names the cache of every
+  /// answer. The storefront it finds is therefore the one the app would ask the server for, not the choice stored for it.
   StorefrontSwitcher switcherOver(SharedPreferences preferences,
-          {bool enabled = true}) =>
+          {bool enabled = true, Object? movesTo}) =>
       StorefrontSwitcher(
         storefrontController: StorefrontController(
-          storefrontServiceInterface: _RecordingService(log, preferences),
+          storefrontServiceInterface:
+              _RecordingService(log, preferences, movesTo: movesTo),
           storefrontChoice: StorefrontChoice(preferences, enabled: enabled),
         ),
-        applyHeaders: () => log.add(
-            'headers rebuilt, choice then ${preferences.getString(AppConstants.storefrontCountry)}'),
+        applyHeaders: () {
+          final String asked = StorefrontConfig.resolve(preferences).code;
+          log.add('headers rebuilt, X-Storefront $asked');
+          StorefrontScope.publish(asked);
+        },
         changeNotifier: StorefrontChangeNotifier(
           clearHttpCache: (String code) => log.add('http cache cleared of $code'),
           clearLocalCache: (String code) async =>
@@ -117,7 +135,10 @@ void main() {
         ),
       );
 
-  setUp(() => log = <String>[]);
+  setUp(() {
+    log = <String>[];
+    StorefrontScope.publish(null);
+  });
 
   group('the default the answer names', () {
     test('is read from default_country, and is the only default of the list',
@@ -170,7 +191,7 @@ void main() {
       );
     });
 
-    test('is nothing at all when the answer names one that cannot be read, or one it does not list',
+    test('is nothing at all when the answer names one that cannot be read, or one it does not list, whatever an entry says of itself',
         () {
       for (final Object? unusable in <Object?>[
         '',
@@ -184,8 +205,14 @@ void main() {
         <Object?>[],
         'EG',
       ]) {
-        final List<StorefrontCountry> listed =
-            StorefrontCountry.parseList(answerNaming(unusable));
+        // Kuwait carries the `is_default` of an older answer: an answer that carries `default_country` has spoken about its default, and
+        // one it cannot be read from names none, so the entry's own word is not a second way to be the default.
+        final List<StorefrontCountry> listed = StorefrontCountry.parseList(
+          answerNaming(unusable, entries: <Map<String, Object>>[
+            _saudiEntry,
+            <String, Object>{..._kuwaitEntry, 'is_default': true},
+          ]),
+        );
 
         expect(
             listed.where((StorefrontCountry storefront) => storefront.isDefault),
@@ -353,10 +380,11 @@ void main() {
       expect(log, <String>[
         'server asked, choice then OM',
         'server asked, choice then AE',
-        'headers rebuilt, choice then AE',
+        'headers rebuilt, X-Storefront AE',
         'http cache cleared of OM',
         'local cache cleared of OM',
       ]);
+      expect(StorefrontScope.current, 'AE');
     });
 
     test('moves them to Saudi Arabia when it names no default, even when it does not list Saudi Arabia',
@@ -406,6 +434,143 @@ void main() {
       expect(result, StorefrontSwitch.unchanged);
       expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
       expect(log, <String>['server asked, choice then KW']);
+    });
+  });
+
+  group('when a newer answer moves the default under a customer who chose none',
+      () {
+    test('the storefront the app asks for moves with it, and what the one they were on cached is dropped',
+        () async {
+      final SharedPreferences preferences =
+          await deviceWith(answer: answerNaming('AE'));
+      expect(fallbackOf(preferences), 'AE');
+
+      final StorefrontSwitch result =
+          await switcherOver(preferences, movesTo: answerNaming('KW'))
+              .followTheServersList();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result, StorefrontSwitch.switched);
+      expect(fallbackOf(preferences), 'KW');
+      expect(log, <String>[
+        'server asked, choice then null',
+        'headers rebuilt, X-Storefront KW',
+        'http cache cleared of AE',
+        'local cache cleared of AE',
+      ]);
+      expect(StorefrontScope.current, 'KW');
+    });
+
+    test('nothing is written for it, so the answer after that moves them again',
+        () async {
+      final SharedPreferences preferences =
+          await deviceWith(answer: answerNaming('AE'));
+
+      await switcherOver(preferences, movesTo: answerNaming('KW'))
+          .followTheServersList();
+
+      expect(preferences.containsKey(AppConstants.storefrontCountry), isFalse);
+
+      final StorefrontSwitch again =
+          await switcherOver(preferences, movesTo: answerNaming('SA'))
+              .followTheServersList();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(again, StorefrontSwitch.switched);
+      expect(fallbackOf(preferences), 'SA');
+      expect(log.last, 'local cache cleared of KW');
+    });
+
+    test('the first answer moves them off Saudi Arabia, which is where a device with no answer starts',
+        () async {
+      final SharedPreferences preferences = await deviceWith();
+      expect(fallbackOf(preferences), 'SA');
+
+      final StorefrontSwitch result =
+          await switcherOver(preferences, movesTo: answerNaming('AE'))
+              .followTheServersList();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result, StorefrontSwitch.switched);
+      expect(log, <String>[
+        'server asked, choice then null',
+        'headers rebuilt, X-Storefront AE',
+        'http cache cleared of SA',
+        'local cache cleared of SA',
+      ]);
+      expect(StorefrontScope.current, 'AE');
+    });
+
+    test('an answer that clears its default moves them back to Saudi Arabia',
+        () async {
+      final SharedPreferences preferences =
+          await deviceWith(answer: answerNaming('AE'));
+
+      final StorefrontSwitch result =
+          await switcherOver(preferences, movesTo: answerNaming(''))
+              .followTheServersList();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(result, StorefrontSwitch.switched);
+      expect(fallbackOf(preferences), 'SA');
+      expect(log, <String>[
+        'server asked, choice then null',
+        'headers rebuilt, X-Storefront SA',
+        'http cache cleared of AE',
+        'local cache cleared of AE',
+      ]);
+    });
+
+    test('a customer who chose a storefront the answer still lists is left where they are',
+        () async {
+      final SharedPreferences preferences = await deviceWith(
+        stored: <String, Object>{AppConstants.storefrontCountry: 'KW'},
+        answer: answerNaming('AE'),
+      );
+
+      final StorefrontSwitch result =
+          await switcherOver(preferences, movesTo: answerNaming('QA'))
+              .followTheServersList();
+
+      expect(result, StorefrontSwitch.unchanged);
+      expect(preferences.getString(AppConstants.storefrontCountry), 'KW');
+      expect(log, <String>['server asked, choice then KW']);
+      expect(StorefrontScope.current, isNull);
+    });
+
+    test('nothing of it happens while storefronts are off: the server is not even asked',
+        () async {
+      final SharedPreferences preferences =
+          await deviceWith(answer: answerNaming('AE'));
+      final String storedList =
+          preferences.getString(AppConstants.storefrontList)!;
+
+      expect(
+          await switcherOver(preferences,
+                  enabled: false, movesTo: answerNaming('KW'))
+              .followTheServersList(),
+          StorefrontSwitch.unchanged);
+
+      expect(log, isEmpty);
+      expect(StorefrontScope.current, isNull);
+      expect(preferences.getString(AppConstants.storefrontList), storedList);
+      expect(preferences.containsKey(AppConstants.storefrontCountry), isFalse);
+    });
+  });
+
+  group('the stored answer', () {
+    test('is parsed once however often it is read, and afresh once it is saved again',
+        () async {
+      final SharedPreferences preferences =
+          await deviceWith(answer: answerNaming('AE'));
+      final StoredStorefronts stored = StoredStorefronts(preferences);
+
+      expect(stored.read(), same(stored.read()));
+      expect(StoredStorefronts(preferences).read(), same(stored.read()));
+
+      await stored.save(StorefrontCountry.parseList(answerNaming('KW')));
+
+      expect(StorefrontCountry.fallbackAmong(stored.read()).code, 'KW');
     });
   });
 }

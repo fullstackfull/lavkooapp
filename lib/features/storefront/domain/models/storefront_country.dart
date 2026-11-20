@@ -110,9 +110,11 @@ class StorefrontCountry {
   /// missing or is not a boolean keeps the built-in answer for that country (Saudi Arabia may sell, every other storefront is
   /// browse-only), so an answer that says nothing never opens a storefront.
   ///
-  /// [answeredDefaultCode] is the `default_country` of the answer the entry came in, when it names one this app can read. It then says
-  /// which entry is the default and the entries' own `is_default` is not read, so a list whose `default_country` has moved on does not
-  /// keep an older default as well. Entries read on their own, as the stored list is, go by their own `is_default`.
+  /// [answeredDefaultCode] is what the answer the entry came in says its default storefront is: a country code, or the empty code when it
+  /// speaks about its default and names none this app can read. Either way it is what says which entry is the default, and the entries' own
+  /// `is_default` is not read, so an answer whose `default_country` has moved on, or has been cleared, does not keep an older default as
+  /// well. Null is an answer that does not speak about its default at all, as the stored list does not: those entries go by their own
+  /// `is_default`.
   ///
   /// Null when the entry cannot be used: it is not an object, it has no two-letter country code, or it names a country this app does not
   /// know and gives no currency.
@@ -199,9 +201,10 @@ class StorefrontCountry {
         if (redirectTo != null) 'redirect_to': redirectTo!,
       };
 
-  /// The `default_country` of an answer, or null when it names none this app can read: the key is missing, is not text, is blank, or is
-  /// not a two-letter country code. A code that names a country the answer does not list matches no entry, so that too leaves the list
-  /// with no default of its own.
+  /// What an answer says its default storefront is: the two-letter code of its `default_country`; the empty code when it carries the key but
+  /// names nothing this app can read (it is not text, is blank, or is not a two-letter country code), which matches no entry and so leaves
+  /// the list with no default; and null when it does not carry the key at all, which is the stored list, whose default is kept on the entry
+  /// itself. A code naming a country the answer does not list also matches no entry.
   static String? _defaultCodeOf(Map body) {
     final String code = _text(body['default_country'])?.toUpperCase() ?? '';
 
