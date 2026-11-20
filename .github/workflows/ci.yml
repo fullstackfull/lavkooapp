@@ -42,6 +42,9 @@ jobs:
           lib/utill/update_gate.dart
           test/release_version_test.dart
           test/update_gate_test.dart
+          lib/utill/update_target.dart
+          lib/features/update/screen/update_screen.dart
+          test/update_target_test.dart
           lib/features/wallet/controllers/wallet_controller.dart
           lib/features/loyaltyPoint/controllers/loyalty_point_controller.dart
           lib/main.dart
@@ -265,6 +268,13 @@ jobs:
       # I1-16 criterion 5 (the app's half): Arabic is written right to left and English left to right.
       - name: I1-16.5 Arabic reads right to left and English left to right in the app
         run: flutter test test/localization_direction_test.dart
+
+      # J-17 criterion 4: the update screen offers a target that works when the shop configures no link, which is what the live shop
+      # publishes. The button is run on the real screen with the launcher answering through the plugin's own channel; the store page it falls
+      # back to is built from the id the build carries, and the test holds that id to the Android build, the manifest and the iOS Firebase
+      # settings. Nothing here reads the storefronts flag, so the file runs once.
+      - name: J-17.4 the update screen offers a store page when the shop configures no link
+        run: flutter test test/update_target_test.dart
 
   # J-18: the whole project is analyzed and no finding may be added. The job above analyzes only the files a branch changes, so a finding added
   # anywhere else went unseen: 255 findings were recorded as the state of the app on 2026-11-18. The number is in tool/analyze_baseline.txt; the

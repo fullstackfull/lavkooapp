@@ -5,10 +5,10 @@ import 'package:syriapharmacy/common/basewidget/custom_button_widget.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
-import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
 import 'package:syriapharmacy/utill/dimensions.dart';
 import 'package:syriapharmacy/utill/images.dart';
+import 'package:syriapharmacy/utill/update_target.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -48,29 +48,26 @@ class UpdateScreen extends StatelessWidget {
             CustomButton(
                 buttonText: getTranslated('update_now', context)!,
                 onTap: () async {
-                  String? appUrl = 'https://google.com';
-                  if (Platform.isAndroid) {
-                    appUrl =
-                        Provider.of<SplashController>(context, listen: false)
-                            .configModel
-                            ?.userAppVersionControl
-                            ?.forAndroid
-                            ?.link;
-                  } else if (Platform.isIOS) {
-                    appUrl =
-                        Provider.of<SplashController>(context, listen: false)
-                            .configModel
-                            ?.userAppVersionControl
-                            ?.forIos
-                            ?.link;
+                  final List<String> targets = UpdateTarget.candidates(
+                    control: Provider.of<SplashController>(context,
+                            listen: false)
+                        .configModel
+                        ?.userAppVersionControl,
+                    isIos: Platform.isIOS,
+                  );
+
+                  for (final String target in targets) {
+                    if (await canLaunchUrlString(target)) {
+                      await launchUrlString(target,
+                          mode: LaunchMode.externalApplication);
+                      return;
+                    }
                   }
-                  if (await canLaunchUrlString(appUrl!)) {
-                    launchUrlString(appUrl,
-                        mode: LaunchMode.externalApplication);
-                  } else {
+
+                  if (context.mounted) {
                     showCustomSnackBarWidget(
-                        '${getTranslated('can_not_launch', Get.context!)!}  $appUrl',
-                        Get.context!,
+                        '${getTranslated('can_not_launch', context)!}  ${targets.last}',
+                        context,
                         snackBarType: SnackBarType.error);
                   }
                 }),
