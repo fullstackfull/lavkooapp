@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: ['gcc/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  storefront-header:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Same pinned toolchain as the seller app. Bump both together.
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Scoped to the files this branch adds or changes. The rest of the app is
+      # not yet analyzed in CI, so pre-existing findings elsewhere do not fail
+      # this job. `flutter analyze` treats warnings as fatal; infos are opted out.
+      - name: Analyze changed files
+        run: >
+          flutter analyze --no-fatal-infos
+          lib/features/storefront
+          lib/data/datasource/remote/dio/dio_client.dart
+          lib/utill/app_constants.dart
+          test/storefront_config_test.dart
+          test/dio_storefront_header_test.dart
+
+      - name: Test storefront header
+        run: flutter test test/storefront_config_test.dart test/dio_storefront_header_test.dart
