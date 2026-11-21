@@ -12,7 +12,20 @@
           "package_name": "com.lavkoo.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "533968466510-ehgccn9dhij7tis67dbbhm7n6akbsujo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lavkoo.app",
+            "certificate_hash": "7bf183b10d1dfec39cb5f3833ad2acf0c173a559"
+          }
+        },
+        {
+          "client_id": "533968466510-81lv9ie59ansuhf8teifj5vbgecfuuvt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDRZAlSvjjRxbmnVj4IzcNb5PgPZkl2R4k"
@@ -20,7 +33,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "533968466510-81lv9ie59ansuhf8teifj5vbgecfuuvt.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "533968466510-1e998mt14efpvhk4b9itsng9dq92akkq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lavkoo.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:533968466510:android:c1476bdda23f47be81891f",
+        "android_client_info": {
+          "package_name": "com.lavkoocosmeticsmanager.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "533968466510-81lv9ie59ansuhf8teifj5vbgecfuuvt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRZAlSvjjRxbmnVj4IzcNb5PgPZkl2R4k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "533968466510-81lv9ie59ansuhf8teifj5vbgecfuuvt.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "533968466510-1e998mt14efpvhk4b9itsng9dq92akkq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.lavkoo.app"
+              }
+            }
+          ]
         }
       }
     }

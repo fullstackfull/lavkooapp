@@ -96,7 +96,7 @@ class AuthController with ChangeNotifier {
     notifyListeners();
 
     ApiResponseModel apiResponse =
-        await authServiceInterface.socialLogin(socialLogin.toJson());
+    await authServiceInterface.socialLogin(socialLogin.toJson());
     if (apiResponse.response != null &&
         apiResponse.response?.statusCode == 200) {
       final CustomerVerification? customerVerification =
@@ -137,7 +137,7 @@ class AuthController with ChangeNotifier {
         await authServiceInterface.updateDeviceToken();
         setCurrentLanguage(
             Provider.of<LocalizationController>(Get.context!, listen: false)
-                    .getCurrentLanguage() ??
+                .getCurrentLanguage() ??
                 'en');
       }
 
@@ -158,7 +158,7 @@ class AuthController with ChangeNotifier {
         await authServiceInterface.updateDeviceToken();
         setCurrentLanguage(
             Provider.of<LocalizationController>(Get.context!, listen: false)
-                    .getCurrentLanguage() ??
+                .getCurrentLanguage() ??
                 'en');
         callback(true, token, null, null, message, socialLogin.medium, null,
             socialLogin.email, socialLogin.name, fromPage, onLoginSuccess);
@@ -215,7 +215,7 @@ class AuthController with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.registration(register.toJson());
+    await authServiceInterface.registration(register.toJson());
 
     _isLoading = false;
     if (apiResponse.response != null &&
@@ -266,7 +266,7 @@ class AuthController with ChangeNotifier {
 
   Future<void> setCurrentLanguage(String currentLanguage) async {
     ApiResponseModel apiResponse =
-        await authServiceInterface.setLanguageCode(currentLanguage);
+    await authServiceInterface.setLanguageCode(currentLanguage);
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
     } else {
@@ -285,15 +285,15 @@ class AuthController with ChangeNotifier {
     String? userInputData = userInput;
 
     ApiResponseModel apiResponse =
-        await authServiceInterface.login(userInput, password, type0);
+    await authServiceInterface.login(userInput, password, type0);
 
     ResponseModel responseModel;
     _isLoading = false;
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       final ConfigModel config =
-          Provider.of<SplashController>(Get.context!, listen: false)
-              .configModel!;
+      Provider.of<SplashController>(Get.context!, listen: false)
+          .configModel!;
       clearGuestId();
       Map map = apiResponse.response!.data;
 
@@ -385,7 +385,7 @@ class AuthController with ChangeNotifier {
 
   Future<void> updateToken(BuildContext context) async {
     ApiResponseModel apiResponse =
-        await authServiceInterface.updateDeviceToken();
+    await authServiceInterface.updateDeviceToken();
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
     } else {
@@ -400,10 +400,10 @@ class AuthController with ChangeNotifier {
     ApiResponseModel apiResponse;
     if (resendOtp) {
       apiResponse =
-          await authServiceInterface.resendEmailOtp(email, temporaryToken);
+      await authServiceInterface.resendEmailOtp(email, temporaryToken);
     } else {
       apiResponse =
-          await authServiceInterface.sendOtpToEmail(email, temporaryToken);
+      await authServiceInterface.sendOtpToEmail(email, temporaryToken);
     }
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
@@ -419,10 +419,10 @@ class AuthController with ChangeNotifier {
 
   Future<void> sendVerificationCode(ConfigModel config, SignUpModel signUpModel,
       {String? type,
-      FromPage? fromPage,
-      bool isResend = false,
-      String? toNavigateScreen,
-      VoidCallback? onLoginSuccess}) async {
+        FromPage? fromPage,
+        bool isResend = false,
+        String? toNavigateScreen,
+        VoidCallback? onLoginSuccess}) async {
     _resendButtonLoading = true;
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
@@ -487,13 +487,13 @@ class AuthController with ChangeNotifier {
   }
 
   Future<void> firebaseVerifyPhoneNumber(
-    String phoneNumber,
-    FromPage fromPage, {
-    bool isForgetPassword = false,
-    bool isResend = false,
-    String? toNavigateScreen,
-    VoidCallback? onLoginSuccess,
-  }) async {
+      String phoneNumber,
+      FromPage fromPage, {
+        bool isForgetPassword = false,
+        bool isResend = false,
+        String? toNavigateScreen,
+        VoidCallback? onLoginSuccess,
+      }) async {
     final Completer<void> completer = Completer<void>();
 
     if (!isResend) {
@@ -671,7 +671,7 @@ class AuthController with ChangeNotifier {
     _verificationMsg = '';
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.verifyEmail(email, _verificationCode, '');
+    await authServiceInterface.verifyEmail(email, _verificationCode, '');
 
     notifyListeners();
     ResponseModel responseModel;
@@ -697,15 +697,15 @@ class AuthController with ChangeNotifier {
 
   Future<void> firebaseOtpLogin(
       {required String phoneNumber,
-      required String session,
-      required String otp,
-      bool isForgetPassword = false,
-      String? toNavigateScreen,
-      VoidCallback? onLoginSuccess}) async {
+        required String session,
+        required String otp,
+        bool isForgetPassword = false,
+        String? toNavigateScreen,
+        VoidCallback? onLoginSuccess}) async {
     _isPhoneNumberVerificationButtonLoading = true;
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.firebaseAuthVerify(
+    await authServiceInterface.firebaseAuthVerify(
       session: session,
       phoneNumber: phoneNumber,
       otp: otp,
@@ -780,6 +780,8 @@ class AuthController with ChangeNotifier {
       }
       if (token != null) {
         await authServiceInterface.saveUserToken(token);
+        // نرسل FCM token للسيرفر بعد تسجيل الدخول حتى تصل الإشعارات لهذا الحساب
+        await authServiceInterface.updateDeviceToken();
       }
       responseModel = ResponseModel('verification', token != null);
     } else {
@@ -802,7 +804,7 @@ class AuthController with ChangeNotifier {
     _verificationMsg = '';
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.verifyOtp(phoneNumber, _verificationCode);
+    await authServiceInterface.verifyOtp(phoneNumber, _verificationCode);
     notifyListeners();
     ResponseModel? responseModel;
     String? token;
@@ -818,6 +820,8 @@ class AuthController with ChangeNotifier {
 
       if (token != null) {
         await authServiceInterface.saveUserToken(token);
+        // نرسل FCM token للسيرفر بعد تسجيل الدخول حتى تصل الإشعارات لهذا الحساب
+        await authServiceInterface.updateDeviceToken();
         responseModel = ResponseModel('verification', true);
       } else if (tempToken != null) {
         responseModel = ResponseModel('verification', true);
@@ -855,7 +859,9 @@ class AuthController with ChangeNotifier {
       }
 
       if (token != null) {
-        authServiceInterface.saveUserToken(token);
+        await authServiceInterface.saveUserToken(token);
+        // نرسل FCM token للسيرفر بعد تسجيل الدخول حتى تصل الإشعارات لهذا الحساب
+        await authServiceInterface.updateDeviceToken();
         responseModel = ResponseModel('verification', true);
       } else if (tempToken != null) {
         responseModel = ResponseModel('verification', true);
@@ -882,10 +888,10 @@ class AuthController with ChangeNotifier {
     ApiResponseModel apiResponse;
     if (fromResend) {
       apiResponse =
-          await authServiceInterface.resendPhoneOtp(phone, temporaryToken);
+      await authServiceInterface.resendPhoneOtp(phone, temporaryToken);
     } else {
       apiResponse =
-          await authServiceInterface.sendOtpToPhone(phone, temporaryToken);
+      await authServiceInterface.sendOtpToPhone(phone, temporaryToken);
     }
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
@@ -918,7 +924,7 @@ class AuthController with ChangeNotifier {
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       final ProfileController profileProvider =
-          Provider.of<ProfileController>(Get.context!, listen: false);
+      Provider.of<ProfileController>(Get.context!, listen: false);
       profileProvider.getUserInfo(Get.context!);
       showCustomSnackBarWidget(
           apiResponse.response!.data['message'], Get.context!,
@@ -973,7 +979,7 @@ class AuthController with ChangeNotifier {
     notifyListeners();
 
     ApiResponseModel apiResponse =
-        await authServiceInterface.verifyOtp(phone, _verificationCode);
+    await authServiceInterface.verifyOtp(phone, _verificationCode);
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
     if (apiResponse.response != null &&
@@ -1096,9 +1102,9 @@ class AuthController with ChangeNotifier {
 
   Future<ResponseModel?> forgetPassword(
       {required ConfigModel config,
-      required String phoneOrEmail,
-      required String type,
-      bool isResend = false}) async {
+        required String phoneOrEmail,
+        required String type,
+        bool isResend = false}) async {
     ResponseModel? responseModel;
     if (isResend) {
       _resendButtonLoading = true;
@@ -1133,7 +1139,7 @@ class AuthController with ChangeNotifier {
     notifyListeners();
 
     ApiResponseModel apiResponse =
-        await authServiceInterface.forgetPassword(email, type);
+    await authServiceInterface.forgetPassword(email, type);
     ResponseModel responseModel;
 
     if (apiResponse.response != null &&
@@ -1162,7 +1168,7 @@ class AuthController with ChangeNotifier {
     _isPhoneNumberVerificationButtonLoading = true;
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.verifyToken(email, _verificationCode);
+    await authServiceInterface.verifyToken(email, _verificationCode);
 
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
@@ -1180,13 +1186,13 @@ class AuthController with ChangeNotifier {
 
   Future<(ResponseModel?, String?)> existingAccountCheck(
       {required String email,
-      required int userResponse,
-      required String medium}) async {
+        required int userResponse,
+        required String medium}) async {
     _isPhoneNumberVerificationButtonLoading = true;
     notifyListeners();
     ApiResponseModel apiResponse =
-        await authServiceInterface.existingAccountCheck(
-            email: email, userResponse: userResponse, medium: medium);
+    await authServiceInterface.existingAccountCheck(
+        email: email, userResponse: userResponse, medium: medium);
     ResponseModel responseModel;
     String? token;
     String? tempToken;
@@ -1204,6 +1210,8 @@ class AuthController with ChangeNotifier {
 
       if (token != null) {
         await authServiceInterface.saveUserToken(token);
+        // نرسل FCM token للسيرفر بعد تسجيل الدخول حتى تصل الإشعارات لهذا الحساب
+        await authServiceInterface.updateDeviceToken();
         responseModel = ResponseModel('token', true);
       } else if (tempToken != null) {
         responseModel = ResponseModel('tempToken', true);
