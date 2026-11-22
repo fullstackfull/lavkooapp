@@ -1,4 +1,3 @@
-import 'dart:math';
 
 class Images {
   static const String moreFilledImage = 'assets/images/more_filled.png';
