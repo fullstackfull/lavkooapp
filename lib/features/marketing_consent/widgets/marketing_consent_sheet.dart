@@ -23,15 +23,27 @@ import 'package:syriapharmacy/utill/dimensions.dart';
 /// WhatsApp answers are recorded and no more: those senders live on the server, which publishes no route for a customer to record a
 /// decision through, so there is nowhere to send them yet. That is one named endpoint missing, not a second scheme.
 class MarketingConsentSheet extends StatefulWidget {
-  const MarketingConsentSheet({super.key, required this.preferences});
+  const MarketingConsentSheet({
+    super.key,
+    required this.preferences,
+    required this.topics,
+  });
 
   final SharedPreferences preferences;
+
+  /// The one subscriber that answers which marketing topics this device is on. It is the container's own, not a second one built here:
+  /// the push answer has to be acted on by the same object a storefront switch and a sign-out act through, and a sheet that built its
+  /// own would be a second copy of that wiring, which is a copy no test can watch.
+  final StorefrontTopicSubscriber topics;
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         context: context,
-        builder: (_) => MarketingConsentSheet(preferences: di.sl()),
+        builder: (_) => MarketingConsentSheet(
+          preferences: di.sl(),
+          topics: di.sl<StorefrontTopicSubscriber>(),
+        ),
       );
 
   /// The language-file key of each channel's name, in the order they are shown.
@@ -70,12 +82,15 @@ class _MarketingConsentSheetState extends State<MarketingConsentSheet> {
       answeredAt: DateTime.now().toUtc(),
     ));
 
-    if (channel == MarketingConsent.channelPush) {
-      await StorefrontTopicSubscriber.forDevice(widget.preferences).apply();
-    }
-
+    // The switch moves as soon as the answer is recorded. The topics follow after: a build with storefronts on asks Firebase to leave half
+    // a dozen topics and join one, and a switch that waited for all of that would sit under the finger showing the old answer for as long
+    // as the network took.
     if (mounted) {
       setState(() {});
+    }
+
+    if (channel == MarketingConsent.channelPush) {
+      await widget.topics.apply();
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,9 +24,11 @@ import 'package:syriapharmacy/utill/app_constants.dart';
 
 /// J-11 criterion 4: marketing consent is CAPTURED per scope, on the real screen, and RESPECTED by the push path.
 ///
-/// The sheet is the real widget, the store is the real store, and what is looked at after a switch is thrown is the decision the store
-/// now holds and the set of topics the subscriber would then join. Nothing between the finger and the subscription is stubbed except
-/// Firebase itself, whose calls are recorded.
+/// The sheet is the real widget and the store is the real store. What is looked at after a switch is thrown is the decision the store now
+/// holds AND THE TOPIC CALLS THE SHEET ITSELF MADE: the subscriber handed to the sheet is the one whose calls are recorded, so the sheet
+/// acting on the push answer is measured rather than assumed. An earlier version of this file rebuilt its own subscriber and ran it by
+/// hand, which proved only that the recorded decision reads back correctly — deleting the sheet's own call left all thirteen tests green.
+/// Firebase is the only thing stubbed, and only at the two calls the subscriber would make.
 ///
 /// The sheet does not read the build flag — a decision is a decision in either build — so this file runs in both settings. What the flag
 /// decides is whether the SETTINGS ROW is there at all, and that is asserted in both settings too.
@@ -71,6 +74,32 @@ void main() {
   late SharedPreferences preferences;
   late MarketingConsentStore store;
 
+  /// The topics the sheet's own subscriber was asked to join and to leave, since the sheet opened.
+  late List<String> joined;
+  late List<String> left;
+
+  /// The subscriber the sheet is given: the real storefront choice and the real consent store, with only the two Firebase calls
+  /// recorded. It is built with storefronts on in either build, because the sheet does not read the build flag — what the flag decides is
+  /// whether the settings row exists at all.
+  StorefrontTopicSubscriber recordingSubscriber() {
+    final StorefrontChoice choice =
+        StorefrontChoice(preferences, enabled: true);
+    final MarketingConsentStore consents = MarketingConsentStore(preferences);
+
+    return StorefrontTopicSubscriber(
+      subscribeToTopic: (String topic) async => joined.add(topic),
+      unsubscribeFromTopic: (String topic) async => left.add(topic),
+      currentStorefront: choice.current,
+      availableStorefronts: choice.available,
+      pushMarketingAllowed: (StorefrontCountry storefront) => consents.allows(
+        market: storefront.code,
+        channel: MarketingConsent.channelPush,
+        purpose: MarketingConsent.purposeBroadcast,
+      ),
+      enabled: true,
+    );
+  }
+
   Future<void> openSheet(WidgetTester tester, {String on = 'KW'}) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       AppConstants.storefrontCountry: on,
@@ -78,6 +107,8 @@ void main() {
     preferences = await SharedPreferences.getInstance();
     await StoredStorefronts(preferences).save(_listed);
     store = MarketingConsentStore(preferences);
+    joined = <String>[];
+    left = <String>[];
 
     await tester.pumpWidget(MaterialApp(
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
@@ -93,7 +124,10 @@ void main() {
           storefrontChoice: StorefrontChoice(preferences, enabled: true),
         ),
         child: Scaffold(
-          body: MarketingConsentSheet(preferences: preferences),
+          body: MarketingConsentSheet(
+            preferences: preferences,
+            topics: recordingSubscriber(),
+          ),
         ),
       ),
     ));
@@ -221,95 +255,141 @@ void main() {
   });
 
   group('THE PUSH ANSWER IS RESPECTED: the topics follow it', () {
-    /// The subscriber the app builds for this device, with the topics it would ask Firebase for recorded instead.
-    ({List<String> joined, List<String> left}) subscribeWith(
-        StorefrontTopicSubscriber Function(
-                List<String> joined, List<String> left)
-            build) {
-      final List<String> joined = <String>[];
-      final List<String> left = <String>[];
-      build(joined, left);
-
-      return (joined: joined, left: left);
-    }
-
-    StorefrontTopicSubscriber subscriber(
-        List<String> joined, List<String> left) {
+    /// A subscriber built fresh from what the preferences now hold, to show that the answer SURVIVES the sheet: the live call proves the
+    /// sheet acted, this proves the next start would act the same way.
+    Future<({List<String> joined, List<String> left})>
+        whatTheNextStartWouldDo() async {
+      final List<String> joinedThen = <String>[];
+      final List<String> leftThen = <String>[];
       final StorefrontChoice choice =
           StorefrontChoice(preferences, enabled: true);
       final MarketingConsentStore consents =
           MarketingConsentStore(preferences);
 
-      return StorefrontTopicSubscriber(
-        subscribeToTopic: (String topic) async => joined.add(topic),
-        unsubscribeFromTopic: (String topic) async => left.add(topic),
+      final StorefrontTopicSubscriber subscriber = StorefrontTopicSubscriber(
+        subscribeToTopic: (String topic) async => joinedThen.add(topic),
+        unsubscribeFromTopic: (String topic) async => leftThen.add(topic),
         currentStorefront: choice.current,
         availableStorefronts: choice.available,
-        pushMarketingAllowed: (StorefrontCountry storefront) => consents.allows(
+        pushMarketingAllowed: (StorefrontCountry storefront) =>
+            consents.allows(
           market: storefront.code,
           channel: MarketingConsent.channelPush,
           purpose: MarketingConsent.purposeBroadcast,
         ),
         enabled: true,
       );
+
+      await subscriber.apply();
+
+      return (joined: joinedThen, left: leftThen);
     }
 
-    testWidgets('before the person agrees, the device joins no marketing topic',
+    testWidgets('the sheet asks the topics nothing until an answer is given',
         (WidgetTester tester) async {
       await openSheet(tester);
 
-      final ({List<String> joined, List<String> left}) calls =
-          subscribeWith(subscriber);
-      await subscriber(calls.joined, calls.left).apply();
-
-      expect(calls.joined, isEmpty);
-      expect(calls.left, contains('sixvalley_kw'));
-      expect(calls.left, contains(AppConstants.topic));
+      expect(joined, isEmpty);
+      expect(left, isEmpty);
     });
 
-    testWidgets('after the person agrees, the device joins this market\'s topic and no other',
+    testWidgets('agreeing puts the device on this market\'s topic and no other, and THE SHEET ITSELF does it',
         (WidgetTester tester) async {
       await openSheet(tester);
       await tester.tap(switchFor(MarketingConsent.channelPush));
       await tester.pumpAndSettle();
 
-      final ({List<String> joined, List<String> left}) calls =
-          subscribeWith(subscriber);
-      await subscriber(calls.joined, calls.left).apply();
-
-      expect(calls.joined, <String>['sixvalley_kw']);
-      expect(calls.left, isNot(contains('sixvalley_kw')));
-      expect(calls.left, contains('sixvalley_sa'));
-      expect(calls.left, contains(AppConstants.topic));
+      expect(joined, <String>['sixvalley_kw'],
+          reason:
+              'these are the calls the sheet made through the subscriber it was given, not a set a test rebuilt afterwards');
+      expect(left, isNot(contains('sixvalley_kw')));
+      expect(left, contains('sixvalley_sa'));
+      expect(left, contains(AppConstants.topic));
     });
 
-    testWidgets('after the person changes their mind, the device leaves it again',
+    testWidgets('and a start after it would ask for the same topic, so the answer outlives the sheet',
         (WidgetTester tester) async {
       await openSheet(tester);
       await tester.tap(switchFor(MarketingConsent.channelPush));
       await tester.pumpAndSettle();
+
+      expect((await whatTheNextStartWouldDo()).joined, <String>['sixvalley_kw']);
+    });
+
+    testWidgets('after the person changes their mind, THE SHEET ITSELF takes the device off it again',
+        (WidgetTester tester) async {
+      await openSheet(tester);
+      await tester.tap(switchFor(MarketingConsent.channelPush));
+      await tester.pumpAndSettle();
+      joined.clear();
+      left.clear();
+
       await tester.tap(switchFor(MarketingConsent.channelPush));
       await tester.pumpAndSettle();
 
-      final ({List<String> joined, List<String> left}) calls =
-          subscribeWith(subscriber);
-      await subscriber(calls.joined, calls.left).apply();
-
-      expect(calls.joined, isEmpty);
-      expect(calls.left, contains('sixvalley_kw'));
+      expect(joined, isEmpty);
+      expect(left, contains('sixvalley_kw'));
+      expect((await whatTheNextStartWouldDo()).joined, isEmpty);
     });
 
-    testWidgets('agreeing to e-mail does not put the device on a push topic',
+    testWidgets('agreeing to e-mail asks the topics nothing at all: a channel the device\'s subscription does not carry',
         (WidgetTester tester) async {
       await openSheet(tester);
       await tester.tap(switchFor(MarketingConsent.channelEmail));
       await tester.pumpAndSettle();
 
-      final ({List<String> joined, List<String> left}) calls =
-          subscribeWith(subscriber);
-      await subscriber(calls.joined, calls.left).apply();
+      expect(joined, isEmpty);
+      expect(left, isEmpty);
+      expect((await whatTheNextStartWouldDo()).joined, isEmpty,
+          reason: 'an e-mail answer is not a push answer');
+    });
 
-      expect(calls.joined, isEmpty);
+    testWidgets('the switch moves as soon as the answer is recorded, not after Firebase has answered about every topic',
+        (WidgetTester tester) async {
+      await openSheet(tester);
+
+      // A subscriber whose calls never complete: the sheet must still have shown the new answer.
+      final Completer<void> firebaseNeverAnswers = Completer<void>();
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          _FileLocalizationsDelegate(),
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        locale: const Locale('en'),
+        home: ChangeNotifierProvider<StorefrontController>.value(
+          value: StorefrontController(
+            storefrontServiceInterface: _NoServer(),
+            storefrontChoice: StorefrontChoice(preferences, enabled: true),
+          ),
+          child: Scaffold(
+            body: MarketingConsentSheet(
+              preferences: preferences,
+              topics: StorefrontTopicSubscriber(
+                subscribeToTopic: (String topic) => firebaseNeverAnswers.future,
+                unsubscribeFromTopic: (String topic) =>
+                    firebaseNeverAnswers.future,
+                currentStorefront: () => StorefrontCountry.kuwait,
+                availableStorefronts: () => const <StorefrontCountry>[],
+                pushMarketingAllowed: (_) => true,
+                enabled: true,
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(switchFor(MarketingConsent.channelPush));
+      await tester.pump();
+
+      expect(valueOf(tester, MarketingConsent.channelPush), isTrue,
+          reason:
+              'a build with storefronts on leaves half a dozen topics and joins one; the switch must not sit under the finger until all of that returns');
+
+      firebaseNeverAnswers.complete();
+      await tester.pumpAndSettle();
     });
   });
 
