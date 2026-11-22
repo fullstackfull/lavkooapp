@@ -2,14 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
 import 'package:syriapharmacy/features/product/domain/services/seller_product_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/features/shop/domain/models/shop_again_from_recent_store_model.dart';
 import 'package:syriapharmacy/common/enums/data_source_enum.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 
-class SellerProductController extends ChangeNotifier {
+class SellerProductController extends ChangeNotifier
+    with StorefrontChangeAware {
   final SellerProductServiceInterface? sellerProductServiceInterface;
-  SellerProductController({required this.sellerProductServiceInterface});
+  SellerProductController({
+    required this.sellerProductServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   ProductModel? sellerProduct;
   ProductModel? sellerMoreProduct;
@@ -166,6 +173,26 @@ class SellerProductController extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  /// The customer is on another storefront: what a shop's page listed belongs to the one they left. The shop-again rail the home showed is
+  /// loaded again; the rest loads when a shop's page is opened again.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadShopAgain = shopAgainFromRecentStoreList.isNotEmpty;
+
+    sellerProduct = null;
+    sellerMoreProduct = null;
+    productModel = null;
+    sellerWiseFeaturedProduct = null;
+    sellerWiseRecommendedProduct = null;
+    shopAgainFromRecentStoreList = [];
+    _isFilterApply = false;
+    notifyListeners();
+
+    if (hadShopAgain) {
+      await getShopAgainFromRecentStore();
+    }
   }
 
   void clearSellerProducts() {

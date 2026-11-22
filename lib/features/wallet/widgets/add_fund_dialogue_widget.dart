@@ -112,8 +112,9 @@ class AddFundDialogueWidget extends StatelessWidget {
                                                 right: Dimensions
                                                     .paddingSizeEight),
                                             child: Text(
-                                              configProvider
-                                                      .myCurrency?.symbol ??
+                                              PriceConverter
+                                                      .currencySymbolToShow(
+                                                          context) ??
                                                   '\$',
                                               style: textRegular.copyWith(
                                                   fontSize: Dimensions

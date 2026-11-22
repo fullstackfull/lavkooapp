@@ -4,6 +4,8 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/data/services/analytics_reporter.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/models/theme_schema.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/services/dynamic_theme_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 
 /// Holds the published home page, and keeps it fresh without ever showing a blank one.
 ///
@@ -19,8 +21,13 @@ import 'package:syriapharmacy/features/dynamic_theme/domain/services/dynamic_the
 /// problem empties the home page: a failed sync leaves the cached payload exactly where it was,
 /// and a first run with no cache reports "no theme" so the caller can render the app's built-in
 /// home instead of an empty scroll.
-class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver {
-  DynamicThemeController({required this.dynamicThemeServiceInterface}) {
+class DynamicThemeController extends ChangeNotifier
+    with WidgetsBindingObserver, StorefrontChangeAware {
+  DynamicThemeController({
+    required this.dynamicThemeServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
     // The controller owns its own resume trigger, so no screen has to remember to wire one: a
     // merchant who publishes while the shopper has the app backgrounded is picked up on the next
     // look, whichever home screen happens to be showing. Guarded because unit tests — and any
@@ -76,13 +83,16 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
   final Set<String> _pagesLoading = {};
   final Set<String> _pagesFailed = {};
 
-  /// Bumped whenever the shopper's language changes. A page fetch that started under the old
-  /// language must not populate [_pages] after the switch: the payload it carries is spelled in
-  /// the language the shopper just left.
-  int _languageEpoch = 0;
+  /// Bumped whenever the shopper's language or storefront changes. A page fetch that started under
+  /// the old one must not populate [_pages] after the switch: the payload it carries is spelled in
+  /// the language the shopper just left, or is another storefront's page.
+  int _contentEpoch = 0;
 
   /// A language switch that arrived while a sync was in flight; honored the moment it ends.
   bool _pendingLanguageRefresh = false;
+
+  /// A storefront change that arrived while a sync was in flight; honored the moment it ends.
+  bool _pendingStorefrontRefresh = false;
 
   ThemePayload get payload => _payload;
   List<ThemeSectionSchema> get sections => _payload.sections;
@@ -107,14 +117,14 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
 
     _pagesLoading.add(slug);
     _pagesFailed.remove(slug);
-    final epoch = _languageEpoch;
+    final epoch = _contentEpoch;
 
     try {
       final response = await dynamicThemeServiceInterface.getPayload(page: slug);
 
       // A fetch that started before a language switch carries the old language; the switch
       // already cleared the map, and this result must not sneak back in.
-      if (epoch != _languageEpoch) return;
+      if (epoch != _contentEpoch) return;
 
       if (response.isSuccess && response.response != null) {
         _pages[slug] = response.response!;
@@ -126,7 +136,7 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
         _pagesFailed.add(slug);
       }
     } catch (_) {
-      if (epoch == _languageEpoch) _pagesFailed.add(slug);
+      if (epoch == _contentEpoch) _pagesFailed.add(slug);
     } finally {
       _pagesLoading.remove(slug);
       notifyListeners();
@@ -167,6 +177,11 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
     _lastError = null;
     notifyListeners();
 
+    // Everything this sync learns is about the storefront it started on. If the shopper moves to
+    // another while it runs, what it has fetched is theirs no longer: it is not shown, and the
+    // refresh that [onStorefrontChanged] asked for runs when this one ends.
+    final String? storefront = StorefrontScope.current;
+
     try {
       // The cached page goes on screen before anything touches the network, and only on the first
       // sync of a session — after that, what is already in memory is at least as fresh.
@@ -174,7 +189,7 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
         final cached = await dynamicThemeServiceInterface.getCachedPayload(page: page);
         final cachedHeader =
             await dynamicThemeServiceInterface.getCachedPayload(page: 'header');
-        if (cached != null) {
+        if (cached != null && StorefrontScope.isCurrent(storefront)) {
           _payload = cached;
           _header = cachedHeader ?? ThemePayload.none;
           notifyListeners();
@@ -182,29 +197,36 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
       }
 
       try {
-        await _revalidate(page: page, force: force);
+        await _revalidate(page: page, force: force, storefront: storefront);
       } catch (error) {
         // A sync that dies mid-air (a parse, an unexpected null) is a failed sync, not an
         // unhandled exception: the shopper keeps whatever renders, and the next resume retries.
         _lastError = '$error';
         if (kDebugMode) debugPrint('[theme] sync crashed: $error');
       }
-      _hasSyncedThisSession = true;
+      if (StorefrontScope.isCurrent(storefront)) _hasSyncedThisSession = true;
     } finally {
       _isLoading = false;
       notifyListeners();
 
-      // A language switch that landed while this sync ran was deferred, not dropped.
-      if (_pendingLanguageRefresh) {
+      // A language switch or a storefront change that landed while this sync ran was deferred,
+      // not dropped.
+      if (_pendingLanguageRefresh || _pendingStorefrontRefresh) {
         _pendingLanguageRefresh = false;
+        _pendingStorefrontRefresh = false;
         await refresh();
       }
     }
   }
 
-  Future<void> _revalidate({required String page, required bool force}) async {
+  Future<void> _revalidate({
+    required String page,
+    required bool force,
+    required String? storefront,
+  }) async {
     if (!force) {
       final revision = await dynamicThemeServiceInterface.getRevision();
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (revision.revision == 0) {
         // Revision 0 has TWO faces, and confusing them is catastrophic either way. The SERVER
@@ -236,6 +258,7 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
       // holds, and the ETag is what turns that into a 304 instead of a wasted download.
       knownChecksum: _payload.checksum,
     );
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (!response.isSuccess) {
       _lastError = '${response.error}';
@@ -281,7 +304,7 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
       page: 'header',
       knownChecksum: _header.checksum,
     );
-    if (headerResponse.isSuccess) {
+    if (headerResponse.isSuccess && StorefrontScope.isCurrent(storefront)) {
       _header = headerResponse.response ?? _header;
     }
   }
@@ -316,9 +339,13 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
     if (failedAt != null && DateTime.now().difference(failedAt) < _sectionRetryAfter) return;
 
     _sectionsLoading.add(key);
+    final String? storefront = StorefrontScope.current;
 
     try {
       final response = await dynamicThemeServiceInterface.getSectionData(source);
+
+      // A section's data is the storefront's: what the one the shopper has left answered is not kept.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       _sectionData[key] = response;
 
@@ -357,7 +384,7 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
   /// page is refetched by force, because a version check would truthfully say nothing was
   /// republished.
   Future<void> onLanguageChanged() async {
-    _languageEpoch++;
+    _contentEpoch++;
     _pages.clear();
     _pagesFailed.clear();
 
@@ -366,6 +393,35 @@ class DynamicThemeController extends ChangeNotifier with WidgetsBindingObserver 
     // it instead; the running sync honors the flag the moment it ends.
     if (_isLoading) {
       _pendingLanguageRefresh = true;
+      return;
+    }
+
+    await refresh();
+  }
+
+  /// The shopper moved to another storefront.
+  ///
+  /// The home page, its header, every page opened since and the data each section fetched all describe the storefront they left, and the
+  /// version check on this build's revision knows nothing about it: the same revision number can be another storefront's page. So all of
+  /// it is dropped, which is what puts the app's own home on screen at once instead of the other storefront's, and the page of the new
+  /// storefront is read from the cache or fetched by force. A sync already in flight is not trusted either: it finishes without
+  /// keeping what it fetched, and the refresh runs when it ends.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _contentEpoch++;
+    _pages.clear();
+    _pagesFailed.clear();
+    _sectionData.clear();
+    _sectionFailedAt.clear();
+    _sectionsLoading.clear();
+    _payload = ThemePayload.none;
+    _header = ThemePayload.none;
+    _hasSyncedThisSession = false;
+    _lastError = null;
+    notifyListeners();
+
+    if (_isLoading) {
+      _pendingStorefrontRefresh = true;
       return;
     }
 

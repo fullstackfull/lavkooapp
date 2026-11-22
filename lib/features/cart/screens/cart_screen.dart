@@ -7,6 +7,9 @@ import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 import 'package:syriapharmacy/features/cart/widgets/circular_progress_with_logo.dart';
 import 'package:syriapharmacy/features/shipping/controllers/shipping_controller.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
+import 'package:syriapharmacy/features/storefront/checkout_sale_gate.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/widgets/storefront_browse_only_notice.dart';
 import 'package:syriapharmacy/helper/cart_healper.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
@@ -123,6 +126,8 @@ class CartScreenState extends State<CartScreen> {
       return Consumer<ShippingController>(
           builder: (context, shippingController, _) {
         return Consumer<CartController>(builder: (context, cart, child) {
+          final CheckoutSaleGate saleGate =
+              Provider.of<StorefrontController>(context).saleGate;
           double amount = 0.0;
           double shippingAmount = 0.0;
           double discount = 0.0;
@@ -393,6 +398,17 @@ class CartScreenState extends State<CartScreen> {
                                     Expanded(
                                       child: InkWell(
                                         onTap: () async {
+                                          if (saleGate.showsBrowseOnlyNotice) {
+                                            showCustomSnackBarWidget(
+                                                getTranslated(
+                                                    'storefront_browse_only_notice',
+                                                    context),
+                                                Get.context!,
+                                                snackBarType:
+                                                    SnackBarType.warning);
+                                            return;
+                                          }
+
                                           bool hasNull = false;
                                           bool minimum = false;
                                           bool stockOutProduct = false;
@@ -682,8 +698,14 @@ class CartScreenState extends State<CartScreen> {
                                         },
                                         child: Container(
                                           decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .primaryColor,
+                                              color: saleGate
+                                                      .permits(
+                                                          otherwiseEnabled:
+                                                              true)
+                                                  ? Theme.of(context)
+                                                      .primaryColor
+                                                  : Theme.of(context)
+                                                      .disabledColor,
                                               borderRadius:
                                                   BorderRadius.circular(
                                                       Dimensions
@@ -718,6 +740,15 @@ class CartScreenState extends State<CartScreen> {
                 title: getTranslated('my_cart', context),
                 isBackButtonExist: widget.showBackButton),
             body: Column(children: [
+              if (saleGate.showsBrowseOnlyNotice &&
+                  !cart.cartLoading &&
+                  cartList.isNotEmpty)
+                const StorefrontBrowseOnlyNotice(
+                    margin: EdgeInsets.fromLTRB(
+                        Dimensions.paddingSizeDefault,
+                        Dimensions.paddingSizeSmall,
+                        Dimensions.paddingSizeDefault,
+                        0)),
               cart.cartLoading
                   ? const Expanded(child: CartPageShimmerWidget())
                   : sellerList.isNotEmpty

@@ -4,6 +4,9 @@ import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:syriapharmacy/features/dashboard/screens/menu_screen.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/widgets/storefront_maintenance_screen.dart';
 import 'package:syriapharmacy/localization/controllers/localization_controller.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/features/cart/controllers/cart_controller.dart';
@@ -131,6 +134,12 @@ class DashBoardScreenState extends State<DashBoardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // A storefront the server has put in maintenance is not browsed: the customer is told, and can leave for another (J-08).
+    if (StorefrontConfig.enabled &&
+        context.watch<StorefrontController>().inMaintenance) {
+      return const StorefrontMaintenanceScreen();
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isLtr =
         Provider.of<LocalizationController>(context, listen: false).isLtr;

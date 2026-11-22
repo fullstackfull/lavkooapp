@@ -7,14 +7,21 @@ import 'package:syriapharmacy/features/product/domain/models/home_category_produ
 import 'package:syriapharmacy/features/product/domain/models/most_demanded_product_model.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
 import 'package:syriapharmacy/features/product/domain/services/product_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/features/product/enums/product_type.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:syriapharmacy/main.dart';
 
-class ProductController extends ChangeNotifier {
+class ProductController extends ChangeNotifier with StorefrontChangeAware {
   final ProductServiceInterface? productServiceInterface;
-  ProductController({required this.productServiceInterface});
+  ProductController({
+    required this.productServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   ProductType _selectedProductType = ProductType.discountedProduct;
 
@@ -100,11 +107,15 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getProductModelByType<Response>(
               offset: offset,
               productType: _selectedProductType,
               source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -149,11 +160,15 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getProductModelByType<Response>(
               offset: offset,
               productType: ProductType.latestProduct,
               source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -198,11 +213,15 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getProductModelByType<Response>(
               offset: offset,
               productType: ProductType.latestProduct,
               source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -342,11 +361,15 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getProductModelByType<Response>(
               offset: offset,
               productType: ProductType.featuredProduct,
               source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -474,11 +497,15 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getProductModelByType<Response>(
               offset: offset,
               productType: ProductType.justForYou,
               source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -526,9 +553,13 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getMostSearchingProductList<Response>(
               offset: offset, source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -607,9 +638,13 @@ class ProductController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel? apiResponse =
           await productServiceInterface?.getClearanceAllProductList<Response>(
               offset: offset, source: DataSourceEnum.client);
+
+      // A page of the products of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse?.response?.statusCode == 200) {
         final ProductModel parsedProductModel =
@@ -688,6 +723,53 @@ class ProductController extends ChangeNotifier {
 
     notifyListeners();
     return apiResponse;
+  }
+
+  /// The customer is on another storefront: every list of products belongs to the one they left. The lists a screen was showing are loaded
+  /// again, and only those, so whichever home the shop runs gets the rails it had. The lists that belong to one category, brand or search
+  /// are dropped and load when their screen is opened again.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadRecommended = _recommendedProduct != null;
+    final bool hadSelected = _selectedProductModel != null;
+    final bool hadLatest = _latestProductModel != null;
+    final bool hadFeatured = _featuredProductModel != null;
+    final bool hadHomeCategories = _homeCategoryProductList.isNotEmpty;
+    final bool hadMostDemanded = _mostDemandedProductModel != null;
+    final bool hadFindWhatYouNeed = _findWhatYouNeedModel != null;
+    final bool hadClearance = _clearanceProductModel != null;
+    final bool hadJustForYou = _justForYouProductModel != null;
+    final bool hadMostSearching = _mostSearchingProduct != null;
+
+    _recommendedProduct = null;
+    _discountedProductModel = null;
+    _selectedProductModel = null;
+    _allProductModel = null;
+    _latestProductModel = null;
+    _featuredProductModel = null;
+    _homeCategoryProductList.clear();
+    _mostDemandedProductModel = null;
+    _findWhatYouNeedModel = null;
+    _clearanceProductModel = null;
+    clearanceSearchProductModel = null;
+    _brandOrCategoryProductList = null;
+    _relatedProductList = null;
+    _justForYouProductModel = null;
+    _mostSearchingProduct = null;
+    notifyListeners();
+
+    await Future.wait(<Future<void>>[
+      if (hadRecommended) getRecommendedProduct(),
+      if (hadSelected) getSelectedProductModel(1, isUpdate: false),
+      if (hadLatest) getLatestProductList(1),
+      if (hadFeatured) getFeaturedProductModel(1),
+      if (hadHomeCategories) getHomeCategoryProductList(true),
+      if (hadMostDemanded) getMostDemandedProduct(),
+      if (hadFindWhatYouNeed) findWhatYouNeed(),
+      if (hadClearance) getClearanceAllProductList(1, isUpdate: false),
+      if (hadJustForYou) getJustForYouProduct(1, isUpdate: false),
+      if (hadMostSearching) getMostSearchingProduct(1, isUpdate: false),
+    ]);
   }
 
   void setSearchText(String? value, {bool isUpdate = true}) {

@@ -11,6 +11,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/models/theme_schema.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/repositories/dynamic_theme_repository_interface.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/capability_registry.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/db_helper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -22,9 +23,14 @@ import 'package:syriapharmacy/utill/app_constants.dart';
 /// feature would be indefensible. The key is the endpoint, which is the convention that store was
 /// built around.
 class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
-  DynamicThemeRepository({required this.dioClient});
+  DynamicThemeRepository({required this.dioClient, this.localDatabase});
 
   final DioClient dioClient;
+
+  /// The database the pages are kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  AppDatabase get _database => localDatabase ?? database;
 
   /// The cache key for a page's payload. Namespaced under the endpoint so it cannot collide with
   /// the raw endpoint entry the generic sync layer might write for the same path.
@@ -35,7 +41,7 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
   @override
   Future<void> dropCachedPayloads() async {
     try {
-      await database.deleteCacheResponsesByPrefix('${AppConstants.themeHomeUri}::');
+      await _database.deleteCacheResponsesByPrefix('${AppConstants.themeHomeUri}::');
     } catch (_) {
       // Losing the delete costs one more stale cold start, never the sync.
     }
@@ -92,6 +98,7 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
         if (knownChecksum != null) 'If-None-Match': '"$knownChecksum"',
       };
 
+      final storefront = StorefrontScope.current;
       final response = await dioClient.get(
         '${AppConstants.themeHomeUri}?page=$page&device=${deviceClass()}',
         options: Options(
@@ -101,6 +108,12 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
           validateStatus: (status) => status != null && (status < 400 || status == 404),
         ),
       );
+
+      // A page of the storefront the shopper has left is neither cached nor handed on: cached, it would open as the home page of the one
+      // they are on.
+      if (!StorefrontScope.isCurrent(storefront)) {
+        return ApiResponseModel.withError('storefront_changed');
+      }
 
       if (response.statusCode == 304) {
         return ApiResponseModel.withSuccess(null);
@@ -126,7 +139,7 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
       if (payload.isRenderable) {
         await writeCachedPayload(payload, raw);
       } else {
-        await database.deleteCacheResponseByEndpoint(_cacheKey(payload.page));
+        await _database.deleteCacheResponseByEndpoint(_cacheKey(payload.page));
       }
 
       return ApiResponseModel.withSuccess(payload);
@@ -157,7 +170,7 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
   @override
   Future<ThemePayload?> readCachedPayload({String page = 'home'}) async {
     try {
-      final cached = await database.getCacheResponseById(_cacheKey(page));
+      final cached = await _database.getCacheResponseById(_cacheKey(page));
       if (cached == null) return null;
 
       final decoded = jsonDecode(cached.response);
@@ -180,6 +193,7 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
   ) async {
     try {
       await DbHelper.insertOrUpdate(
+        localDatabase: localDatabase,
         id: _cacheKey(payload.page),
         data: CacheResponseCompanion(
           endPoint: Value(_cacheKey(payload.page)),

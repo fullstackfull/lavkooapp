@@ -5,6 +5,7 @@ import 'package:syriapharmacy/data/local/cache_response.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/order/domain/models/order_model.dart';
 import 'package:syriapharmacy/features/order/domain/services/order_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -13,7 +14,13 @@ import 'package:syriapharmacy/utill/app_constants.dart';
 
 class OrderController with ChangeNotifier {
   final OrderServiceInterface orderServiceInterface;
-  OrderController({required this.orderServiceInterface});
+
+  /// The database the delivered orders are kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  OrderController({required this.orderServiceInterface, this.localDatabase});
+
+  AppDatabase get _database => localDatabase ?? database;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -22,7 +29,12 @@ class OrderController with ChangeNotifier {
   OrderModel? deliveredOrderModel;
   Future<void> getOrderList(int offset, String status,
       {String? type, bool refresh = false}) async {
-    var localData = await database.getCacheResponseById(AppConstants.orderUri);
+    // The orders a customer sees are read and kept for the storefront they are on now; if they choose another while an answer is on its
+    // way, that answer is neither shown nor kept.
+    final String? storefront = StorefrontScope.current;
+
+    var localData = await _database.getCacheResponseById(AppConstants.orderUri);
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (type == 'reorder') {
       if (localData != null) {
@@ -41,6 +53,8 @@ class OrderController with ChangeNotifier {
 
     ApiResponseModel apiResponse =
     await orderServiceInterface.getOrderList(offset, status, type: type);
+    if (!StorefrontScope.isCurrent(storefront)) return;
+
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       if (offset == 1) {
@@ -49,7 +63,7 @@ class OrderController with ChangeNotifier {
           deliveredOrderModel = OrderModel.fromJson(apiResponse.response?.data);
 
           if (localData != null) {
-            await database.updateCacheResponse(
+            await _database.updateCacheResponse(
                 AppConstants.orderUri,
                 CacheResponseCompanion(
                   endPoint: const Value(AppConstants.orderUri),
@@ -57,7 +71,7 @@ class OrderController with ChangeNotifier {
                   response: Value(jsonEncode(apiResponse.response!.data)),
                 ));
           } else {
-            await database.insertCacheResponse(
+            await _database.insertCacheResponse(
               CacheResponseCompanion(
                 endPoint: const Value(AppConstants.orderUri),
                 header: Value(jsonEncode(apiResponse.response!.headers.map)),

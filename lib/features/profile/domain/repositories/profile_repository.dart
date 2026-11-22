@@ -41,6 +41,7 @@ class ProfileRepository implements ProfileRepositoryInterface {
     http.MultipartRequest request = http.MultipartRequest('POST',
         Uri.parse('${AppConstants.baseUrl}${AppConstants.updateProfileUri}'));
     request.headers.addAll(<String, String>{'Authorization': 'Bearer $token'});
+    request.headers.addAll(dioClient?.storefrontHeaders ?? const <String, String>{});
     if (file != null) {
       request.files.add(http.MultipartFile(
           'image', file.readAsBytes().asStream(), file.lengthSync(),

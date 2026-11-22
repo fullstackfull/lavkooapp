@@ -8,13 +8,19 @@ import 'package:syriapharmacy/features/shop/controllers/shop_controller.dart';
 import 'package:syriapharmacy/features/brand/controllers/brand_controller.dart';
 import 'package:syriapharmacy/features/category/controllers/category_controller.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/theme_action_resolver.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
 
-class BannerController extends ChangeNotifier {
+class BannerController extends ChangeNotifier with StorefrontChangeAware {
   final BannerServiceInterface? bannerServiceInterface;
-  BannerController({required this.bannerServiceInterface});
+  BannerController({
+    required this.bannerServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   /// One destination vocabulary for the whole app: a banner from the dashboard and a banner placed
   /// by the theme builder are the same tap.
@@ -83,6 +89,28 @@ class BannerController extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  /// The customer is on another storefront: every banner belongs to the one they left, the promo banners a slot at a time.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _mainBannerList = null;
+    _footerBannerList = null;
+    mainSectionBanner = null;
+    sideBarBanner = null;
+    _product = null;
+    _currentIndex = null;
+    _footerBannerIndex = null;
+    promoBannerMiddleTop = null;
+    promoBannerRight = null;
+    promoBannerMiddleBottom = null;
+    promoBannerLeft = null;
+    promoBannerBottom = null;
+    sideBarBannerBottom = null;
+    topSideBarBannerBottom = null;
+    notifyListeners();
+
+    await getBannerList();
   }
 
   void setCurrentIndex(int index) {
