@@ -181,6 +181,7 @@ import 'package:syriapharmacy/features/wishlist/domain/repositories/wishlist_rep
 import 'package:syriapharmacy/features/wishlist/domain/repositories/wishlist_repository_interface.dart';
 import 'package:syriapharmacy/features/wishlist/domain/services/wishlist_service.dart';
 import 'package:syriapharmacy/features/wishlist/domain/services/wishlist_service_interface.dart';
+import 'package:syriapharmacy/push_notification/storefront_topic_subscriber.dart';
 import 'package:syriapharmacy/helper/network_info.dart';
 import 'package:syriapharmacy/main.dart' show database;
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
@@ -220,6 +221,11 @@ Future<void> init() async {
         clearLocalCache: database.deleteCacheResponsesOfStorefront,
         isSignedIn: () => sl<AuthServiceInterface>().isLoggedIn(),
       ));
+
+  // Which marketing topics this device is on. It is one of the notifier's listeners, so a customer who moves to another storefront
+  // leaves the market they left and joins the one they chose; the device token registration and signing out ask it directly.
+  sl.registerLazySingleton(() => StorefrontTopicSubscriber.forDevice(sl()));
+  sl<StorefrontChangeNotifier>().register(sl<StorefrontTopicSubscriber>());
 
   DataSyncRepoInterface dataSyncRepoInterface =
       DataSyncRepo(dioClient: sl(), sharedPreferences: sl());

@@ -313,6 +313,11 @@ class AppConstants {
   static const String currency = 'currency';
   static const String langKey = 'lang';
   static const String storefrontCountry = 'gcc_storefront_country';
+
+  /// Every marketing consent decision this device has recorded, as a JSON list in the shape the backend's
+  /// `customer_marketing_consents` row holds, and how many of them a server has been told about.
+  static const String marketingConsents = 'gcc_marketing_consents';
+  static const String marketingConsentsSent = 'gcc_marketing_consents_sent';
   static const String storefrontHeader = 'X-Storefront';
   static const String storefrontList = 'gcc_storefront_list';
   static const String intro = 'intro';
