@@ -24,6 +24,15 @@ class StorefrontTopics {
 
   /// `sixvalley_kw`: the global topic's own name, then the storefront's ISO code in lower case. The prefix is the existing topic rather
   /// than a new word, so a backend reading the app's topics sees the same family it already publishes to.
+  ///
+  /// EVERY MARKET GETS A SUFFIX, SAUDI ARABIA INCLUDED, and that is a decision the backend has to agree to. The backend's own tracker
+  /// item for the naming (I1-05, IN PROGRESS, nothing built) proposes instead that bare `sixvalley` stay as Saudi Arabia's topic. It
+  /// cannot: every install that exists, in every market, is already subscribed to `sixvalley`, so the day the backend began treating that
+  /// topic as Saudi Arabia's audience, Saudi marketing would go to every device in all six markets — the exact leak this feature exists
+  /// to stop. Keeping `sixvalley` as the legacy global topic, which this app LEAVES when storefronts are on, and giving Saudi Arabia
+  /// `sixvalley_sa` like everyone else, is what makes the markets disjoint.
+  ///
+  /// It is one line, in one place, so the other decision costs one line if the owner takes it.
   static String of(StorefrontCountry storefront) =>
       '${AppConstants.topic}_${storefront.code.trim().toLowerCase()}';
 

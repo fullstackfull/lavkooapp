@@ -84,6 +84,21 @@ void main() {
       );
     });
 
+    test('SAUDI ARABIA DOES NOT KEEP THE BARE GLOBAL TOPIC, which is what makes the six markets disjoint', () {
+      // The backend's naming item (I1-05) proposes that `sixvalley` stay as Saudi Arabia's topic. Every install that exists, in every
+      // market, is already on `sixvalley`: were it read as Saudi Arabia's audience, Saudi marketing would reach all six markets at once.
+      // This is the decision, pinned so that changing it is a visible change and not a drift.
+      expect(StorefrontTopics.of(StorefrontCountry.saudiArabia),
+          'sixvalley_sa');
+      expect(StorefrontTopics.of(StorefrontCountry.saudiArabia),
+          isNot(AppConstants.topic));
+      expect(
+        StorefrontTopics.forStorefront(StorefrontCountry.saudiArabia,
+            enabled: true),
+        isNot(contains(AppConstants.topic)),
+      );
+    });
+
     test('a storefront the server lists that this app does not know gets its own topic too', () {
       expect(
         StorefrontTopics.of(const StorefrontCountry(
