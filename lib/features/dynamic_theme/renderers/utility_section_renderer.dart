@@ -700,11 +700,16 @@ class _ShippingCutoffState extends State<_ShippingCutoff> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      '$label ',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    // A long label gives way to the clock (the render matrix reports an overflow of 28 pixels in a narrow strip), it never pushes it out.
+                    Flexible(
+                      child: Text(
+                        '$label ',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     // العداد الزمني بلون الموقع الأساسي

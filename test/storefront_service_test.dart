@@ -4,6 +4,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/domain/repositories/storefront_repository_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 
 /// A repository double the tests script per scenario. No mocking package: the interface is three methods.
 class _FakeStorefrontRepository implements StorefrontRepositoryInterface {
@@ -96,7 +97,18 @@ void main() {
       expect(service.enabled, isFalse);
       expect(await service.refreshStorefronts(), isFalse);
       expect(repository.requests, 0);
-    });
+    }, skip: StorefrontConfig.enabled);
+
+    test('is on in a build made with the flag', () async {
+      final repository = _FakeStorefrontRepository(
+          answer: _answerWith(_listOf([_saudi, _emirates])));
+      final service =
+          StorefrontService(storefrontRepositoryInterface: repository);
+
+      expect(service.enabled, isTrue);
+      expect(await service.refreshStorefronts(), isTrue);
+      expect(repository.requests, 1);
+    }, skip: !StorefrontConfig.enabled);
   });
 
   group('while storefronts are on', () {

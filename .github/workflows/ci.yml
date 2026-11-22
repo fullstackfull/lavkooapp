@@ -318,3 +318,52 @@ jobs:
             echo "::error::$((found - recorded)) finding(s) were added to the $recorded recorded in tool/analyze_baseline.txt. Fix them; lowering the number is welcome, raising it needs a reason."
             exit 1
           fi
+
+  # J-18: the whole suite, with storefronts off and with them on. The first job above runs the tests that this work touches, so a test anywhere else could fail unseen. Each run lists only
+  # what failed, and both must be green: the run with storefronts off is the app as it ships today (two layout overflows that failed in it are fixed in the widgets), and the run with them
+  # on is the build that turns them on (the cases that assert the build without the flag are skipped in it, and the render matrix gives its host the storefront controller that a price needs).
+  test-whole-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Whole suite, storefronts off
+        run: |
+          status=0
+          flutter test --reporter failures-only > suite-off.txt 2>&1 || status=$?
+          echo "---- storefronts off: the end of the report"
+          tail -n 160 suite-off.txt
+          exit "$status"
+
+      - name: Whole suite, storefronts on
+        if: always()
+        run: |
+          status=0
+          flutter test --reporter failures-only --dart-define=GCC_STOREFRONTS_ENABLED=true > suite-on.txt 2>&1 || status=$?
+          echo "---- storefronts on: the end of the report"
+          tail -n 160 suite-on.txt
+          exit "$status"
+
+      - name: What failed with storefronts on, in detail
+        if: failure()
+        run: |
+          # The first exceptions the framework caught, each with the lines that say what it was: a failed test prints only the last of many, and the first one is the cause.
+          grep -nE -A6 'EXCEPTION CAUGHT' suite-on.txt | cut -c1-230 | head -n 400 || true
+
+      - name: What failed
+        if: always()
+        run: |
+          # The reporter's last progress line is the verdict ("+582 ~23 -2: Some tests failed."); a failed test is a progress line that ends in [E].
+          for run in off on; do
+            echo "storefronts $run: $(grep -E '^\+[0-9]+' suite-$run.txt | tail -n 1)"
+            grep -E '^\+[0-9]+ .* \[E\]$' suite-$run.txt | sed -E 's/^\+[0-9]+ (~[0-9]+ )?-[0-9]+: //' | sort -u | sed 's/^/  failed: /' || true
+          done

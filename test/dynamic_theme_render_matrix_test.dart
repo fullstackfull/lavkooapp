@@ -17,6 +17,10 @@ import 'package:syriapharmacy/features/product_details/domain/services/product_d
 import 'package:syriapharmacy/features/search_product/controllers/search_product_controller.dart';
 import 'package:syriapharmacy/features/search_product/domain/services/search_product_service_interface.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/features/wishlist/controllers/wishlist_controller.dart';
 import 'package:syriapharmacy/localization/controllers/localization_controller.dart';
 import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
@@ -28,6 +32,13 @@ import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
 /// or anything a renderer throws surfaces as an exception in the test binding, so "renders
 /// cleanly" is provable here without an emulator. Where a style has visible proof (a title, a
 /// chip, a product name) the test looks for it too.
+/// A build with storefronts on writes a price in the currency of the storefront the customer is on, which the price helper asks the storefront controller for; the renderers cannot
+/// draw a price without one above them. The server is never asked: the matrix proves how a section is drawn, not what the server said about a storefront.
+class _NoStorefrontServer implements StorefrontServiceInterface {
+  @override
+  Future<bool> refreshStorefronts() async => false;
+}
+
 class _FakeThemeService implements DynamicThemeServiceInterface {
   @override
   Future<void> dropCachedPayloads() async {}
@@ -214,6 +225,11 @@ void main() {
         ChangeNotifierProvider(
             create: (_) => SearchProductController(
                 searchProductServiceInterface: _LooseSearchService())),
+        if (StorefrontConfig.enabled)
+          ChangeNotifierProvider<StorefrontController>(
+              create: (_) => StorefrontController(
+                  storefrontServiceInterface: _NoStorefrontServer(),
+                  storefrontChoice: StorefrontChoice(prefs))),
       ],
       child: MaterialApp(
         home: Directionality(

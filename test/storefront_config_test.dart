@@ -50,7 +50,11 @@ void main() {
   group('the build flag', () {
     test('is off unless the build defines it', () {
       expect(StorefrontConfig.enabled, isFalse);
-    });
+    }, skip: StorefrontConfig.enabled);
+
+    test('is on when the build defines it', () {
+      expect(StorefrontConfig.enabled, isTrue);
+    }, skip: !StorefrontConfig.enabled);
   });
 
   group('resolving the stored choice', () {
