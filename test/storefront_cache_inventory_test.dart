@@ -152,6 +152,10 @@ void main() {
           'the storefront feature\'s own: the list of storefronts',
       'lib/features/storefront/storefront_choice.dart::AppConstants.storefrontCountry':
           'the storefront feature\'s own: the choice',
+      'lib/features/marketing_consent/marketing_consent_store.dart::AppConstants.marketingConsents':
+          'not a storefront\'s data: ONE store of marketing consent decisions, every one of which names the market it was given for, so a customer who leaves a storefront keeps the answer they gave for it and the device keeps obeying it',
+      'lib/features/marketing_consent/marketing_consent_store.dart::AppConstants.marketingConsentsSent':
+          'not a storefront\'s data: how many of the decisions above a server has been told about, which is about the one store and not about any market',
       'lib/localization/controllers/localization_controller.dart::AppConstants.languageCode':
           'not storefront data: the language',
       'lib/localization/controllers/localization_controller.dart::AppConstants.countryCode':
