@@ -77,7 +77,24 @@ class PushStorefrontTarget {
       available: controller.available,
     );
 
-    return target == null ? null : switcher.switchTo(target);
+    return target == null ? null : _move(switcher, target);
+  }
+
+  /// A move that fails must not cost the customer the screen they tapped for.
+  ///
+  /// Both tap paths in the notification helper route inside a `try`/`catch` that swallows everything, so an exception escaping from here
+  /// would skip the routing altogether and the tap would do NOTHING — a regression on a path that has always opened a screen. A failure
+  /// is logged instead, and the tap goes on to route on the storefront the app is already on, which is exactly what it did before this
+  /// existed.
+  static Future<void> _move(
+      StorefrontSwitcher switcher, StorefrontCountry target) async {
+    try {
+      await switcher.switchTo(target);
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[push] the storefront did not move: ${error.runtimeType}');
+      }
+    }
   }
 
   /// A push can be tapped before the app has built the tree that provides these, and a notification must never be swallowed because of

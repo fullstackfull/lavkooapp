@@ -69,6 +69,20 @@ class _NoServer implements StorefrontServiceInterface {
   Future<bool> refreshStorefronts() async => false;
 }
 
+/// A switcher that cannot move the customer: the preferences refuse the write, the headers cannot be rebuilt. The tap must still open
+/// the screen it was tapped for, because both tap paths route inside a `catch` that swallows everything.
+class _FailingSwitcher extends StorefrontSwitcher {
+  _FailingSwitcher({
+    required super.storefrontController,
+    required super.applyHeaders,
+    required super.changeNotifier,
+  });
+
+  @override
+  Future<StorefrontSwitch> switchTo(StorefrontCountry storefront) =>
+      Future<StorefrontSwitch>.error(StateError('the choice could not be saved'));
+}
+
 /// The three markets the server lists in this test. Kuwait may sell; the Emirates are listed browse-only, so a push about an order there
 /// still opens in the Emirates — an order that exists is not a sale.
 const List<StorefrontCountry> _listed = <StorefrontCountry>[
@@ -87,7 +101,8 @@ void main() {
   });
 
   /// Opens the app on [on], with [_listed] as the server's last answer, and with everything a storefront move needs in the tree.
-  Future<void> openApp(WidgetTester tester, {String on = 'SA'}) async {
+  Future<void> openApp(WidgetTester tester,
+      {String on = 'SA', bool theMoveFails = false}) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       AppConstants.storefrontCountry: on,
     });
@@ -107,18 +122,30 @@ void main() {
         providers: [
           ChangeNotifierProvider<StorefrontController>.value(value: controller),
           Provider<StorefrontSwitcher>(
-            create: (BuildContext context) => StorefrontSwitcher(
-              storefrontController: controller,
-              // What the HTTP client does when it rebuilds its headers: it publishes the storefront every request from now on asks for.
-              applyHeaders: () =>
-                  StorefrontScope.publish(controller.current.code),
-              changeNotifier: StorefrontChangeNotifier(
+            create: (BuildContext context) {
+              final StorefrontChangeNotifier changeNotifier =
+                  StorefrontChangeNotifier(
                 clearHttpCache: (String _) {},
                 clearLocalCache: (String _) async {},
                 isSignedIn: () => true,
                 enabled: true,
-              ),
-            ),
+              );
+              // What the HTTP client does when it rebuilds its headers: it publishes the storefront every request from now on asks for.
+              void applyHeaders() =>
+                  StorefrontScope.publish(controller.current.code);
+
+              return theMoveFails
+                  ? _FailingSwitcher(
+                      storefrontController: controller,
+                      applyHeaders: applyHeaders,
+                      changeNotifier: changeNotifier,
+                    )
+                  : StorefrontSwitcher(
+                      storefrontController: controller,
+                      applyHeaders: applyHeaders,
+                      changeNotifier: changeNotifier,
+                    );
+            },
           ),
         ],
         child: MaterialApp.router(
@@ -261,6 +288,22 @@ void main() {
       expect(controller.current.code, 'SA');
       expect(StorefrontScope.current, 'SA');
       expect(find.text('order 4217, from a notification: true'), findsOneWidget);
+    });
+
+    testWidgets('A MOVE THAT FAILS STILL OPENS THE ORDER: the tap is never swallowed',
+        (WidgetTester tester) async {
+      await openApp(tester, theMoveFails: true);
+
+      await openFromSystem(tester, <String, dynamic>{
+        'type': 'order',
+        'order_id': '4217',
+        'storefront': 'KW',
+      });
+
+      expect(find.text('order 4217, from a notification: true'), findsOneWidget,
+          reason: 'both tap paths route inside a catch that swallows everything');
+      expect(StorefrontScope.current, 'SA',
+          reason: 'the app is on the storefront it was on, as it was before this existed');
     });
 
     testWidgets('a push about the market the customer is already on moves nothing and still opens the order',
