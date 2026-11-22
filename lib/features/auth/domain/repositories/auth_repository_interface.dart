@@ -81,7 +81,8 @@ abstract class AuthRepoInterface<T> implements RepositoryInterface {
   Future<ApiResponseModel> existingAccountCheck(
       {required String email,
       required int userResponse,
-      required String medium});
+      required String medium,
+      String? temporaryToken});
 
   Future<ApiResponseModel> verifyProfileInfo(
       String userInput, String token, String type);
