@@ -18,6 +18,7 @@ import 'package:syriapharmacy/features/wallet/controllers/wallet_controller.dart
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/push_notification/models/notification_body.dart';
+import 'package:syriapharmacy/push_notification/push_storefront_target.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -48,6 +49,13 @@ class NotificationHelper {
               payload = NotificationBody.fromJson(jsonDecode(load.payload!));
               log("-----------tyyuuyypee88==>${payload.type}");
               log("=============Payload==>${load.payload}");
+              // A push with no storefront to move to does not suspend here at all, so the routing below is reached in the same turn it
+              // always was.
+              final Future<void>? movingStorefront =
+                  PushStorefrontTarget.enter(payload, Get.context);
+              if (movingStorefront != null) {
+                await movingStorefront;
+              }
               if (payload.type == 'order') {
                 RouterHelper.getOrderDetailsScreenRoute(
                     action: RouteAction.pushReplacement,
@@ -180,6 +188,11 @@ class NotificationHelper {
       try {
         if (message.data.isNotEmpty) {
           NotificationBody notificationBody = convertNotification(message.data);
+          final Future<void>? movingStorefront =
+              PushStorefrontTarget.enter(notificationBody, Get.context);
+          if (movingStorefront != null) {
+            await movingStorefront;
+          }
           if (notificationBody.type == 'order') {
             RouterHelper.getOrderDetailsScreenRoute(
                 action: RouteAction.pushReplacement,
@@ -407,7 +420,18 @@ class NotificationHelper {
     return filePath;
   }
 
+  /// The message as the app reads it, whatever kind it is.
+  ///
+  /// The storefront is read ONCE, here, and not in the seven branches of [_bodyOf]: a branch that forgot it would quietly route a push
+  /// about another market on whatever storefront the customer happens to be on, which is the defect this criterion exists to stop.
   static NotificationBody convertNotification(Map<String, dynamic> data) {
+    final NotificationBody body = _bodyOf(data);
+    body.storefront = NotificationBody.storefrontIn(data);
+
+    return body;
+  }
+
+  static NotificationBody _bodyOf(Map<String, dynamic> data) {
     if (data['type'] == 'notification') {
       return NotificationBody(type: 'notification');
     } else if (data['type'] == 'order') {
