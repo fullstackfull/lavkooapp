@@ -8,6 +8,8 @@ import 'package:syriapharmacy/data/datasource/remote/exception/api_error_handler
 import 'package:syriapharmacy/data/local/cache_response.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/data/reposotories/data_sync_repo_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_cache_key.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/db_helper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -17,7 +19,15 @@ class DataSyncRepo implements DataSyncRepoInterface {
   final DioClient dioClient;
   final SharedPreferences? sharedPreferences;
 
-  DataSyncRepo({required this.dioClient, required this.sharedPreferences});
+  /// The database the answers are kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  DataSyncRepo(
+      {required this.dioClient,
+      required this.sharedPreferences,
+      this.localDatabase});
+
+  AppDatabase get _database => localDatabase ?? database;
 
   @override
   Future<ApiResponseModel<T>> fetchData<T>(
@@ -38,7 +48,13 @@ class DataSyncRepo implements DataSyncRepoInterface {
     return '$uri#$lang';
   }
 
+  /// The key a web build files an answer under in the preferences, which have no table to file it for the storefront: the language-aware
+  /// key, followed by the storefront while they are on. The database files its rows itself, by the same rule.
+  String _webKey(String cacheKey, String? storefront) =>
+      StorefrontCacheKey.scoped(cacheKey, storefrontCode: storefront);
+
   Future<ApiResponseModel<T>> _fetchFromClient<T>(String uri) async {
+    final String? storefront = StorefrontScope.current;
     final response = await dioClient.get(uri);
     final cacheKey = _getLangAwareUri(uri);
 
@@ -50,13 +66,18 @@ class DataSyncRepo implements DataSyncRepoInterface {
       isSuccess: Value(response.statusCode == 200),
     );
 
-    // Cache the data based on the platform
-    if (kIsWeb && _isWebCachesActive()) {
-      _cacheResponseWeb(cacheKey, cacheData);
-    }
+    // An answer for a storefront the customer has left on the way is handed back and filed nowhere: kept, it would be read as the answer
+    // of the storefront they are on.
+    if (StorefrontScope.isCurrent(storefront)) {
+      // Cache the data based on the platform
+      if (kIsWeb && _isWebCachesActive()) {
+        _cacheResponseWeb(_webKey(cacheKey, storefront), cacheData);
+      }
 
-    if (!kIsWeb && _isAppCachesActive()) {
-      await DbHelper.insertOrUpdate(id: cacheKey, data: cacheData);
+      if (!kIsWeb && _isAppCachesActive()) {
+        await DbHelper.insertOrUpdate(
+            id: cacheKey, data: cacheData, localDatabase: _database);
+      }
     }
 
     return ApiResponseModel.withSuccess(response as T);
@@ -87,12 +108,13 @@ class DataSyncRepo implements DataSyncRepoInterface {
     final cacheKey = _getLangAwareUri(uri);
 
     if (kIsWeb) {
-      final cachedJson = sharedPreferences?.getString(cacheKey);
+      final cachedJson = sharedPreferences
+          ?.getString(_webKey(cacheKey, StorefrontScope.current));
       if (cachedJson != null) {
         cacheData = CacheResponseData.fromJson(jsonDecode(cachedJson));
       }
     } else {
-      cacheData = await database.getCacheResponseById(cacheKey);
+      cacheData = await _database.getCacheResponseById(cacheKey);
     }
 
     if (cacheData != null && cacheData.isSuccess) {

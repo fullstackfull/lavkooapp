@@ -26,6 +26,7 @@ class RefundRepository implements RefundRepositoryInterface {
       'Authorization':
           'Bearer ${Provider.of<AuthController>(Get.context!, listen: false).getUserToken()}'
     });
+    request.headers.addAll(dioClient?.storefrontHeaders ?? const <String, String>{});
     for (int i = 0; i < file.length; i++) {
       Uint8List list = await file[i]!.readAsBytes();
       var part = http.MultipartFile(

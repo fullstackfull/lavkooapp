@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/setting/widgets/select_language_bottom_sheet_widget.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_config.dart';
+import 'package:syriapharmacy/features/storefront/storefront_money.dart';
+import 'package:syriapharmacy/features/storefront/widgets/storefront_settings_entry.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
 import 'package:syriapharmacy/utill/dimensions.dart';
@@ -49,16 +53,21 @@ class SettingsScreen extends StatelessWidget {
                     builder: (_) => const SelectLanguageBottomSheetWidget(),
                   ),
                 ),
-                TitleButton(
-                    image: Images.currency,
-                    title:
-                        '${getTranslated('currency', context)} (${Provider.of<SplashController>(context).myCurrency?.name ?? ''})',
-                    onTap: () => showModalBottomSheet(
-                        backgroundColor: Colors.transparent,
-                        isScrollControlled: true,
-                        context: context,
-                        builder: (_) =>
-                            const SelectCurrencyBottomSheetWidget())),
+                if (!StorefrontConfig.enabled ||
+                    !StorefrontMoney.writesPricesOf(
+                        Provider.of<StorefrontController>(context).current,
+                        enabled: true))
+                  TitleButton(
+                      image: Images.currency,
+                      title:
+                          '${getTranslated('currency', context)} (${Provider.of<SplashController>(context).myCurrency?.name ?? ''})',
+                      onTap: () => showModalBottomSheet(
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          context: context,
+                          builder: (_) =>
+                              const SelectCurrencyBottomSheetWidget())),
+                const StorefrontSettingsEntry(),
               ],
             )),
           ])),

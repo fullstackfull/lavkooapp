@@ -119,7 +119,7 @@ class _OrderOfflinePaymentScreenState extends State<OrderOfflinePaymentScreen> {
                                     padding: const EdgeInsets.all(
                                         Dimensions.paddingSizeDefault),
                                     child: Text(
-                                        '${getTranslated('amount', context)} : ${PriceConverter.convertPrice(context, widget.payableAmount)}',
+                                        '${getTranslated('amount', context)} : ${PriceConverter.convertOrderPrice(context, widget.payableAmount, market: orderDetailsController.orders?.market)}',
                                         style: textBold.copyWith(
                                             fontSize:
                                                 Dimensions.fontSizeLarge)))),

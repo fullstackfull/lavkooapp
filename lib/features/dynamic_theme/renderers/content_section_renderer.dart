@@ -765,51 +765,62 @@ class _StatTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: .10)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              gradient: BrandGradients.primary,
-              borderRadius: BorderRadius.circular(13),
+      // The grid gives a tile a fixed height, so a long label or a large text scale made the column taller than its cell (the render matrix
+      // reports an overflow of 17 pixels): the content is scaled down to fit, wrapping at the width of the tile as before, and is unchanged
+      // when it already fits.
+      child: LayoutBuilder(
+        builder: (context, constraints) => FittedBox(
+          fit: BoxFit.scaleDown,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    gradient: BrandGradients.primary,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: image != null
+                      ? Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: CustomImageWidget(image: image, fit: BoxFit.contain),
+                  )
+                      : Icon(icon, color: Colors.white, size: 25),
+                ),
+                if (value != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+                if (label != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: .65),
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ],
             ),
-            child: image != null
-                ? Padding(
-              padding: const EdgeInsets.all(10),
-              child: CustomImageWidget(image: image, fit: BoxFit.contain),
-            )
-                : Icon(icon, color: Colors.white, size: 25),
           ),
-          if (value != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-              ),
-            ),
-          ],
-          if (label != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: .65),
-                fontSize: 12.5,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

@@ -6,6 +6,8 @@ import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 import 'package:syriapharmacy/features/product/domain/models/product_model.dart';
 import 'package:syriapharmacy/features/product_details/controllers/product_details_controller.dart';
 import 'package:syriapharmacy/features/shipping/controllers/shipping_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
@@ -13,9 +15,14 @@ import 'package:provider/provider.dart';
 
 import '../../../services/meta_tracking_service.dart';
 
-class CartController extends ChangeNotifier {
+class CartController extends ChangeNotifier with StorefrontChangeAware {
   final CartServiceInterface? cartServiceInterface;
-  CartController({required this.cartServiceInterface});
+  CartController({
+    required this.cartServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   List<CartModel> _cartList = [];
   List<bool> isSelectedList = [];
@@ -41,12 +48,22 @@ class CartController extends ChangeNotifier {
   }
 
   Future<ApiResponseModel> getCartData(BuildContext context,
+          {bool reload = true, String? couponCode}) =>
+      _loadCart(reload: reload, couponCode: couponCode);
+
+  Future<ApiResponseModel> _loadCart(
       {bool reload = true, String? couponCode}) async {
+    final String? storefront = StorefrontScope.current;
     if (reload) {
       _cartLoading = true;
     }
     ApiResponseModel apiResponse =
         await cartServiceInterface!.getCartList(couponCode: couponCode);
+
+    // The cart is kept per storefront: the answer of the storefront the customer has left is never shown as the cart of the one they are
+    // on.
+    if (!StorefrontScope.isCurrent(storefront)) return apiResponse;
+
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       _cartList = [];
@@ -228,6 +245,22 @@ class CartController extends ChangeNotifier {
       ApiChecker.checkApi(apiResponse);
     }
     notifyListeners();
+  }
+
+  /// The customer is on another storefront, which has a cart of its own: nothing of the previous one is shown, not even while the new one
+  /// loads, and a guest's cart is asked for as much as a signed-in customer's.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _cartList = [];
+    isSelectedList = [];
+    amount = 0.0;
+    isSelectAll = true;
+    cart = null;
+    _updateQuantityErrorText = null;
+    _cartLoading = true;
+    notifyListeners();
+
+    await _loadCart();
   }
 
   void resetCartList({bool isUpdate = true}) {

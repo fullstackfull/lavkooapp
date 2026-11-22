@@ -10,14 +10,28 @@ import 'package:syriapharmacy/features/shop/domain/models/more_store_model.dart'
 import 'package:syriapharmacy/features/shop/domain/models/seller_info_model.dart';
 import 'package:syriapharmacy/features/shop/domain/models/seller_model.dart';
 import 'package:syriapharmacy/features/shop/domain/services/shop_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
+import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/data_sync_helper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
-class ShopController extends ChangeNotifier {
+class ShopController extends ChangeNotifier with StorefrontChangeAware {
   final ShopServiceInterface? shopServiceInterface;
-  ShopController({required this.shopServiceInterface});
+
+  /// The database a shop's clearance products are kept in: the app's one, unless a test hands in another.
+  final AppDatabase? localDatabase;
+
+  ShopController({
+    required this.shopServiceInterface,
+    this.localDatabase,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
+
+  AppDatabase get _database => localDatabase ?? database;
 
   String? _searchText;
   String? get searchText => _searchText;
@@ -121,12 +135,16 @@ class ShopController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel apiResponse = await shopServiceInterface!
           .getSellerList(
               type: 'top',
               limit: 10,
               offset: offset,
               source: DataSourceEnum.client);
+
+      // A page of the shops of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse.response?.statusCode == 200) {
         final SellerModel parseSellerModel =
@@ -172,12 +190,16 @@ class ShopController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel apiResponse = await shopServiceInterface!
           .getSellerList(
               type: type,
               limit: 10,
               offset: offset,
               source: DataSourceEnum.client);
+
+      // A page of the shops of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse.response?.statusCode == 200) {
         final SellerModel parseSellerModel =
@@ -224,12 +246,16 @@ class ShopController extends ChangeNotifier {
         },
       );
     } else {
+      final String? storefront = StorefrontScope.current;
       final ApiResponseModel apiResponse = await shopServiceInterface!
           .getSellerList(
               type: 'all',
               limit: 100,
               offset: offset,
               source: DataSourceEnum.client);
+
+      // A page of the shops of the storefront the customer has left is not added to the ones of the storefront they are on.
+      if (!StorefrontScope.isCurrent(storefront)) return;
 
       if (apiResponse.response?.statusCode == 200) {
         final SellerModel parseSellerModel =
@@ -250,8 +276,13 @@ class ShopController extends ChangeNotifier {
   Future<void> getClearanceShopProductList(
       String type, String offset, String slug,
       {bool reload = false}) async {
-    var localData = await database.getCacheResponseById(
+    // A shop's clearance products are read and kept for the storefront the customer is on now; if they choose another while an answer is
+    // on its way, that answer is neither shown nor kept.
+    final String? storefront = StorefrontScope.current;
+
+    var localData = await _database.getCacheResponseById(
         "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type");
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (localData != null) {
       clearanceProductModel =
@@ -261,6 +292,7 @@ class ShopController extends ChangeNotifier {
 
     ApiResponseModel apiResponse = await shopServiceInterface!
         .getClearanceShopProductList(type, offset, slug);
+    if (!StorefrontScope.isCurrent(storefront)) return;
 
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
@@ -279,7 +311,7 @@ class ShopController extends ChangeNotifier {
       }
 
       if (localData != null) {
-        await database.updateCacheResponse(
+        await _database.updateCacheResponse(
             "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type",
             CacheResponseCompanion(
               endPoint: Value(
@@ -288,7 +320,7 @@ class ShopController extends ChangeNotifier {
               response: Value(jsonEncode(apiResponse.response!.data)),
             ));
       } else {
-        await database.insertCacheResponse(
+        await _database.insertCacheResponse(
           CacheResponseCompanion(
             endPoint: Value(
                 "${AppConstants.clearanceShopProductUri}$slug/products?guest_id=1&limit=10&offset=$offset&offer_type=$type"),
@@ -303,6 +335,36 @@ class ShopController extends ChangeNotifier {
 
   void emptyClearanceProductList() {
     clearanceProductModel = null;
+  }
+
+  /// The customer is on another storefront: the shops, the products a shop's page showed and the shop's own info belong to the one they
+  /// left. The lists the home showed are loaded again, and only those; what belongs to one shop is dropped and loads when its screen is
+  /// opened again.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool hadMoreStores = moreStoreList.isNotEmpty;
+    final bool hadTopSellers = topSellerModel != null;
+    final bool hadAllSellers = allSellerModel != null;
+    final bool hadFilteredSellers = filteredSellerModel != null;
+
+    moreStoreList = [];
+    isLoading = false;
+    topSellerModel = null;
+    allSellerModel = null;
+    filteredSellerModel = null;
+    clearanceProductModel = null;
+    clearanceSearchProductModel = null;
+    sellerInfoModel = null;
+    sellerInfoModelProductDetails = null;
+    notifyListeners();
+
+    await Future.wait(<Future<void>>[
+      if (hadMoreStores) getMoreStore(),
+      if (hadTopSellers) getTopSellerList(offset: 1, isUpdate: false),
+      if (hadAllSellers) getAllSellerList(offset: 1, isUpdate: false),
+      if (hadFilteredSellers)
+        getFilteredSellerList(type: sellerType, offset: 1, isUpdate: false),
+    ]);
   }
 
   ProductModel? clearanceSearchProductModel;

@@ -1,0 +1,368 @@
+name: CI
+
+on:
+  push:
+    branches: ['gcc/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  storefront-header:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Same pinned toolchain as the seller app. Bump both together.
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Scoped to the files this branch adds or changes. The rest of the app is
+      # not yet analyzed in CI, so pre-existing findings elsewhere do not fail
+      # this job. `flutter analyze` treats warnings as fatal; infos are opted out.
+      - name: Analyze changed files
+        run: >
+          flutter analyze --no-fatal-infos
+          lib/features/storefront
+          lib/data/datasource/remote/dio/dio_client.dart
+          lib/utill/app_constants.dart
+          test/storefront_config_test.dart
+          test/dio_storefront_header_test.dart
+          test/storefront_choice_test.dart
+          lib/data/datasource/remote/exception/api_error_handler.dart
+          lib/di_container.dart
+          lib/features/checkout/controllers/checkout_controller.dart
+          lib/features/checkout/screens/checkout_screen.dart
+          lib/features/splash/screens/splash_screen.dart
+          lib/utill/update_gate.dart
+          test/release_version_test.dart
+          test/update_gate_test.dart
+          lib/utill/update_target.dart
+          lib/features/update/screen/update_screen.dart
+          test/update_target_test.dart
+          lib/features/wallet/controllers/wallet_controller.dart
+          lib/features/loyaltyPoint/controllers/loyalty_point_controller.dart
+          lib/main.dart
+          lib/data/datasource/remote/dio/api_cache_key.dart
+          test/api_cache_key_test.dart
+          test/api_error_handler_storefront_test.dart
+          test/checkout_sale_gate_test.dart
+          test/dio_cache_storefront_test.dart
+          test/price_converter_storefront_test.dart
+          test/storefront_money_test.dart
+          test/storefront_currency_sites_test.dart
+          lib/features/order_details/controllers/order_details_controller.dart
+          lib/features/wallet/widgets/add_fund_dialogue_widget.dart
+          test/storefront_browse_only_notice_test.dart
+          test/storefront_can_sell_test.dart
+          test/storefront_controller_test.dart
+          test/storefront_list_parsing_test.dart
+          test/storefront_repository_test.dart
+          test/storefront_service_test.dart
+          test/stored_storefronts_test.dart
+          lib/data/local/cache_response.dart
+          lib/data/reposotories/data_sync_repo.dart
+          lib/features/banner/controllers/banner_controller.dart
+          lib/features/brand/controllers/brand_controller.dart
+          lib/features/cart/controllers/cart_controller.dart
+          lib/features/category/controllers/category_controller.dart
+          lib/features/compare/controllers/compare_controller.dart
+          lib/features/coupon/controllers/coupon_controller.dart
+          lib/features/deal/controllers/featured_deal_controller.dart
+          lib/features/deal/controllers/flash_deal_controller.dart
+          lib/features/dynamic_theme/controllers/dynamic_theme_controller.dart
+          lib/features/dynamic_theme/domain/repositories/dynamic_theme_repository.dart
+          lib/features/order/controllers/order_controller.dart
+          lib/features/product/controllers/product_controller.dart
+          lib/features/product/controllers/seller_product_controller.dart
+          lib/features/product_details/controllers/product_details_controller.dart
+          lib/features/restock/controllers/restock_controller.dart
+          lib/features/search_product/controllers/search_product_controller.dart
+          lib/features/setting/screens/settings_screen.dart
+          lib/features/shipping/controllers/shipping_controller.dart
+          lib/features/shop/controllers/shop_controller.dart
+          lib/features/splash/controllers/splash_controller.dart
+          lib/features/wishlist/controllers/wishlist_controller.dart
+          lib/helper/data_sync_helper.dart
+          lib/helper/db_helper.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cache_inventory_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_multipart_headers_test.dart
+          test/storefront_theme_reload_test.dart
+          test/storefront_wallet_reload_test.dart
+
+      # cart_screen.dart already carries two analyzer warnings of its own (two
+      # unused locals), so it cannot join the list above. It is analyzed for
+      # errors only, which is what a wrong name or argument in the lines this
+      # branch added to it would be. Remove this step once those warnings are
+      # fixed and add the file to the list above.
+      - name: Analyze the cart screen for errors only
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/features/cart/screens/cart_screen.dart
+
+      # dashboard_screen.dart carries an analyzer warning of its own (an unused import), so it cannot join the list above either; it is analyzed for errors only,
+      # which is what a wrong name in the lines this branch added to it would be.
+      - name: Analyze the dashboard screen for errors only
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/features/dashboard/screens/dashboard_screen.dart
+
+      # The five repositories that build an upload were not analyzed in CI before. They are analyzed for errors only, which is what a wrong
+      # name or type in the line this branch added to each would be.
+      - name: Analyze the upload repositories for errors only
+        run: >
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+          lib/features/chat/domain/repositories/chat_repository.dart
+          lib/features/profile/domain/repositories/profile_repository.dart
+          lib/features/refund/domain/repositories/refund_repository.dart
+          lib/features/review/domain/repositories/review_repository.dart
+          lib/features/support/domain/repositories/support_ticket_repository.dart
+
+      # localization_keys_test.dart is not new, but this branch adds translation
+      # keys it checks. storefront_controller_test.dart has one test, and
+      # dio_cache_storefront_test.dart a group of them, that run only in a build
+      # made with GCC_STOREFRONTS_ENABLED=true; they are skipped here, as the flag
+      # is off by default, and run in the next step. The tests of the storefront
+      # caches and the change of storefront do not depend on the build flag: they
+      # set the storefront the way the HTTP client does, so both settings run
+      # here. The local database ones run over SQLite in memory, which needs
+      # libsqlite3 on the runner.
+      - name: Test storefront
+        run: >
+          flutter test
+          test/price_converter_storefront_test.dart
+          test/storefront_money_test.dart
+          test/storefront_currency_sites_test.dart
+          test/storefront_config_test.dart
+          test/dio_storefront_header_test.dart
+          test/storefront_choice_test.dart
+          test/api_error_handler_storefront_test.dart
+          test/checkout_sale_gate_test.dart
+          test/localization_keys_test.dart
+          test/storefront_browse_only_notice_test.dart
+          test/storefront_can_sell_test.dart
+          test/storefront_controller_test.dart
+          test/storefront_list_parsing_test.dart
+          test/storefront_repository_test.dart
+          test/storefront_service_test.dart
+          test/stored_storefronts_test.dart
+          test/api_cache_key_test.dart
+          test/dio_cache_storefront_test.dart
+          test/dynamic_theme_controller_test.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cache_inventory_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_multipart_headers_test.dart
+          test/storefront_theme_reload_test.dart
+          test/storefront_wallet_reload_test.dart
+          test/release_version_test.dart
+          test/update_gate_test.dart
+
+      # The groups that run only with the flag on, and everything new that has to
+      # hold in both settings.
+      - name: Test storefront with storefronts on
+        run: >
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true
+          test/price_converter_storefront_test.dart
+          test/dio_cache_storefront_test.dart
+          test/storefront_controller_test.dart
+          test/cache_response_storefront_test.dart
+          test/dio_cache_key_order_test.dart
+          test/dio_storefront_namespace_test.dart
+          test/storefront_availability_test.dart
+          test/storefront_cart_reload_test.dart
+          test/storefront_catalogue_reload_test.dart
+          test/storefront_change_notifier_test.dart
+          test/storefront_chooser_sheet_test.dart
+          test/storefront_maintenance_screen_test.dart
+          test/storefront_maintenance_dashboard_test.dart
+          test/storefront_controllers_registered_test.dart
+          test/storefront_local_caches_test.dart
+          test/storefront_scope_test.dart
+          test/storefront_switcher_test.dart
+          test/storefront_multipart_headers_test.dart
+          test/storefront_theme_reload_test.dart
+          test/storefront_wallet_reload_test.dart
+
+      # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
+      # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
+      # constant: the groups that need it are skipped in the build without it, and the groups that say what that build does are skipped in the
+      # build with it.
+
+      # J-01 criterion 3: nothing derives the storefront from the IP address, the language or region of the device, or the position.
+      - name: J-01.3 the storefront is never derived from the IP address, the device locale or the position
+        run: |
+          flutter test test/storefront_not_derived_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_not_derived_test.dart
+
+      # J-01 criterion 4: the storefront the app falls back to is the one the server's list names its default, and Saudi Arabia while it names
+      # none. The parse, the stored list and the move all take the flag as a parameter, so the file holds in both settings of the build flag
+      # and is run in both.
+      - name: J-01.4 the fallback storefront is the default the server's list names
+        run: |
+          flutter test test/storefront_server_default_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_server_default_test.dart
+
+      # J-05 criterion 3: every use of toStringAsFixed is looked at, and none of the files that write a cart, checkout, order, wallet or coupon
+      # amount through PriceConverter formats a number itself. The scan reads the sources and does not depend on the flag.
+      - name: J-05.3 every toStringAsFixed is accounted for and none writes a cart, checkout, order, wallet or coupon amount
+        run: flutter test test/money_formatter_inventory_test.dart
+
+      # J-09 criterion 1, with I2-10 criterion 5 and I2-13 criterion 1: no order, payment or wallet top-up request leaves the app on a browse-only
+      # storefront. The controllers are started by hand; the cart and checkout screens are pinned by their source.
+      - name: J-09.1 no order, payment or wallet top-up request leaves the app on a browse-only storefront
+        run: |
+          flutter test test/storefront_payment_guard_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_payment_guard_test.dart
+
+      # J-11 criterion 3: a push about an order opens the order by its id on any storefront, a browse-only one included.
+      - name: J-11.3 an order push opens the order by its id on any storefront
+        run: |
+          flutter test test/order_push_routing_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_push_routing_test.dart
+
+      # J-13 criterion 2: the sale gate is asked by what starts a sale and by nothing that serves an order the customer already has.
+      - name: J-13.2 the details, tracking, refund, support and chat of an existing order are not gated
+        run: |
+          flutter test test/existing_orders_not_gated_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/existing_orders_not_gated_test.dart
+
+      # J-13 criterion 1: an order is written in the currency it was sold in, and says the storefront it was sold on. The model reads three keys
+      # the server writes on an order and the rules read the flag as a parameter, so that test does not depend on the build; the money and the
+      # screens are tested in both settings, because the flag is a compile-time constant.
+      - name: J-13.1 an order carries what it was sold in, and an order that says nothing is read as before
+        run: flutter test test/order_market_test.dart
+
+      - name: J-13.1 an amount of an order is written in the currency of the order, with its decimals and no conversion
+        run: |
+          flutter test test/order_price_converter_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_price_converter_test.dart
+
+      - name: J-13.1 the list item, the billing summary, the lines and the order again card write the currency and the country of the order
+        run: |
+          flutter test test/order_screens_currency_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_screens_currency_test.dart
+
+      - name: J-13.1 every amount the screens of an order write is accounted for, in the currency of the order or with the reason it is not
+        run: flutter test test/order_amounts_inventory_test.dart
+
+      # I1-16 criterion 5 (the app's half): Arabic is written right to left and English left to right.
+      - name: I1-16.5 Arabic reads right to left and English left to right in the app
+        run: flutter test test/localization_direction_test.dart
+
+      # J-17 criterion 4: the update screen offers a target that works when the shop configures no link, which is what the live shop
+      # publishes. The button is run on the real screen, on both platforms, with the launcher answering through the plugin's own channel; the
+      # store it falls back to is built from the id the build carries, and the test holds that id to the Android build, the manifest and the
+      # iOS Firebase settings. Nothing here reads the storefronts flag, so the file runs once.
+      - name: J-17.4 the update screen offers a store page when the shop configures no link
+        run: flutter test test/update_target_test.dart
+
+  # J-18: the whole project is analyzed and no finding may be added. The job above analyzes only the files a branch changes, so a finding added
+  # anywhere else went unseen: 255 findings were recorded as the state of the app on 2026-11-18. The number is in tool/analyze_baseline.txt; the
+  # job fails when the analyzer finds more than that, or any error, and says how many it found so that a fix can lower the number on purpose.
+  analyze-whole-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze the whole project, no finding added
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1 || true
+          grep -nE 'issues? found|No issues' analyze.txt || true
+          found=$(grep -oE '[0-9]+ issues? found' analyze.txt | tail -n 1 | grep -oE '^[0-9]+' || true)
+          found=${found:-0}
+          errors=$(grep -cE '^\s*error • ' analyze.txt || true)
+          recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
+          echo "The analyzer found $found findings ($errors errors); the recorded state is $recorded."
+          if [ "$errors" -gt 0 ]; then
+            echo "::error::The analyzer reports errors."
+            exit 1
+          fi
+          if [ "$found" -gt "$recorded" ]; then
+            echo "::error::$((found - recorded)) finding(s) were added to the $recorded recorded in tool/analyze_baseline.txt. Fix them; lowering the number is welcome, raising it needs a reason."
+            exit 1
+          fi
+
+  # J-18: the whole suite, with storefronts off and with them on. The first job above runs the tests that this work touches, so a test anywhere
+  # else could fail unseen. The two settings run as independent jobs of a matrix with fail-fast off, so a failure in one does not hide the other:
+  # the run with storefronts off is the app as it ships today (two layout overflows that failed in it are fixed in the widgets), and the run with
+  # them on is the build that turns them on (the cases that assert the build without the flag are skipped in it, and the render matrix gives its
+  # host the storefront controller that a price needs). Each run lists only what failed, and both must be green.
+  test-whole-suite:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        storefronts: ['off', 'on']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: The whole suite, storefronts ${{ matrix.storefronts }}
+        run: |
+          status=0
+          if [ "${{ matrix.storefronts }}" = "on" ]; then
+            flutter test --reporter failures-only --dart-define=GCC_STOREFRONTS_ENABLED=true > suite.txt 2>&1 || status=$?
+          else
+            flutter test --reporter failures-only > suite.txt 2>&1 || status=$?
+          fi
+          echo "---- storefronts ${{ matrix.storefronts }}: the end of the report"
+          tail -n 160 suite.txt
+          exit "$status"
+
+      - name: What failed, in detail
+        if: failure()
+        run: |
+          # The first exceptions the framework caught, each with the lines that say what it was: a failed test prints only the last of many, and the first one is the cause.
+          grep -nE -A6 'EXCEPTION CAUGHT' suite.txt | cut -c1-230 | head -n 400 || true
+
+      - name: What failed
+        if: always()
+        run: |
+          # The reporter's last progress line is the verdict ("+582 ~23 -2: Some tests failed."); a failed test is a progress line that ends in [E].
+          echo "storefronts ${{ matrix.storefronts }}: $(grep -E '^\+[0-9]+' suite.txt | tail -n 1)"
+          grep -E '^\+[0-9]+ .* \[E\]$' suite.txt | sed -E 's/^\+[0-9]+ (~[0-9]+ )?-[0-9]+: //' | sort -u | sed 's/^/  failed: /' || true

@@ -5,15 +5,21 @@ import 'package:syriapharmacy/features/checkout/controllers/checkout_controller.
 import 'package:syriapharmacy/features/coupon/domain/models/coupon_item_model.dart';
 import 'package:syriapharmacy/features/coupon/domain/models/coupon_model.dart';
 import 'package:syriapharmacy/features/coupon/domain/services/coupon_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:provider/provider.dart';
 
-class CouponController extends ChangeNotifier {
+class CouponController extends ChangeNotifier with StorefrontChangeAware {
   final CouponServiceInterface? couponRepo;
-  CouponController({required this.couponRepo});
+  CouponController({
+    required this.couponRepo,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   CouponModel? _coupon;
   double? _discount;
@@ -117,6 +123,20 @@ class CouponController extends ChangeNotifier {
           snackBarType: SnackBarType.error);
     }
     _isLoading = false;
+    notifyListeners();
+  }
+
+  /// The customer is on another storefront, whose cart is another cart: the coupon applied to the one they left, and the discount it gave,
+  /// are not the new cart's. The lists load when their screen is opened.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _coupon = null;
+    _discount = null;
+    _couponCode = '';
+    _isLoading = false;
+    couponList = null;
+    couponItemModel = null;
+    availableCouponList = null;
     notifyListeners();
   }
 

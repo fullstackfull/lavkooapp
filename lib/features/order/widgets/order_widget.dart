@@ -3,6 +3,7 @@ import 'package:syriapharmacy/common/basewidget/custom_asset_image_widget.dart';
 import 'package:syriapharmacy/common/basewidget/custom_image_widget.dart';
 import 'package:syriapharmacy/features/order/domain/models/order_model.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/order_country_name.dart';
 import 'package:syriapharmacy/helper/date_converter.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
@@ -26,6 +27,8 @@ class _OrderWidgetState extends State<OrderWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final String? countryName =
+        OrderCountryName.of(context, widget.orderModel?.market);
     double orderAmount = 0;
     double tax = 0;
 
@@ -243,16 +246,25 @@ class _OrderWidgetState extends State<OrderWidget> {
                       color: Theme.of(context).textTheme.titleMedium?.color,
                     ),
                   ),
+                  if (countryName != null)
+                    Text(
+                      countryName,
+                      style: textMedium.copyWith(
+                        fontSize: Dimensions.fontSizeSmall,
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                      ),
+                    ),
                   const SizedBox(height: Dimensions.paddingSizeExtraSmall),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        PriceConverter.convertPrice(
+                        PriceConverter.convertOrderPrice(
                           context,
                           widget.orderModel!.orderType == 'POS'
                               ? orderAmount
                               : widget.orderModel!.orderAmount,
+                          market: widget.orderModel!.market,
                         ),
                         style: textBold.copyWith(
                           fontSize: Dimensions.fontSizeDefault,

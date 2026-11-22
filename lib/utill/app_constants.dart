@@ -15,11 +15,11 @@ class AppConstants {
   ///
   /// It cannot simply be corrected, and the reason is worth reading before touching it. The live
   /// shop publishes `user_app_version_control` = **14.1 with status 1** for both platforms (read
-  /// from /api/v1/config on 2026-11-11), and `_updateIsRequired` in splash_screen.dart demands an
-  /// update whenever that floor is higher than this constant. Set this to the true `3.0.6` and
-  /// 14.1 > 3.0.6, so EVERY build is held at the update screen — and the config ships `link: ""`,
-  /// so there is nowhere for the customer to go. The wrong number is what currently keeps the app
-  /// past its own update gate.
+  /// from /api/v1/config on 2026-11-11), and `UpdateGate.isRequired` (lib/utill/update_gate.dart,
+  /// which the splash screen calls) demands an update whenever that floor is higher than this
+  /// constant. Set this to the true `3.0.6` and 14.1 > 3.0.6, so EVERY build is held at the update
+  /// screen — and the config ships `link: ""`, so there is nowhere for the customer to go. The
+  /// wrong number is what currently keeps the app past its own update gate.
   ///
   /// So the two must move together, and which way is the owner's call:
   ///   * lower the shop's floor to at most the app's real version, then set this to `3.0.6`; or
@@ -37,6 +37,12 @@ class AppConstants {
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
 
   static const String baseUrl = 'https://lavkoo.com';
+
+  /// The id the Android build ships under, recorded here because nothing in the Dart sources can read it from the build itself: it is
+  /// `applicationId` in android/app/build.gradle.kts and `package` in android/app/src/main/AndroidManifest.xml, and the same string is
+  /// `BUNDLE_ID` in ios/Runner/GoogleService-Info.plist. Google Play addresses an app by it, so it is how the app names its own page on the
+  /// store. Changing this line renames nothing — it only stops matching the build, which test/update_target_test.dart refuses.
+  static const String androidApplicationId = 'com.lavkoo.app';
 
   static const String googleServerClientId =
       '225848042220-6bpr48i5cvs6sbtff1dunn3s3v07odl3.apps.googleusercontent.com';
@@ -71,6 +77,10 @@ class AppConstants {
   /// What only the app can see. The web reports the same events from its own beacon; in the app a
   /// banner tap is not a navigation the server could ever observe.
   static const String analyticsEventsUri = '/api/v1/analytics/events';
+
+  /// The storefronts the shop serves, each with the currency it sells in and whether it may sell yet. Public, and asked only while GCC
+  /// storefronts are on in this build.
+  static const String storefrontsUri = '/api/v1/storefronts';
 
   static const String pendingCrashCount = 'pending_crash_count';
 
@@ -302,6 +312,9 @@ class AppConstants {
   static const String guestMode = 'guest_mode';
   static const String currency = 'currency';
   static const String langKey = 'lang';
+  static const String storefrontCountry = 'gcc_storefront_country';
+  static const String storefrontHeader = 'X-Storefront';
+  static const String storefrontList = 'gcc_storefront_list';
   static const String intro = 'intro';
   static const String userLogData = 'user_log_data';
   static const pi = 3.14;

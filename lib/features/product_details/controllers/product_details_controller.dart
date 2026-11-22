@@ -9,6 +9,7 @@ import 'package:syriapharmacy/features/product_details/domain/models/product_det
 import 'package:syriapharmacy/features/product_details/domain/services/product_details_service_interface.dart';
 import 'package:syriapharmacy/features/product_details/enums/preview_type.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
@@ -20,9 +21,15 @@ import 'package:provider/provider.dart';
 
 import '../../../services/meta_tracking_service.dart';
 
-class ProductDetailsController extends ChangeNotifier {
+class ProductDetailsController extends ChangeNotifier
+    with StorefrontChangeAware {
   final ProductDetailsServiceInterface productDetailsServiceInterface;
-  ProductDetailsController({required this.productDetailsServiceInterface});
+  ProductDetailsController({
+    required this.productDetailsServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   int? _imageSliderIndex = 0;
   int? _quantity = 0;
@@ -97,6 +104,24 @@ class ProductDetailsController extends ChangeNotifier {
           snackBarType: SnackBarType.error);
     }
     _isDetails = false;
+    notifyListeners();
+  }
+
+  /// The customer is on another storefront: the product a details page showed, and the choices made on it, belong to the one they left.
+  /// The next product they open is asked for under the new storefront.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    _productDetailsModel = null;
+    _isDetails = false;
+    _imageSliderIndex = 0;
+    _quantity = 0;
+    _variantIndex = null;
+    _variationIndex = null;
+    _orderCount = null;
+    _wishCount = null;
+    _sharableLink = null;
+    _digitalVariationIndex = 0;
+    _digitalVariationSubindex = 0;
     notifyListeners();
   }
 

@@ -167,7 +167,7 @@ class OrderAgainCard extends StatelessWidget {
                         const SizedBox(
                             height: Dimensions.paddingSizeExtraSmall),
                         Text(
-                            "${getTranslated('final_total', context)} : ${PriceConverter.convertPrice(context, orders.orderAmount)}",
+                            "${getTranslated('final_total', context)} : ${PriceConverter.convertOrderPrice(context, orders.orderAmount, market: orders.market)}",
                             style: robotoBold.copyWith(
                                 fontSize: Dimensions.fontSizeDefault,
                                 color: Theme.of(context)

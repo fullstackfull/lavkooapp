@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/order_details/controllers/order_details_controller.dart';
+import 'package:syriapharmacy/features/storefront/order_country_name.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
@@ -24,8 +25,14 @@ class OrderAmountCalculation extends StatelessWidget {
       required this.orderProvider,
       required this.referAndEarnDiscount});
 
+  String _price(BuildContext context, double? amount) =>
+      PriceConverter.convertOrderPrice(context, amount,
+          market: orderProvider.orders!.market);
+
   @override
   Widget build(BuildContext context) {
+    final String? countryName =
+        OrderCountryName.of(context, orderProvider.orders!.market);
     bool isPaid = orderProvider
             .orderDetails?[0].latestEditHistory?.orderDuePaymentStatus ==
         'paid';
@@ -83,45 +90,46 @@ class OrderAmountCalculation extends StatelessWidget {
                             )),
                       ),
 
+                    if (countryName != null)
+                      AmountWidget(
+                          title: getTranslated('country', context),
+                          amount: countryName),
+
                     AmountWidget(
                         title: getTranslated('sub_total', context),
-                        amount: PriceConverter.convertPrice(
-                            context, itemTotalAmount)),
+                        amount: _price(context, itemTotalAmount)),
 
                     orderProvider.orders!.orderType == "POS"
                         ? const SizedBox()
                         : AmountWidget(
                             title: getTranslated('shipping_fee', context),
-                            amount: PriceConverter.convertPrice(
-                                context, shippingCost)),
+                            amount: _price(context, shippingCost)),
 
                     AmountWidget(
                         title: getTranslated('discount', context),
-                        amount: PriceConverter.convertPrice(context, discount)),
+                        amount: _price(context, discount)),
 
                     orderProvider.orders!.orderType == "POS"
                         ? AmountWidget(
                             title: getTranslated('extra_discount', context),
-                            amount: PriceConverter.convertPrice(
-                                context, eeDiscount))
+                            amount: _price(context, eeDiscount))
                         : const SizedBox(),
 
                     AmountWidget(
                       title: getTranslated('coupon_voucher', context),
-                      amount: PriceConverter.convertPrice(
-                          context, orderProvider.orders!.discountAmount),
+                      amount:
+                          _price(context, orderProvider.orders!.discountAmount),
                     ),
 
                     if (tax > 0)
                       AmountWidget(
                           title: getTranslated('tax', context),
-                          amount: PriceConverter.convertPrice(context, tax)),
+                          amount: _price(context, tax)),
 
                     if (referAndEarnDiscount > 0)
                       AmountWidget(
                           title: getTranslated('referral_discount', context),
-                          amount: PriceConverter.convertPrice(
-                              context, referAndEarnDiscount)),
+                          amount: _price(context, referAndEarnDiscount)),
 
                     SizedBox(
                         height: 1,
@@ -141,7 +149,7 @@ class OrderAmountCalculation extends StatelessWidget {
                       isTitleBlack: true,
                       title:
                           '${getTranslated('total_payable', context)} ${orderProvider.orders!.taxModel == 'include' ? getTranslated('inc_vat_tax', context) : ''}',
-                      amount: PriceConverter.convertPrice(
+                      amount: _price(
                           context,
                           (itemTotalAmount +
                               shippingCost -
@@ -167,7 +175,7 @@ class OrderAmountCalculation extends StatelessWidget {
                               fontSize: Dimensions.fontSizeDefault,
                               color:
                                   Theme.of(context).textTheme.bodyLarge?.color),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context,
                               (itemTotalAmount +
                                       shippingCost -
@@ -193,7 +201,7 @@ class OrderAmountCalculation extends StatelessWidget {
                               color: isPaid
                                   ? Theme.of(context).primaryColor
                                   : Theme.of(context).colorScheme.error),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context,
                               (orderProvider.orderDetails?[0].latestEditHistory
                                       ?.orderDueAmount ??
@@ -215,7 +223,7 @@ class OrderAmountCalculation extends StatelessWidget {
                               fontSize: Dimensions.fontSizeDefault,
                               color:
                                   Theme.of(context).textTheme.bodyLarge?.color),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context,
                               (itemTotalAmount +
                                       shippingCost -
@@ -248,7 +256,7 @@ class OrderAmountCalculation extends StatelessWidget {
                           amountStyle: textBold.copyWith(
                               fontSize: Dimensions.fontSizeDefault,
                               color: Theme.of(context).colorScheme.primary),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context,
                               (orderProvider.orderDetails?[0].latestEditHistory
                                       ?.orderReturnAmount ??
@@ -260,14 +268,14 @@ class OrderAmountCalculation extends StatelessWidget {
                       AmountWidget(
                           isTitleBlack: true,
                           title: getTranslated('paid_amount', context),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context, orderProvider.orders!.paidAmount)),
 
                     if (orderProvider.orders!.orderType == 'POS')
                       AmountWidget(
                           isTitleBlack: true,
                           title: getTranslated('change_amount', context),
-                          amount: PriceConverter.convertPrice(
+                          amount: _price(
                               context,
                               orderProvider.orders!.paidAmount! -
                                   double.parse((itemTotalAmount +

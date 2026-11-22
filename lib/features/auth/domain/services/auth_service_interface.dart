@@ -68,7 +68,7 @@ abstract class AuthServiceInterface{
 
   Future<dynamic> verifyToken(String email, String token);
 
-  Future<dynamic> existingAccountCheck({required String email, required int userResponse, required String medium});
+  Future<dynamic> existingAccountCheck({required String email, required int userResponse, required String medium, String? temporaryToken});
 
   Future<dynamic>  verifyProfileInfo({required String userInput, required String token, required String type});
 

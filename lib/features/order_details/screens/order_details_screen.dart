@@ -765,12 +765,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                                       title: getTranslated(
                                                           'pay_due_bill',
                                                           context)!,
-                                                      price: PriceConverter.convertPrice(
-                                                          context,
-                                                          orderProvider
-                                                              .orderDetails![0]
-                                                              .latestEditHistory!
-                                                              .orderDueAmount!),
+                                                      price: PriceConverter
+                                                          .convertOrderPrice(
+                                                              context,
+                                                              orderProvider
+                                                                  .orderDetails![
+                                                                      0]
+                                                                  .latestEditHistory!
+                                                                  .orderDueAmount!,
+                                                              market:
+                                                                  orderProvider
+                                                                      .orders!
+                                                                      .market),
                                                       description: getTranslated(
                                                           'after_editing_your_product_list',
                                                           context)!,
@@ -825,12 +831,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                                       title: getTranslated(
                                                           'amount_to_be_returned',
                                                           context)!,
-                                                      price: PriceConverter.convertPrice(
-                                                          context,
-                                                          orderProvider
-                                                              .orderDetails![0]
-                                                              .latestEditHistory!
-                                                              .orderReturnAmount!),
+                                                      price: PriceConverter
+                                                          .convertOrderPrice(
+                                                              context,
+                                                              orderProvider
+                                                                  .orderDetails![
+                                                                      0]
+                                                                  .latestEditHistory!
+                                                                  .orderReturnAmount!,
+                                                              market:
+                                                                  orderProvider
+                                                                      .orders!
+                                                                      .market),
                                                       description: getTranslated(
                                                           'after_editing_your_product_list_you_will_receive_this',
                                                           context)!,

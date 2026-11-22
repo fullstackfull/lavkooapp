@@ -6,6 +6,7 @@ import 'package:syriapharmacy/data/datasource/remote/dio/dio_client.dart';
 import 'package:syriapharmacy/data/datasource/remote/exception/api_error_handler.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/features/wallet/domain/repositories/wallet_repository_interface.dart';
 import 'package:syriapharmacy/helper/date_converter.dart';
 import 'package:syriapharmacy/main.dart';
@@ -64,10 +65,10 @@ class WalletRepository implements WalletRepositoryInterface {
         'payment_method': paymentMethod,
         'payment_request_from': 'app',
         'amount': amount,
-        'current_currency_code':
-        Provider.of<SplashController>(Get.context!, listen: false)
-            .myCurrency!
-            .code
+        'current_currency_code': PriceConverter.ownCurrencyCode(Get.context!) ??
+            Provider.of<SplashController>(Get.context!, listen: false)
+                .myCurrency!
+                .code
       });
       return ApiResponseModel.withSuccess(response);
     } catch (e) {
