@@ -121,6 +121,7 @@ jobs:
           test/push_storefront_notification_test.dart
           test/marketing_consent_store_test.dart
           test/marketing_consent_sheet_test.dart
+          test/push_topic_inventory_test.dart
 
       # cart_screen.dart already carries two analyzer warnings of its own (two
       # unused locals), so it cannot join the list above. It is analyzed for
@@ -200,6 +201,7 @@ jobs:
           test/storefront_topics_test.dart
           test/storefront_topic_subscriber_test.dart
           test/marketing_consent_store_test.dart
+          test/push_topic_inventory_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
       # hold in both settings.
@@ -229,6 +231,7 @@ jobs:
           test/storefront_topics_test.dart
           test/storefront_topic_subscriber_test.dart
           test/marketing_consent_store_test.dart
+          test/push_topic_inventory_test.dart
 
       # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
       # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
@@ -274,8 +277,8 @@ jobs:
       # install that exists, because the backend still publishes every marketing broadcast to that one topic (tracker I1-05, not built).
       - name: J-11.1/J-11.2 the marketing topics are the storefront's, and a switch or a sign-out leaves the market the device left
         run: |
-          flutter test test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart
-          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart
+          flutter test test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart test/push_topic_inventory_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart test/push_topic_inventory_test.dart
 
       # J-11 criterion 3, the storefront half: a push carries its storefront and the tap opens the order, the wallet or the product in that
       # storefront's context. The routing is driven through the real notification helper, and the move through the real storefront switcher.
