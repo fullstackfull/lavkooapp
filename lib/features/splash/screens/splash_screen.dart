@@ -142,6 +142,13 @@ class SplashScreenState extends State<SplashScreen> {
                 // every push the backend sends today -- does not suspend here at all, so the routing below is reached in the same turn
                 // of the event loop it always was.
                 //
+                // THIS BRANCH IS NOT REACHED TODAY and that is said here rather than left to be found: `widget.body` is always null,
+                // because main.dart reads the initial message into MyApp(body:) and NOTHING READS IT AGAIN, and all three constructions
+                // of SplashScreen (route_healper.dart 1055 and 1172, and line 380 of this file) pass no body. So a cold-start push is
+                // routed nowhere at all -- a gap this feature did not make and does not close, recorded against J-11.3 in the tracker.
+                // The settle is here so that the day the body is wired through, a push about another market does not open its order under
+                // the market the app happened to resolve at launch.
+                //
                 // Making this callback `async` for the await does move where a throw from the routing below surfaces: an async function
                 // completes its future with the error instead of throwing into initConfig, which does not wrap the call. So a bad push
                 // payload -- an order id that is null, a product id that will not parse -- no longer stops initConfig half way through
@@ -263,7 +270,8 @@ class SplashScreenState extends State<SplashScreen> {
               // screen below is read under that market's headers, currency and caches. A push that names no storefront -- which is
               // every push the backend sends today -- does not suspend here at all, so the routing below is reached in the same turn
               // of the event loop it always was. Making this callback `async` moves where a throw from the routing below surfaces, the
-              // same way as in the branch above: into this future rather than into initConfig, which does not wrap the call.
+              // same way as in the branch above: into this future rather than into initConfig, which does not wrap the call. And as in
+              // the branch above, this one is not reached today -- nothing supplies `widget.body`.
               final Future<void>? movingStorefront =
                   PushStorefrontTarget.enter(widget.body!, Get.context);
               if (movingStorefront != null) {

@@ -120,9 +120,14 @@ void main() {
     });
 
     /// A PUSH THAT STARTED THE APP is not routed by the notification helper at all. `main` reads it with
-    /// `FirebaseMessaging.instance.getInitialMessage()` and hands it to the splash screen, which routes it in TWO places of its own.
-    /// Neither settled the storefront, so a cold-start push naming another market opened its order under whatever storefront the app
-    /// resolved at launch — and tapping a push while the app is not running is the ordinary case, not the edge one.
+    /// `FirebaseMessaging.instance.getInitialMessage()`, and the splash screen routes it in TWO places of its own. Neither settled the
+    /// storefront, so either of them would open an order under whatever storefront the app resolved at launch.
+    ///
+    /// NEITHER IS REACHED TODAY, and this pin does not pretend otherwise. `main.dart` hands the message to `MyApp(body:)` and nothing
+    /// reads it again, and all three constructions of SplashScreen pass no body, so `widget.body` is always null and both blocks are
+    /// unreachable. That a cold-start push is routed NOWHERE is a gap this feature did not make and does not close; the tracker records it
+    /// against J-11.3. What this pin is for is the day the body is wired through: both branches settle before they route, so the hole does
+    /// not reopen silently in the one place a reviewer would not think to look.
     test('settles the storefront in the two places the splash screen routes a push that started the app', () {
       final String splash =
           codeOf('lib/features/splash/screens/splash_screen.dart');
