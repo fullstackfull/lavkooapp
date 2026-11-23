@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-enum _Use { formatter, rating, health, fileSize, points, rounding }
+enum _Use { formatter, rating, health, fileSize, points, rounding, count }
 
 /// What was decided about the uses of `toStringAsFixed` in one file: how many there are and what they write, so why none of them is an
 /// amount of money written the way a screen should write it, through PriceConverter.
@@ -103,6 +103,29 @@ const Map<String, _Looked> _looked = <String, _Looked>{
       count: 4,
       use: _Use.fileSize,
       reason: 'the size of a file to upload, in megabytes or kilobytes'),
+};
+
+final RegExp _otherWays =
+    RegExp(r'toStringAsPrecision|toStringAsExponential|NumberFormat');
+
+int _otherWaysIn(String source) => source
+    .split('\n')
+    .where((String line) => !line.trimLeft().startsWith('//'))
+    .fold(0,
+        (int total, String line) => total + _otherWays.allMatches(line).length);
+
+/// What every use of `NumberFormat`, `toStringAsPrecision` and `toStringAsExponential` in the app writes. None of them is money: a shop
+/// card and a product's shop header both write how many products the shop has, in short form.
+const Map<String, _Looked> _lookedAtOtherWays = <String, _Looked>{
+  'lib/features/shop/widgets/seller_card.dart': _Looked(
+      count: 1,
+      use: _Use.count,
+      reason: 'how many products a shop has, in short form'),
+  'lib/features/product_details/widgets/shop_info_widget.dart': _Looked(
+      count: 1,
+      use: _Use.count,
+      reason:
+          'how many products the shop of the product has, in short form; its prices go through PriceConverter'),
 };
 
 /// J-05 criterion 3: the cart, the checkout, the orders, the wallet and the coupons write every amount through one formatter, PriceConverter.
@@ -208,17 +231,45 @@ void main() {
     });
 
     test('are written by no other way of writing a number with decimals', () {
-      final RegExp otherWays =
-          RegExp(r'toStringAsPrecision|toStringAsExponential|NumberFormat');
-
       final Set<String> found = <String>{
         for (final MapEntry<String, String> source in sources.entries)
           if (isOfTheFiveFeatures(source.key) &&
-              otherWays.hasMatch(source.value))
+              _otherWaysIn(source.value) > 0)
             source.key,
       };
 
       expect(found, isEmpty);
+    });
+  });
+
+  /// The six directories above are not every screen that writes an amount: the wallet balance of the "more" screen, the amounts of a
+  /// refund and the coupons of a shop's page are outside them, and a `NumberFormat` added to any of those would have gone unseen. So
+  /// every other way of writing a number with decimals is accounted for across the whole of `lib`, in the way the uses of
+  /// `toStringAsFixed` are, and a new one fails until someone has looked at the number.
+  group('every other way of writing a number with decimals in the app', () {
+    test('is in the files that were looked at, and in no other', () {
+      final Set<String> found = <String>{
+        for (final MapEntry<String, String> source in sources.entries)
+          if (_otherWaysIn(source.value) > 0) source.key,
+      };
+
+      expect(found, _lookedAtOtherWays.keys.toSet(),
+          reason:
+              'a file that writes a number by another route has to be looked at: is the number an amount of money? Money is written by PriceConverter.');
+    });
+
+    test('is as many in each file as were looked at', () {
+      final Map<String, String> changed = <String, String>{
+        for (final MapEntry<String, _Looked> entry
+            in _lookedAtOtherWays.entries)
+          if (_otherWaysIn(sources[entry.key] ?? '') != entry.value.count)
+            entry.key:
+                'looked at ${entry.value.count}, found ${_otherWaysIn(sources[entry.key] ?? '')}',
+      };
+
+      expect(changed, isEmpty,
+          reason:
+              'a use added to or taken from a file has to be looked at: is the number an amount of money?');
     });
   });
 }
