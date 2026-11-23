@@ -244,9 +244,12 @@ Future<_Harness> _open(WidgetTester tester,
 /// (`CheckoutController.digitalPaymentPlaceOrder`) and the wallet top-up (`WalletController.addFundToWallet`). The payment of what is still due
 /// on an order the customer already has (`OrderDetailsController.duePayment*`) has no such guard, and is not started here.
 ///
-/// I2-10 criterion 5 says the cart and the checkout screens show the notice and switch Proceed off. The screens are not built here (they
-/// need the providers of the whole app), so the last group is structural only: it pins the lines of the two screens that read the gate while
-/// listening, show the notice and switch the button off, as the dashboard's maintenance screen is pinned.
+/// I2-10 criterion 5 says the cart and the checkout screens show the notice and switch Proceed off. The screens are not built here, and the
+/// last group is structural only: it pins the lines of the two screens that read the gate while listening, show the notice and switch the
+/// button off, as the dashboard's maintenance screen is pinned. A scan cannot say what a customer sees, and three mutations proved it: the
+/// cart's notice condition with `&& false` added, the checkout's notice commented out and a notice that draws nothing all left this file
+/// green. The screens themselves are built, and what they draw is read, by test/browse_only_screens_test.dart; this group stays as the pin
+/// of the shape, not as the proof of the behaviour.
 void main() {
   final String notice =
       _languageFile('en')['storefront_browse_only_notice'] as String;
