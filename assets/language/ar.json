@@ -3259,5 +3259,11 @@
   "payment_is_being_processed": "جارٍ معالجة عملية الدفع",
   "payment_successful": "تم الدفع بنجاح",
   "your_payment_successful": "تمت عملية الدفع بنجاح.",
-  "payment_session_expired": "انتهت صلاحية جلسة الدفع"
+  "payment_session_expired": "انتهت صلاحية جلسة الدفع",
+  "marketing_consent": "الرسائل التسويقية",
+  "marketing_consent_hint": "اختر كيف يمكننا إرسال العروض والأخبار إليك في",
+  "marketing_channel_email": "البريد الإلكتروني",
+  "marketing_channel_sms": "الرسائل النصية",
+  "marketing_channel_whatsapp": "واتساب",
+  "marketing_channel_push": "إشعارات التطبيق"
 }

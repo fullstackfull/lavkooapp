@@ -10,6 +10,7 @@ import 'package:syriapharmacy/features/splash/widgets/launch_transition_widget.d
 import 'package:syriapharmacy/helper/route_healper.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/push_notification/models/notification_body.dart';
+import 'package:syriapharmacy/push_notification/push_storefront_target.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
@@ -121,7 +122,7 @@ class SplashScreenState extends State<SplashScreen> {
           final config = Provider.of<SplashController>(Get.context!, listen: false)
               .configModel;
 
-          Future.delayed(const Duration(milliseconds: 0)).then((_) {
+          Future.delayed(const Duration(milliseconds: 0)).then((_) async {
             if (_updateIsRequired(config?.userAppVersionControl)) {
               RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
             } else if (config?.maintenanceModeData?.maintenanceStatus == 1 &&
@@ -136,6 +137,28 @@ class SplashScreenState extends State<SplashScreen> {
               Provider.of<AuthController>(Get.context!, listen: false)
                   .updateToken(Get.context!);
               if (widget.body != null) {
+                // A PUSH THAT STARTED THE APP opens in the storefront it names, the same as one tapped while the app was running: the
+                // screen below is read under that market's headers, currency and caches. A push that names no storefront -- which is
+                // every push the backend sends today -- does not suspend here at all, so the routing below is reached in the same turn
+                // of the event loop it always was.
+                //
+                // THIS BRANCH IS NOT REACHED TODAY and that is said here rather than left to be found: `widget.body` is always null,
+                // because main.dart reads the initial message into MyApp(body:) and NOTHING READS IT AGAIN, and all three constructions
+                // of SplashScreen (route_healper.dart 1055 and 1172, and line 380 of this file) pass no body. So a cold-start push is
+                // routed nowhere at all -- a gap this feature did not make and does not close, recorded against J-11.3 in the tracker.
+                // The settle is here so that the day the body is wired through, a push about another market does not open its order under
+                // the market the app happened to resolve at launch.
+                //
+                // Making this callback `async` for the await does move where a throw from the routing below surfaces: an async function
+                // completes its future with the error instead of throwing into initConfig, which does not wrap the call. So a bad push
+                // payload -- an order id that is null, a product id that will not parse -- no longer stops initConfig half way through
+                // the theme and the operational topics; it is reported as an unhandled async error instead. That is the better of the
+                // two, and it is said out loud rather than left to be discovered.
+                final Future<void>? movingStorefront =
+                    PushStorefrontTarget.enter(widget.body!, Get.context);
+                if (movingStorefront != null) {
+                  await movingStorefront;
+                }
                 if (widget.body!.type == 'order') {
                   RouterHelper.getOrderDetailsScreenRoute(
                     action: RouteAction.pushReplacement,
@@ -224,7 +247,7 @@ class SplashScreenState extends State<SplashScreen> {
             }
           });
           //  });
-        }, (ConfigModel? configModel) {
+        }, (ConfigModel? configModel) async {
           Provider.of<SplashController>(Get.context!, listen: false)
               .initSharedPrefData();
           // Timer(const Duration(seconds: 1), () {
@@ -243,6 +266,17 @@ class SplashScreenState extends State<SplashScreen> {
             Provider.of<AuthController>(Get.context!, listen: false)
                 .updateToken(Get.context!);
             if (widget.body != null) {
+              // A PUSH THAT STARTED THE APP opens in the storefront it names, the same as one tapped while the app was running: the
+              // screen below is read under that market's headers, currency and caches. A push that names no storefront -- which is
+              // every push the backend sends today -- does not suspend here at all, so the routing below is reached in the same turn
+              // of the event loop it always was. Making this callback `async` moves where a throw from the routing below surfaces, the
+              // same way as in the branch above: into this future rather than into initConfig, which does not wrap the call. And as in
+              // the branch above, this one is not reached today -- nothing supplies `widget.body`.
+              final Future<void>? movingStorefront =
+                  PushStorefrontTarget.enter(widget.body!, Get.context);
+              if (movingStorefront != null) {
+                await movingStorefront;
+              }
               if (widget.body!.type == 'order') {
                 RouterHelper.getOrderDetailsScreenRoute(
                   action: RouteAction.pushReplacement,

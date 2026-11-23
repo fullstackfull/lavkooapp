@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -8,6 +9,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/features/auth/domain/repositories/auth_repository_interface.dart';
 import 'package:syriapharmacy/main.dart';
+import 'package:syriapharmacy/push_notification/storefront_topic_subscriber.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,8 +94,9 @@ class AuthRepository implements AuthRepoInterface {
   Future<ApiResponseModel> updateDeviceToken() async {
     try {
       String? deviceToken = await _getDeviceToken();
-      FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
-      FirebaseMessaging.instance.subscribeToTopic(AppConstants.demoTopic);
+      // Not awaited, exactly as the two subscribe calls this replaces were not: the token must reach the server whether or not Firebase
+      // answers about a topic. Nothing in the subscriber throws out of it.
+      unawaited(StorefrontTopicSubscriber.forDevice(sharedPreferences!).apply());
       Response response = await dioClient!.post(
         AppConstants.tokenUri,
         data: {
@@ -187,6 +190,12 @@ class AuthRepository implements AuthRepoInterface {
   Future<bool> clearSharedData() async {
     sharedPreferences?.remove(AppConstants.userLoginToken);
     sharedPreferences?.remove(AppConstants.guestId);
+    // Signing out takes the device off the market's marketing topics: whoever signs in next is not on the audience of the storefront the
+    // person who left was shopping in. A build with storefronts off leaves nothing, as it always did.
+    if (sharedPreferences != null) {
+      await StorefrontTopicSubscriber.forDevice(sharedPreferences!)
+          .leaveEverything();
+    }
     return true;
   }
 

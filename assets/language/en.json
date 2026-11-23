@@ -3203,5 +3203,11 @@
   "payment_is_being_processed": "Your payment is being processed",
   "payment_successful": "Payment successful",
   "your_payment_successful": "Your payment was completed successfully.",
-  "payment_session_expired": "The payment session expired"
+  "payment_session_expired": "The payment session expired",
+  "marketing_consent": "Marketing messages",
+  "marketing_consent_hint": "Choose how we may send you offers and news in",
+  "marketing_channel_email": "E-mail",
+  "marketing_channel_sms": "SMS",
+  "marketing_channel_whatsapp": "WhatsApp",
+  "marketing_channel_push": "App notifications"
 }

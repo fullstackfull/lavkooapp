@@ -113,6 +113,20 @@ jobs:
           test/screen_money_test.dart
           test/coupon_dropped_on_storefront_change_test.dart
           test/due_payment_and_reorder_measured_test.dart
+          lib/push_notification/storefront_topics.dart
+          lib/push_notification/storefront_topic_subscriber.dart
+          lib/push_notification/push_storefront_target.dart
+          lib/push_notification/notification_helper.dart
+          lib/push_notification/models/notification_body.dart
+          lib/features/marketing_consent
+          lib/features/auth/domain/repositories/auth_repository.dart
+          test/storefront_topics_test.dart
+          test/storefront_topic_subscriber_test.dart
+          test/push_storefront_target_test.dart
+          test/push_storefront_notification_test.dart
+          test/marketing_consent_store_test.dart
+          test/marketing_consent_sheet_test.dart
+          test/push_topic_inventory_test.dart
 
       # cart_screen.dart already carries two analyzer warnings of its own (two
       # unused locals), so it cannot join the list above. It is analyzed for
@@ -189,6 +203,10 @@ jobs:
           test/storefront_wallet_reload_test.dart
           test/release_version_test.dart
           test/update_gate_test.dart
+          test/storefront_topics_test.dart
+          test/storefront_topic_subscriber_test.dart
+          test/marketing_consent_store_test.dart
+          test/push_topic_inventory_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
       # hold in both settings.
@@ -215,6 +233,10 @@ jobs:
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
+          test/storefront_topics_test.dart
+          test/storefront_topic_subscriber_test.dart
+          test/marketing_consent_store_test.dart
+          test/push_topic_inventory_test.dart
 
       # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
       # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
@@ -277,6 +299,33 @@ jobs:
         run: |
           flutter test test/order_push_routing_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/order_push_routing_test.dart
+
+      # J-11 criteria 1 and 2: the marketing topics are scoped by storefront, and a switch or a sign-out leaves the market the device is no
+      # longer on. The topic set and the subscriber both take the build flag as a parameter, so those two files measure BOTH answers in one
+      # run and are listed with the rest above; they are run here as well, in a real build of each setting, because the criteria are theirs.
+      # With the flag OFF the subscription is exactly {sixvalley} and not one unsubscribe call is made: that is the case that protects every
+      # install that exists, because the backend still publishes every marketing broadcast to that one topic (tracker I1-05, not built).
+      - name: J-11.1/J-11.2 the marketing topics are the storefront's, and a switch or a sign-out leaves the market the device left
+        run: |
+          flutter test test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart test/push_topic_inventory_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_topics_test.dart test/storefront_topic_subscriber_test.dart test/push_topic_inventory_test.dart
+
+      # J-11 criterion 3, the storefront half: a push carries its storefront and the tap opens the order, the wallet or the product in that
+      # storefront's context. The routing is driven through the real notification helper, and the move through the real storefront switcher.
+      # The group that asserts a push naming NO storefront is unchanged runs in both settings, because that is every push the backend sends
+      # today and it has to hold in both.
+      - name: J-11.3 a push opens in the storefront it names, and one that names none is routed as it always was
+        run: |
+          flutter test test/push_storefront_target_test.dart test/push_storefront_notification_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/push_storefront_target_test.dart test/push_storefront_notification_test.dart
+
+      # J-11 criterion 4: marketing consent is captured per market, channel and purpose on the real screen, and the push path respects it.
+      # The sheet does not read the build flag, so it runs in both; what the flag decides is whether the settings row is there at all, and
+      # that is asserted in both settings.
+      - name: J-11.4 marketing consent is captured per scope and the topics follow it
+        run: |
+          flutter test test/marketing_consent_store_test.dart test/marketing_consent_sheet_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/marketing_consent_store_test.dart test/marketing_consent_sheet_test.dart
 
       # J-13 criterion 2: the sale gate is asked by what starts a sale and by nothing that serves an order the customer already has.
       - name: J-13.2 the details, tracking, refund, support and chat of an existing order are not gated
