@@ -108,6 +108,11 @@ jobs:
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
+          test/app_screen_harness.dart
+          test/browse_only_screens_test.dart
+          test/screen_money_test.dart
+          test/coupon_dropped_on_storefront_change_test.dart
+          test/due_payment_and_reorder_measured_test.dart
 
       # cart_screen.dart already carries two analyzer warnings of its own (two
       # unused locals), so it cannot join the list above. It is analyzed for
@@ -230,17 +235,42 @@ jobs:
           flutter test test/storefront_server_default_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_server_default_test.dart
 
-      # J-05 criterion 3: every use of toStringAsFixed is looked at, and none of the files that write a cart, checkout, order, wallet or coupon
-      # amount through PriceConverter formats a number itself. The scan reads the sources and does not depend on the flag.
+      # J-05 criterion 3: the cart, the checkout, the wallet and the coupon surfaces are BUILT and the exact words they write are read off
+      # them — the currency mark, the number and the decimals of the currency. The inventory of every use of toStringAsFixed, and of every
+      # other way of writing a number with decimals anywhere in lib, runs beside it: the scan says nothing new was added without being
+      # looked at, and the screens say what a customer actually reads. The screens run in both builds, because the flag decides whether an
+      # amount is the storefront's money or the platform's; the scan reads the sources and does not depend on the flag.
       - name: J-05.3 every toStringAsFixed is accounted for and none writes a cart, checkout, order, wallet or coupon amount
         run: flutter test test/money_formatter_inventory_test.dart
 
-      # J-09 criterion 1, with I2-10 criterion 5 and I2-13 criterion 1: no order, payment or wallet top-up request leaves the app on a browse-only
-      # storefront. The controllers are started by hand; the cart and checkout screens are pinned by their source.
+      - name: J-05.3 the cart, the checkout, the wallet and the coupon card write every amount through the one formatter, read off the built screens
+        run: |
+          flutter test test/screen_money_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/screen_money_test.dart
+
+      # J-09 criterion 1: no order, payment or wallet top-up request leaves the app on a browse-only storefront. The controllers that start
+      # one are started by hand over recording stand-ins.
       - name: J-09.1 no order, payment or wallet top-up request leaves the app on a browse-only storefront
         run: |
           flutter test test/storefront_payment_guard_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_payment_guard_test.dart
+
+      # I2-10 criterion 5 and I2-13 criterion 1, the screens: the app's own CartScreen and CheckoutScreen are BUILT through its provider
+      # tree and what they draw is read out of it — the words of the notice in both languages, the colour the cart paints its Checkout
+      # button, whether the checkout's Confirm Order button can be pressed at all, and what a press answers with. The gate the screens read
+      # takes whether storefronts are on as a parameter, so both builds are read, and the last group is the dormancy proof: with
+      # storefronts off a customer stored on a storefront the server calls not sellable sees the screens exactly as they are today.
+      - name: I2-10.5 and I2-13.1 the built cart and checkout show the notice and offer no order on a browse-only storefront
+        run: |
+          flutter test test/browse_only_screens_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/browse_only_screens_test.dart
+
+      # B-16 criterion 5: a customer with a coupon applied loses it, and the coupon lists with it, when they move to another storefront —
+      # read off the coupon card the checkout shows and the sheet it opens, with the coupon applied the way a customer applies one.
+      - name: B-16.5 the built coupon card drops the applied coupon and the coupon lists when the storefront changes
+        run: |
+          flutter test test/coupon_dropped_on_storefront_change_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/coupon_dropped_on_storefront_change_test.dart
 
       # J-11 criterion 3: a push about an order opens the order by its id on any storefront, a browse-only one included.
       - name: J-11.3 an order push opens the order by its id on any storefront
@@ -253,6 +283,14 @@ jobs:
         run: |
           flutter test test/existing_orders_not_gated_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/existing_orders_not_gated_test.dart
+
+      # J-13 criterion 2, the five paths that are deliberately left open and are named one by one: the four ways of paying what is still
+      # due on an order the customer already has, and ordering the same things again. This is a measurement, not a gate — a guard added to
+      # any of them fails it, which is what makes the decision deliberate rather than forgotten. Q-40 (order again) is still the owner's.
+      - name: J-13.2 the due payment of an existing order, and ordering it again, reach the server on a browse-only storefront
+        run: |
+          flutter test test/due_payment_and_reorder_measured_test.dart
+          flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/due_payment_and_reorder_measured_test.dart
 
       # J-13 criterion 1: an order is written in the currency it was sold in, and says the storefront it was sold on. The model reads three keys
       # the server writes on an order and the rules read the flag as a parameter, so that test does not depend on the build; the money and the
