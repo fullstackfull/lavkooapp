@@ -982,7 +982,7 @@ class CheckoutController with ChangeNotifier {
 // import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 // import 'package:syriapharmacy/features/checkout/domain/services/checkout_service_interface.dart';
 // import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
-import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+// import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 // import 'package:syriapharmacy/helper/api_checker.dart';
 // import 'package:syriapharmacy/helper/route_healper.dart';
 // import 'package:syriapharmacy/localization/language_constrants.dart';
