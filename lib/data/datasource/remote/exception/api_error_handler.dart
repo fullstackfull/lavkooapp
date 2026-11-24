@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:syriapharmacy/data/model/error_response.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
+import 'package:syriapharmacy/features/shipping/shipping_refusal.dart';
 import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +44,14 @@ class ApiErrorHandler {
               StorefrontRefusal.messageOf(error.response?.data);
           if (storefrontRefusal != null) {
             return storefrontRefusal;
+          }
+
+          // A basket refused for where it is going answers 403 with every reason it was refused for, each already in the customer's
+          // language. Without this the customer reads "Failed to load data - status code: 403" and is told nothing they can act on.
+          final String? shippingRefusal =
+              ShippingRefusal.messageOf(error.response?.data);
+          if (shippingRefusal != null) {
+            return shippingRefusal;
           }
 
           switch (error.type) {

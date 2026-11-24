@@ -5,6 +5,7 @@ import 'package:syriapharmacy/features/checkout/domain/services/checkout_service
 import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/shipping/shipping_refusal.dart';
 import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/helper/route_healper.dart';
@@ -385,6 +386,10 @@ class CheckoutController with ChangeNotifier {
   String? _refusalMessage(ApiResponseModel apiResponse) {
     final dynamic body = apiResponse.response?.data;
     if (body is! Map) return null;
+
+    // A basket refused for where it is going carries every reason, each already in the customer's language.
+    final String? shipping = ShippingRefusal.messageOf(body);
+    if (shipping != null) return shipping;
 
     final dynamic errors = body['errors'];
     if (errors is List && errors.isNotEmpty) {
@@ -977,7 +982,7 @@ class CheckoutController with ChangeNotifier {
 // import 'package:syriapharmacy/features/cart/domain/models/cart_model.dart';
 // import 'package:syriapharmacy/features/checkout/domain/services/checkout_service_interface.dart';
 // import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
-// import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
+import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 // import 'package:syriapharmacy/helper/api_checker.dart';
 // import 'package:syriapharmacy/helper/route_healper.dart';
 // import 'package:syriapharmacy/localization/language_constrants.dart';
