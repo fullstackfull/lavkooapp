@@ -276,7 +276,7 @@ class ConfigModel {
     // The one list in this constructor that was read without a guard: a shop that sends no `unit` crashed the app at the splash screen with
     // NoSuchMethodError on null, where every other list here already answers null. Guarded, because the config response is the shop's and
     // not ours, and an older or partial one must leave the app usable rather than unopenable.
-    unit = json['unit'] == null ? null : json['unit'].cast<String>();
+    unit = json['unit']?.cast<String>();
     shippingMethod = json['shipping_method'];
     emailVerification = json['email_verification'];
     phoneVerification = json['phone_verification'];
