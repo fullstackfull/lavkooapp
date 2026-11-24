@@ -68,7 +68,10 @@ const Map<String, _Looked> _looked = <String, _Looked>{
   'lib/features/health/trackers/sleep_tracker_screen.dart':
       _Looked(count: 1, use: _Use.health, reason: 'the hours of rest'),
   'lib/features/loyaltyPoint/widget/loyalty_point_info_widget.dart': _Looked(
-      count: 1, use: _Use.points, reason: 'the loyalty points of the customer'),
+      count: 2,
+      use: _Use.points,
+      reason:
+          'the loyalty points of the customer, and the earn rate the shop sends as a percentage -- a count of points and a percentage, neither of them an amount of money'),
   'lib/features/more/widgets/square_item_widget.dart': _Looked(
       count: 1,
       use: _Use.points,
