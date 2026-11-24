@@ -401,6 +401,12 @@ jobs:
           errors=$(grep -cE '^\s*error • ' analyze.txt || true)
           recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
           echo "The analyzer found $found findings ($errors errors); the recorded state is $recorded."
+          # The findings themselves, not only how many: a job that says "the analyzer reports errors" and prints none leaves the next
+          # person to guess, and an error is a thing somebody has to read to fix. Errors in full, then the newest findings of any kind.
+          echo "--- errors ---"
+          grep -E '^\s*error • ' analyze.txt || echo "(none)"
+          echo "--- every finding ---"
+          grep -E '^\s*(error|warning|info) • ' analyze.txt | head -n 300 || true
           if [ "$errors" -gt 0 ]; then
             echo "::error::The analyzer reports errors."
             exit 1
