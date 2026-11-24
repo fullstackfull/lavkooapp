@@ -51,6 +51,8 @@ jobs:
           lib/data/datasource/remote/dio/api_cache_key.dart
           test/api_cache_key_test.dart
           test/api_error_handler_storefront_test.dart
+          test/shipping_refusal_test.dart
+          lib/features/shipping/shipping_refusal.dart
           test/checkout_sale_gate_test.dart
           test/dio_cache_storefront_test.dart
           test/price_converter_storefront_test.dart
@@ -171,7 +173,9 @@ jobs:
           test/dio_storefront_header_test.dart
           test/storefront_choice_test.dart
           test/api_error_handler_storefront_test.dart
+          test/shipping_refusal_test.dart
           test/checkout_sale_gate_test.dart
+          test/loyalty_earn_rate_from_config_test.dart
           test/localization_keys_test.dart
           test/storefront_browse_only_notice_test.dart
           test/storefront_can_sell_test.dart
@@ -397,6 +401,12 @@ jobs:
           errors=$(grep -cE '^\s*error • ' analyze.txt || true)
           recorded=$(tr -d '[:space:]' < tool/analyze_baseline.txt)
           echo "The analyzer found $found findings ($errors errors); the recorded state is $recorded."
+          # The findings themselves, not only how many: a job that says "the analyzer reports errors" and prints none leaves the next
+          # person to guess, and an error is a thing somebody has to read to fix. Errors in full, then the newest findings of any kind.
+          echo "--- errors ---"
+          grep -E '^\s*error • ' analyze.txt || echo "(none)"
+          echo "--- every finding ---"
+          grep -E '^\s*(error|warning|info) • ' analyze.txt | head -n 300 || true
           if [ "$errors" -gt 0 ]; then
             echo "::error::The analyzer reports errors."
             exit 1

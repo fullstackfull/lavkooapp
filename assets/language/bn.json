@@ -1018,5 +1018,6 @@
   "payment_is_being_processed": "Your payment is being processed",
   "payment_successful": "Payment successful",
   "your_payment_successful": "Your payment was completed successfully.",
-  "payment_session_expired": "The payment session expired"
+  "payment_session_expired": "The payment session expired",
+  "earned_on_every_order": "প্রতিটি অর্ডারের, পয়েন্ট হিসেবে অর্জিত"
 }
