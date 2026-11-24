@@ -3209,5 +3209,6 @@
   "marketing_channel_email": "E-mail",
   "marketing_channel_sms": "SMS",
   "marketing_channel_whatsapp": "WhatsApp",
-  "marketing_channel_push": "App notifications"
+  "marketing_channel_push": "App notifications",
+  "earned_on_every_order": "of every order, earned as points"
 }

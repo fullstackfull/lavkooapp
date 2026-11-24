@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syriapharmacy/features/profile/controllers/profile_contrroller.dart';
+import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
 import 'package:syriapharmacy/utill/dimensions.dart';
@@ -86,10 +87,40 @@ class LoyaltyPointInfoWidget extends StatelessWidget {
                             style: textRegular.copyWith(
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .secondaryContainer))
+                                    .secondaryContainer)),
+                        const _EarnRate(),
                       ]))),
         ],
       );
     });
+  }
+}
+
+/// What an order earns in the storefront the customer is on (E-02, J-V2): the one loyalty number they see BEFORE they buy.
+///
+/// The shop sends it per market, so a Kuwaiti customer reads Kuwait's rate. A shop that does not send it, or sends nothing useful, shows
+/// no line at all rather than a zero -- "this order earns nothing" is a claim, and an older shop has not made it.
+class _EarnRate extends StatelessWidget {
+  const _EarnRate();
+
+  @override
+  Widget build(BuildContext context) {
+    final double? rate =
+        context.select<SplashController, double?>((SplashController splash) => splash.configModel?.loyaltyPointEarnRate);
+
+    if (rate == null || rate <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final String percentage = rate == rate.roundToDouble() ? rate.toStringAsFixed(0) : rate.toString();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: Dimensions.paddingSizeExtraSmall),
+      child: Text(
+        '$percentage% ${getTranslated('earned_on_every_order', context)}',
+        textAlign: TextAlign.center,
+        style: textRegular.copyWith(color: Theme.of(context).colorScheme.secondaryContainer, fontSize: Dimensions.fontSizeSmall),
+      ),
+    );
   }
 }

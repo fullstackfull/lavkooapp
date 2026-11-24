@@ -52,6 +52,13 @@ class ConfigModel {
   int? loyaltyPointStatus;
   double? loyaltyPointExchangeRate;
   int? loyaltyPointMinimumPoint;
+
+  /// What an order earns, as a percentage of its value, in the storefront the customer is on (E-02, J-V2).
+  ///
+  /// The shop was telling the app whether loyalty runs, what a point converts at and how few may be converted, but never the earn rate, so
+  /// the app could not say what an order is about to earn -- the one loyalty number a customer sees before they buy rather than after. A
+  /// shop too old to send it leaves this null, and a screen that reads null says nothing, which is what every screen does today.
+  double? loyaltyPointEarnRate;
   List<PaymentMethods>? paymentMethods;
   OfflinePayment? offlinePayment;
   String? paymentMethodImagePath;
@@ -140,6 +147,7 @@ class ConfigModel {
     this.walletStatus,
     this.loyaltyPointStatus,
     this.loyaltyPointExchangeRate,
+    this.loyaltyPointEarnRate,
     this.loyaltyPointMinimumPoint,
     this.paymentMethods,
     this.offlinePayment,
@@ -303,6 +311,10 @@ class ConfigModel {
     }
 
     loyaltyPointMinimumPoint = json['loyalty_point_minimum_point'];
+    // Null when the shop does not send it, and null is "say nothing": a zero would read as "this order earns nothing", which is a claim.
+    loyaltyPointEarnRate = json['loyalty_point_item_purchase_point'] == null
+        ? null
+        : double.tryParse(json['loyalty_point_item_purchase_point'].toString());
     if (json['payment_methods'] != null) {
       paymentMethods = <PaymentMethods>[];
       json['payment_methods'].forEach((v) {

@@ -3265,5 +3265,6 @@
   "marketing_channel_email": "البريد الإلكتروني",
   "marketing_channel_sms": "الرسائل النصية",
   "marketing_channel_whatsapp": "واتساب",
-  "marketing_channel_push": "إشعارات التطبيق"
+  "marketing_channel_push": "إشعارات التطبيق",
+  "earned_on_every_order": "من قيمة كل طلب تُمنح كنقاط"
 }
