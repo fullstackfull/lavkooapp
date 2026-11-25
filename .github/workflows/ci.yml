@@ -113,6 +113,7 @@ jobs:
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
+          test/storefront_legal_texts_reload_test.dart
           test/app_screen_harness.dart
           test/browse_only_screens_test.dart
           test/screen_money_test.dart
@@ -209,6 +210,7 @@ jobs:
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
+          test/storefront_legal_texts_reload_test.dart
           test/release_version_test.dart
           test/update_gate_test.dart
           test/storefront_topics_test.dart
@@ -241,6 +243,7 @@ jobs:
           test/storefront_multipart_headers_test.dart
           test/storefront_theme_reload_test.dart
           test/storefront_wallet_reload_test.dart
+          test/storefront_legal_texts_reload_test.dart
           test/storefront_topics_test.dart
           test/storefront_topic_subscriber_test.dart
           test/marketing_consent_store_test.dart
