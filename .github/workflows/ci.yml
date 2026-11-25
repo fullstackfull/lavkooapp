@@ -265,6 +265,15 @@ jobs:
           flutter test test/storefront_server_default_test.dart
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true test/storefront_server_default_test.dart
 
+      # J-14: the central address catalogue, whose rule is that IDS ARE THE KEYS AND NAMES NEVER ARE -- a courier's coverage, a warehouse
+      # and a marketplace are each mapped to a city by its id. The file is run in both settings of the build flag: with it off the switch is
+      # asserted off and the repository makes no request, and with it on the readers are the same readers, so a row with no usable id is
+      # dropped either way rather than offered to a customer and matched by nothing afterwards.
+      - name: J-14 the address catalogue is read by id, and ships dark
+        run: |
+          flutter test test/address_catalog_test.dart
+          flutter test --dart-define=GCC_UNIFIED_ADDRESS=true test/address_catalog_test.dart
+
       # J-05 criterion 3: the cart, the checkout, the wallet and the coupon surfaces are BUILT and the exact words they write are read off
       # them — the currency mark, the number and the decimals of the currency. The inventory of every use of toStringAsFixed, and of every
       # other way of writing a number with decimals anywhere in lib, runs beside it: the scan says nothing new was added without being

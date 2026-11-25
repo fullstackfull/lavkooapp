@@ -233,6 +233,10 @@ class AppConstants {
   /// What the customer is told about customs duty before they pay (H1-09). Answers null for a basket that crosses no border, which is
   /// every basket a one-country shop takes, so a shop that has not opened a second market shows no line.
   static const String customsDutyUri = '/api/v1/cart/customs-duty';
+
+  /// The central address catalogue (J-14): the regions and the cities an address is built from, by their ids.
+  static const String addressRegionsUri = '/api/v1/address/regions';
+  static const String addressCitiesUri = '/api/v1/address/cities';
   static const String orderDetailsTrack =
       '/api/v1/order/track-order-details?order_id=';
 
