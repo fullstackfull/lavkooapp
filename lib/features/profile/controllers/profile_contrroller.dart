@@ -5,14 +5,20 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/data/model/response_model.dart';
 import 'package:syriapharmacy/features/profile/domain/models/profile_model.dart';
 import 'package:syriapharmacy/features/profile/domain/services/profile_service_interface.dart';
+import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:http/http.dart' as http;
 
-class ProfileController extends ChangeNotifier {
+class ProfileController extends ChangeNotifier with StorefrontChangeAware {
   final ProfileServiceInterface? profileServiceInterface;
-  ProfileController({required this.profileServiceInterface});
+  ProfileController({
+    required this.profileServiceInterface,
+    StorefrontChangeNotifier? storefrontChangeNotifier,
+  }) {
+    followStorefrontChanges(storefrontChangeNotifier);
+  }
 
   ProfileModel? _userInfoModel;
   bool _isLoading = false;
@@ -25,7 +31,36 @@ class ProfileController extends ChangeNotifier {
   double? loyaltyPoint = 0;
   String userID = '-1';
 
-  Future<String> getUserInfo(BuildContext context) async {
+  /// Whether the profile has been asked for at all, so a change of storefront reloads what was on screen and nothing else.
+  bool _profileWasAsked = false;
+
+  /// The customer is on another storefront, whose wallet money and loyalty points are its own (J-09, E-01, E-04).
+  ///
+  /// This controller holds the two balances the account screen shows, and it was the only holder of a balance in the app that was not
+  /// told: the wallet screen and the points screen both drop theirs, so a customer who moved from Kuwait to Riyadh saw the Saudi wallet
+  /// on one screen and a Kuwaiti figure on their account page, in a currency that was no longer the one being shown.
+  ///
+  /// Dropped BEFORE the first await, as the contract of a listener requires, so the money of the storefront the customer left is never on
+  /// screen. A guest has no profile to ask for and asking would sign them out.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) async {
+    final bool reloadProfile = _profileWasAsked;
+    _userInfoModel = null;
+    _balance = null;
+    loyaltyPoint = 0;
+    userID = '-1';
+    _profileWasAsked = false;
+    notifyListeners();
+
+    if (change.signedIn && reloadProfile) {
+      await getUserInfo();
+    }
+  }
+
+  /// [context] is accepted because every screen passes one and is not read: the profile is asked for over the client, and a reload that
+  /// follows a change of storefront has no screen to take one from.
+  Future<String> getUserInfo([BuildContext? context]) async {
+    _profileWasAsked = true;
     ApiResponseModel apiResponse =
         await profileServiceInterface!.getProfileInfo();
     if (apiResponse.response != null &&

@@ -322,7 +322,9 @@ Future<void> init() async {
   sl.registerFactory(() => ChatController(chatServiceInterface: sl()));
   sl.registerFactory(
       () => NotificationController(notificationServiceInterface: sl()));
-  sl.registerFactory(() => ProfileController(profileServiceInterface: sl()));
+  sl.registerFactory(() => ProfileController(
+      profileServiceInterface: sl(),
+      storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));
   sl.registerFactory(() => WishListController(
       wishlistServiceInterface: sl(),
       storefrontChangeNotifier: sl<StorefrontChangeNotifier>()));

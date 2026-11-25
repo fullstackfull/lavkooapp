@@ -274,8 +274,10 @@ void main() {
           'one of the customer\'s own orders, loaded when it is opened',
       'lib/features/product/widgets/latest_product/stacked_swiper/transformer_page_view/index_controller.dart':
           'a swiper\'s position, not data',
-      'lib/features/profile/controllers/profile_contrroller.dart':
-          'the customer\'s profile',
+      // Was 'the customer's profile', and that was wrong: the profile carries the WALLET MONEY and the LOYALTY POINTS, and a storefront's
+      // money is its own (J-09, E-01, E-04). A customer who moved from Kuwait to Riyadh saw the Saudi wallet on the wallet screen and a
+      // Kuwaiti figure on their account page, in a currency that was no longer the one being shown.
+      'lib/features/profile/controllers/profile_contrroller.dart': null,
       'lib/features/refund/controllers/refund_controller.dart':
           'the customer\'s own refund requests, loaded when their screen opens',
       'lib/features/reorder/controllers/re_order_controller.dart':

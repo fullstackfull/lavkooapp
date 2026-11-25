@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
@@ -6,6 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/loyaltyPoint/controllers/loyalty_point_controller.dart';
 import 'package:syriapharmacy/features/loyaltyPoint/domain/services/loyalty_point_service_interface.dart';
+import 'package:syriapharmacy/features/profile/controllers/profile_contrroller.dart';
+import 'package:syriapharmacy/features/profile/domain/models/profile_model.dart';
+import 'package:syriapharmacy/features/profile/domain/services/profile_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
@@ -116,6 +120,31 @@ class _FakeLoyaltyPointService implements LoyaltyPointServiceInterface {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// The profile an answer carries says which storefront it was asked for: the wallet of SA is 100 with 10 points, of AE 200 with 20.
+class _FakeProfileService implements ProfileServiceInterface {
+  int asked = 0;
+
+  @override
+  Future<dynamic> getProfileInfo() async {
+    asked++;
+    final bool saudi = _who == 'SA';
+
+    return ApiResponseModel.withSuccess(_ok(<String, dynamic>{
+      'id': saudi ? 1 : 2,
+      'f_name': 'A',
+      'l_name': 'Customer',
+      'wallet_balance': saudi ? 100.0 : 200.0,
+      'loyalty_point': saudi ? 10.0 : 20.0,
+    }));
+  }
+
+  @override
+  Future<dynamic> delete(int id) async => throw UnimplementedError();
+
+  @override
+  Future<dynamic> updateProfile(ProfileModel userInfoModel, String pass, File? file, String token) async => throw UnimplementedError();
 }
 
 /// E-04 criterion 3: a customer who moves to another storefront is never shown the wallet or the points of the one they left. What is held is
@@ -231,6 +260,68 @@ void main() {
       await asked;
 
       expect(controller.walletTransactionModel, isNull);
+    });
+  });
+
+  /// J-09: the account page holds the two balances as well, and it was the only holder in the app that was never told. A customer who moved
+  /// from Kuwait to Riyadh saw the Saudi wallet on the wallet screen and a Kuwaiti figure on their account page, in a currency that was no
+  /// longer the one being shown.
+  group('the profile', () {
+    late _FakeProfileService service;
+    late ProfileController controller;
+
+    setUp(() async {
+      service = _FakeProfileService();
+      controller = ProfileController(profileServiceInterface: service);
+      await controller.getUserInfo();
+      service.asked = 0;
+    });
+
+    tearDown(() => controller.dispose());
+
+    test('is the old storefront\'s before the change', () {
+      expect(controller.balance, 100);
+      expect(controller.loyaltyPoint, 10);
+      expect(controller.userID, '1');
+    });
+
+    test('is gone at once, before anything answers', () async {
+      StorefrontScope.publish('AE');
+      final Future<void> told = controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(controller.balance, isNull, reason: 'the money of the storefront the customer left is never on screen');
+      expect(controller.userInfoModel, isNull);
+      expect(controller.loyaltyPoint, 0);
+
+      await told;
+    });
+
+    test('of a customer is asked for again, and is the new storefront\'s when it has loaded', () async {
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.asked, 1);
+      expect(controller.balance, 200);
+      expect(controller.loyaltyPoint, 20);
+      expect(controller.userID, '2');
+    });
+
+    test('of a guest is dropped and not asked for, because asking would sign the guest out', () async {
+      StorefrontScope.publish('AE');
+      await controller.onStorefrontChanged(_guestToEmirates);
+
+      expect(service.asked, 0);
+      expect(controller.balance, isNull);
+    });
+
+    test('that was never asked for is not asked for by a change of storefront', () async {
+      final ProfileController untouched = ProfileController(profileServiceInterface: service);
+      StorefrontScope.publish('AE');
+
+      await untouched.onStorefrontChanged(_customerToEmirates);
+
+      expect(service.asked, 0, reason: 'a change of storefront reloads what was on screen, and nothing else');
+      untouched.dispose();
     });
   });
 
