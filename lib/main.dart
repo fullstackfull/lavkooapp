@@ -1,6 +1,5 @@
 // assets/lottie copy/chat.json assets/lottie copy/empty.json assets/lottie copy/fire.json assets/lottie copy/getnotification.json assets/lottie copy/succes.json assets/lottie copy/Whatsapp.json
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:syriapharmacy/services/meta_tracking_service.dart';
@@ -89,18 +88,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 final database = AppDatabase();
 
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback = (
-        X509Certificate cert,
-        String host,
-        int port,
-      ) => true;
-  }
-}
-
 Future<void> main() async {
   // A widget that throws while BUILDING shows Flutter's grey box to shoppers in release mode.
   // Collapsing it to nothing is strictly better on a shop screen — a missing card beats a grey
@@ -111,7 +98,11 @@ Future<void> main() async {
     ErrorWidget.builder = (details) => const SizedBox.shrink();
   }
 
-  HttpOverrides.global = MyHttpOverrides();
+  // No HttpOverrides is installed here on purpose. Accepting any server certificate -- which is what a
+  // `badCertificateCallback` returning true does, for every host, on every connection -- hands a shopper's
+  // session, address and payment traffic to anyone able to answer for the server on the network, and it
+  // cannot be told apart from the real thing by the app. `test/https_certificates_are_verified_test.dart`
+  // refuses its return.
   WidgetsFlutterBinding.ensureInitialized();
 
   // Installed before anything else can fail: a crash during startup is exactly the one the
