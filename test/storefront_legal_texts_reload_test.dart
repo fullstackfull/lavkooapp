@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/domain/services/splash_service_interface.dart';
@@ -60,13 +61,21 @@ class _FakeSplashService implements SplashServiceInterface {
 /// the dashboard, and a change of market re-asked only the shop's config, so a customer who moved from Riyadh to Dubai went on reading the
 /// Saudi terms. A legal text is the one thing in the app that must never be the wrong market's.
 void main() {
+  // The controller's constructor reads a preference (`loadPricingMode`) and `onStorefrontChanged` asks `Get.context`, which is a
+  // GlobalKey's context: both reach a Flutter binding, so the binding has to exist before either runs. Without this the whole file fails
+  // with "Binding has not yet been initialized", which is what the first CI run of it said.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late _FakeSplashService service;
   late SplashController controller;
 
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
     StorefrontScope.publish('SA');
     service = _FakeSplashService();
     controller = SplashController(splashServiceInterface: service);
+    // The constructor starts a preference read; let it finish before the test, so it cannot land after the controller is disposed.
+    await pumpEventQueue();
   });
 
   tearDown(() {
