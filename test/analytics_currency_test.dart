@@ -201,6 +201,9 @@ void main() {
     const Map<String, String> allowed = {
       'lib/features/storefront/domain/models/storefront_country.dart':
           'the table of the six markets and the money each trades in: this is where a currency code belongs',
+      'lib/features/storefront/domain/models/storefront_money_block.dart':
+          'the reader of the money block the SERVER sends, which carries the code it was given and never works one out: '
+          'the scan is about a currency a file decided for itself, and this file decides nothing',
       'lib/features/checkout/domain/models/myfatoorah_payment_status.dart':
           'the gateway reports the currency it took the payment in; the empty string is "it said none"',
       'lib/services/meta_tracking_service.dart':
