@@ -11,6 +11,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/models/theme_schema.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/repositories/dynamic_theme_repository_interface.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/capability_registry.dart';
+import 'package:syriapharmacy/features/dynamic_theme/theme_preview.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/db_helper.dart';
 import 'package:syriapharmacy/main.dart';
@@ -93,14 +94,23 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
     String? knownChecksum,
   }) async {
     try {
+      // The draft a merchant asked to see, when one was asked for (J-V1). Null in every build that
+      // accepts no preview token, which is every build that does not ask for one.
+      final String? previewToken = ThemePreview.token;
+
       final headers = <String, String>{
         ...ThemeCapabilities.headers,
-        if (knownChecksum != null) 'If-None-Match': '"$knownChecksum"',
+        // Not sent with a preview: a draft is answered with no ETag and never with a 304, and the
+        // checksum this app holds is the PUBLISHED page's, so sending it would ask the server to
+        // compare a draft against a page it is not.
+        if (knownChecksum != null && previewToken == null)
+          'If-None-Match': '"$knownChecksum"',
       };
 
       final storefront = StorefrontScope.current;
       final response = await dioClient.get(
-        '${AppConstants.themeHomeUri}?page=$page&device=${deviceClass()}',
+        '${AppConstants.themeHomeUri}?page=$page&device=${deviceClass()}'
+        '${previewToken == null ? '' : '&${ThemePreview.requestKey}=${Uri.encodeQueryComponent(previewToken)}'}',
         options: Options(
           headers: headers,
           // 304 is the success case this request is built around, and 404 is a real ANSWER
@@ -133,13 +143,20 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
       final raw = Map<String, dynamic>.from(data);
       final payload = ThemePayload.fromJson(raw);
 
-      // Only a page that actually rendered is worth keeping. Caching an empty payload would give
-      // the next cold start a blank home page to show instantly, which is worse than no cache —
-      // and a page the server just emptied must also stop serving its OLD cached self.
-      if (payload.isRenderable) {
-        await writeCachedPayload(payload, raw);
-      } else {
-        await _database.deleteCacheResponseByEndpoint(_cacheKey(payload.page));
+      // A DRAFT is shown and never kept, and is not allowed to evict the published page either: it
+      // is somebody's unfinished work, asked for once, and the shopper who opens the app tomorrow
+      // must get the shop. The answer's own mark decides this, not what this request asked for, so
+      // a draft that arrives by any other route is not kept either.
+      //
+      // Otherwise: only a page that actually rendered is worth keeping. Caching an empty payload
+      // would give the next cold start a blank home page to show instantly, which is worse than no
+      // cache — and a page the server just emptied must also stop serving its OLD cached self.
+      if (!payload.isDraft) {
+        if (payload.isRenderable) {
+          await writeCachedPayload(payload, raw);
+        } else {
+          await _database.deleteCacheResponseByEndpoint(_cacheKey(payload.page));
+        }
       }
 
       return ApiResponseModel.withSuccess(payload);

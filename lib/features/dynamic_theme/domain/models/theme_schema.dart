@@ -378,6 +378,7 @@ class ThemePayload {
     required this.tokens,
     required this.sections,
     required this.withheld,
+    this.isDraft = false,
   });
 
   final String page;
@@ -400,6 +401,16 @@ class ThemePayload {
 
   /// Section types the server withheld from this build, mapped to why — surfaced in diagnostics.
   final Map<String, String> withheld;
+
+  /// Whether the server marked this page an unpublished DRAFT rather than the live one: the
+  /// `preview: true` of `ThemeDelivery::previewPayload`, answered only to a request that carried a
+  /// signed preview token (J-V1).
+  ///
+  /// Read even in a build that asks for no preview, and read off the ANSWER rather than off what
+  /// the app asked for, because this is the one fact that decides whether a page may be kept. A
+  /// draft written to the disk cache would come back as the home page of the next cold start — for
+  /// a shopper, days after the merchant decided against it.
+  final bool isDraft;
 
   static const ThemePayload none = ThemePayload(
     page: 'home',
@@ -436,6 +447,7 @@ class ThemePayload {
           .toList(growable: false),
       withheld: _asMap(compatibility['withheld'])
           .map((key, value) => MapEntry(key, '$value')),
+      isDraft: json['preview'] == true,
     );
   }
 }

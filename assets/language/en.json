@@ -220,6 +220,7 @@
   "could_not_open_payment_app": "We could not open that app. Please choose another payment method.",
   "order_could_not_be_placed": "Your order was not placed. Please try again.",
   "storefront_browse_only_notice": "This store is open for browsing only. Orders and payments are not available yet.",
+  "theme_draft_preview_notice": "You are viewing an unpublished draft of this page. Customers still see the published store.",
   "storefront_maintenance_title": "This store is under maintenance",
   "storefront_maintenance_body": "Your earlier orders and payments are not affected. Please come back soon.",
   "storefront_maintenance_expected_back": "Expected back",
