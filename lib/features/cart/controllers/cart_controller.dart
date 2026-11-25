@@ -9,6 +9,7 @@ import 'package:syriapharmacy/features/shipping/controllers/shipping_controller.
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:provider/provider.dart';
@@ -158,7 +159,7 @@ class CartController extends ChangeNotifier with StorefrontChangeAware {
         productId: cart.productId.toString(),
         productName: cart.variant ?? 'Product',
         price: cart.digitalVariantPrice ?? 0.0,
-        currency: 'SYP',
+        currency: PriceConverter.analyticsCurrencyCode(Get.context),
       );
     } else {
       _addToCartLoading = false;

@@ -69,6 +69,31 @@ class PriceConverter {
       ownCurrencySymbol(context) ??
       Provider.of<SplashController>(context, listen: false).myCurrency?.symbol;
 
+  /// The currency code an analytics event is attributed in (J-05, GCC-05).
+  ///
+  /// An event names a currency beside a number, so the wrong code is not a cosmetic error: a basket of 12.500 dinars reported as 12.500
+  /// Syrian pounds is a different amount of money, and every conversion of every market was being counted in one currency none of them
+  /// trades in. So the code is the storefront's own when that storefront has one, the code the customer chose in the settings otherwise,
+  /// and the last resort below only when neither is known yet.
+  ///
+  /// The context is nullable because these calls are made from controllers that run after an await, where `Get.context` can be gone; a
+  /// missing context used to be a crash at the bang (`Get.context!`) in an analytics line, which is the least deserving place in the app
+  /// to lose a session over.
+  static String analyticsCurrencyCode(BuildContext? context) =>
+      (context == null ? null : currencyCodeToSend(context)) ??
+      _currencyBeforeAnythingIsKnown;
+
+  /// What an event is attributed in before the app knows anything at all -- no context, or the config has not arrived.
+  ///
+  /// While storefronts are on it is the default storefront's currency, which is the money of the market the app opens on. While they are
+  /// off it stays the code the app has always sent, so the default build reports exactly what it reports today; changing that code is a
+  /// finance decision and not this one's.
+  static String get _currencyBeforeAnythingIsKnown => StorefrontConfig.enabled
+      ? StorefrontCountry.defaultCountry.currency
+      : _platformCurrencyOfTheOriginalShop;
+
+  static const String _platformCurrencyOfTheOriginalShop = 'SYP';
+
   /// The price written in the currency of the storefront the customer is on, when that storefront trades in its own currency
   /// (GCC-05, J-05); null while storefronts are off and on the default storefront, which keep the platform's money below.
   static String? _priceOfOwnCurrency(BuildContext context, double? price,
