@@ -535,3 +535,86 @@ jobs:
           # The reporter's last progress line is the verdict ("+582 ~23 -2: Some tests failed."); a failed test is a progress line that ends in [E].
           echo "storefronts ${{ matrix.storefronts }}: $(grep -E '^\+[0-9]+' suite.txt | tail -n 1)"
           grep -E '^\+[0-9]+ .* \[E\]$' suite.txt | sed -E 's/^\+[0-9]+ (~[0-9]+ )?-[0-9]+: //' | sort -u | sed 's/^/  failed: /' || true
+
+  # M-457. The recorded state of this repository was that it had NO .github directory at all and so no CI of any kind. That is no longer
+  # true -- the three jobs above run on every pull request -- but two of the checks the criterion asks for were still missing, and each
+  # gets a job of its own here rather than a step inside a job whose shape is pinned by a test.
+  #
+  # Formatting. `dart format` was not run anywhere in this repository, in any job, on any ref. It reads the Dart files THIS change adds or
+  # edits, and it fails the job. Scoped to the change on purpose: the app's existing source has never been formatted in CI, so reading all
+  # of it would make every pull request red for drift nobody here introduced, and a red that nobody can act on gets switched off.
+  formatting:
+    name: Changed Dart files are formatted
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Needed to know which files the change touched.
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Same pinned toolchain as the other jobs and as the seller app. Bump them together.
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Which change to read
+        id: range
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$base" ]; then base="${{ github.event.before }}"; fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "The event names no base this clone has (a new branch, or a manual run), so the change is read against origin/main."
+            git fetch --no-tags --quiet origin main
+            base="$(git rev-parse FETCH_HEAD)"
+          fi
+          echo "Reading the change from ${base} to $(git rev-parse HEAD)."
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify formatting of changed Dart files
+        run: |
+          changed="$(git diff --name-only --diff-filter=ACMR "${{ steps.range.outputs.base }}" HEAD -- '*.dart')"
+          if [ -z "$changed" ]; then
+            echo "This change touches no Dart file."
+            exit 0
+          fi
+          echo "$changed"
+          # shellcheck disable=SC2086
+          dart format --output=none --set-exit-if-changed $(echo $changed)
+
+  # M-457, the half the criterion is actually about: the backend refuses a pull request that adds a secret or personal data, and this
+  # repository refused nothing of the kind. A customer app carries the Firebase and push configuration and the fixtures a developer types
+  # a real telephone number into, so the material this reads for is material this repository handles.
+  leak-guard:
+    name: No secret or personal data added
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The scanner reads the change commit by commit as well as whole, because a secret added and taken out again
+          # in the same branch is still in the pushed history. A shallow clone cannot answer that.
+          fetch-depth: 0
+
+      - name: Which change to read
+        id: range
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$base" ]; then base="${{ github.event.before }}"; fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "The event names no base this clone has (a new branch, or a manual run), so the change is read against origin/main."
+            git fetch --no-tags --quiet origin main
+            base="$(git rev-parse FETCH_HEAD)"
+          fi
+          echo "Reading the change from ${base} to $(git rev-parse HEAD)."
+          echo "base=${base}" >> "$GITHUB_OUTPUT"
+
+      # PHP because the scanner is the backend's reviewed and tested one, ported rather than rewritten; the runner has it already,
+      # so this adds no toolchain. It prints where it found something and which rule, never the text it matched.
+      - name: Scan what this change adds
+        run: php .github/scripts/leak-guard.php --base="${{ steps.range.outputs.base }}"
