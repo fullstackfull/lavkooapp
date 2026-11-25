@@ -134,15 +134,14 @@ Future<void> main() async {
 
   flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.requestNotificationsPermission();
   String? path;
   NotificationBody? body;
 
   try {
-    final RemoteMessage? remoteMessage = await FirebaseMessaging.instance
-        .getInitialMessage();
+    final RemoteMessage? remoteMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
     if (remoteMessage != null) {
       body = NotificationHelper.convertNotification(remoteMessage.data);
     }

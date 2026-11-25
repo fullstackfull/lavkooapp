@@ -38,7 +38,8 @@ void main() {
       expect(
         sources.length,
         greaterThan(100),
-        reason: 'lib holds hundreds of Dart files; a near-empty map means the scan read nothing',
+        reason:
+            'lib holds hundreds of Dart files; a near-empty map means the scan read nothing',
       );
       expect(
         sources.containsKey('lib/main.dart'),
@@ -64,7 +65,9 @@ void main() {
     );
   });
 
-  test('no file installs a global HttpOverrides, which would decide for every connection the app makes', () {
+  test(
+      'no file installs a global HttpOverrides, which would decide for every connection the app makes',
+      () {
     final List<String> offenders = <String>[
       for (final MapEntry<String, String> source in sources.entries)
         if (source.value.contains('HttpOverrides.global') ||
