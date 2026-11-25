@@ -5,6 +5,7 @@ import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/order_market.dart';
 import 'package:syriapharmacy/features/storefront/domain/models/storefront_country.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_money_block.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
 import 'package:syriapharmacy/features/storefront/storefront_money.dart';
 
@@ -36,21 +37,39 @@ class PriceConverter {
     return null;
   }
 
+  /// The money the server named for this request, when it is the money of [currencyCode] (GCC-05, B-03).
+  ///
+  /// The block names the currency of the REQUEST, and an amount is not always in it: the amounts of an order are written in the currency
+  /// the order was sold in (J-13.1), which is another market's money whenever the customer has moved since. So the currency is checked
+  /// before the block is used, or this market's decimals and mark would be put on another market's money.
+  ///
+  /// Null when the shop sent no block, which is every shop that has storefronts off and the default storefront of every shop: the mark of
+  /// the currency list, the global symbol position and this app's own decimals then stand, exactly as before.
+  static StorefrontMoneyBlock? _moneyNamedFor(
+      ConfigModel? configModel, String currencyCode) {
+    final StorefrontMoneyBlock? named = configModel?.storefrontMoney;
+
+    return named != null && named.isMoneyOf(currencyCode) ? named : null;
+  }
+
   /// The currency code of the storefront the customer is on when that storefront trades in its own currency, else null: the code the
   /// customer chose in the settings applies (`SplashController.myCurrency`), as it always has.
   static String? ownCurrencyCode(BuildContext context) =>
       _storefrontOfOwnCurrency(context)?.currency;
 
-  /// The mark of that currency (the symbol of the server's list, the code when the server sent none), else null.
+  /// The mark of that currency: the one the server named for this market's money, else the symbol of the server's currency list, else the
+  /// currency code. Null when the customer is not on a storefront that trades in its own currency.
   static String? ownCurrencySymbol(BuildContext context) {
     final StorefrontCountry? storefront = _storefrontOfOwnCurrency(context);
     if (storefront == null) {
       return null;
     }
 
-    final String? symbol = _symbolOf(
-        Provider.of<SplashController>(context, listen: false).configModel,
-        storefront.currency);
+    final ConfigModel? configModel =
+        Provider.of<SplashController>(context, listen: false).configModel;
+    final String? symbol =
+        _moneyNamedFor(configModel, storefront.currency)?.symbol ??
+            _symbolOf(configModel, storefront.currency);
 
     return symbol == null || symbol.trim().isEmpty
         ? storefront.currency
@@ -69,6 +88,31 @@ class PriceConverter {
       ownCurrencySymbol(context) ??
       Provider.of<SplashController>(context, listen: false).myCurrency?.symbol;
 
+  /// The currency code an analytics event is attributed in (J-05, GCC-05).
+  ///
+  /// An event names a currency beside a number, so the wrong code is not a cosmetic error: a basket of 12.500 dinars reported as 12.500
+  /// Syrian pounds is a different amount of money, and every conversion of every market was being counted in one currency none of them
+  /// trades in. So the code is the storefront's own when that storefront has one, the code the customer chose in the settings otherwise,
+  /// and the last resort below only when neither is known yet.
+  ///
+  /// The context is nullable because these calls are made from controllers that run after an await, where `Get.context` can be gone; a
+  /// missing context used to be a crash at the bang (`Get.context!`) in an analytics line, which is the least deserving place in the app
+  /// to lose a session over.
+  static String analyticsCurrencyCode(BuildContext? context) =>
+      (context == null ? null : currencyCodeToSend(context)) ??
+      _currencyBeforeAnythingIsKnown;
+
+  /// What an event is attributed in before the app knows anything at all -- no context, or the config has not arrived.
+  ///
+  /// While storefronts are on it is the default storefront's currency, which is the money of the market the app opens on. While they are
+  /// off it stays the code the app has always sent, so the default build reports exactly what it reports today; changing that code is a
+  /// finance decision and not this one's.
+  static String get _currencyBeforeAnythingIsKnown => StorefrontConfig.enabled
+      ? StorefrontCountry.defaultCountry.currency
+      : _platformCurrencyOfTheOriginalShop;
+
+  static const String _platformCurrencyOfTheOriginalShop = 'SYP';
+
   /// The price written in the currency of the storefront the customer is on, when that storefront trades in its own currency
   /// (GCC-05, J-05); null while storefronts are off and on the default storefront, which keep the platform's money below.
   static String? _priceOfOwnCurrency(BuildContext context, double? price,
@@ -79,24 +123,34 @@ class PriceConverter {
     }
 
     if (!withSymbol) {
+      final ConfigModel? configModel =
+          Provider.of<SplashController>(context, listen: false).configModel;
+
       return StorefrontMoney.formatWithoutSymbol(price,
-          currencyCode: storefront.currency);
+          currencyCode: storefront.currency,
+          decimals:
+              _moneyNamedFor(configModel, storefront.currency)?.decimals);
     }
 
     return _priceIn(context, price, currencyCode: storefront.currency);
   }
 
-  /// The price written in [currencyCode], with the decimals of that currency and the mark of the server's currency list (the code when the
-  /// server sent none), on the side the config says.
+  /// The price written in [currencyCode]: the decimals, the mark and the side the server named for this market's money, and, for each of the
+  /// three the server named none, the decimals of that currency, the mark of the server's currency list (the code when it sent none) and the
+  /// side the global config says — which is what every shop that sends no money block answers, so nothing moves for one that does not.
   static String _priceIn(BuildContext context, double? price,
       {required String currencyCode}) {
     final ConfigModel? configModel =
         Provider.of<SplashController>(context, listen: false).configModel;
+    final StorefrontMoneyBlock? named =
+        _moneyNamedFor(configModel, currencyCode);
 
     return StorefrontMoney.format(price,
         currencyCode: currencyCode,
-        symbol: _symbolOf(configModel, currencyCode),
-        symbolOnRight: configModel?.currencySymbolPosition == 'right');
+        symbol: named?.symbol ?? _symbolOf(configModel, currencyCode),
+        symbolOnRight: named?.symbolOnRight ??
+            configModel?.currencySymbolPosition == 'right',
+        decimals: named?.decimals);
   }
 
   // static String convertPrice(BuildContext context, double? price,

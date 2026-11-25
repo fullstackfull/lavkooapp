@@ -4,6 +4,7 @@ import 'package:syriapharmacy/data/model/api_response.dart';
 import 'package:syriapharmacy/data/services/analytics_reporter.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/models/theme_schema.dart';
 import 'package:syriapharmacy/features/dynamic_theme/domain/services/dynamic_theme_service_interface.dart';
+import 'package:syriapharmacy/features/dynamic_theme/theme_preview.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/features/storefront/storefront_scope.dart';
 
@@ -164,6 +165,14 @@ class DynamicThemeController extends ChangeNotifier
   /// non-empty map means an app update would show more of the merchant's page.
   Map<String, String> get withheldTypes => _payload.withheld;
 
+  /// Whether what is on screen is an unpublished DRAFT and not the shop (J-V1).
+  ///
+  /// Read off the page the server actually answered, not off the token this app sent: a token the
+  /// server refused — expired, forged, or minted for another storefront's theme — is answered with
+  /// the published page, and a notice over the real shop saying it is a draft would be a lie in the
+  /// one place a merchant is deciding what to publish.
+  bool get isShowingADraft => _payload.isDraft;
+
   // -------------------------------------------------------------------------------------------
 
   /// Render whatever is cached, then check for something newer.
@@ -182,10 +191,17 @@ class DynamicThemeController extends ChangeNotifier
     // refresh that [onStorefrontChanged] asked for runs when this one ends.
     final String? storefront = StorefrontScope.current;
 
+    // A draft is asked for by force, and never seeded from the cache. The version endpoint carries
+    // no preview, so it answers the PUBLISHED revision: a version check would truthfully say
+    // nothing had moved and the merchant would be shown the shop instead of the draft they asked
+    // to see. And the cache only ever holds published pages, so seeding from it would put the shop
+    // on screen under a notice saying it was a draft.
+    final bool askingForADraft = ThemePreview.isAskingForADraft;
+
     try {
       // The cached page goes on screen before anything touches the network, and only on the first
       // sync of a session — after that, what is already in memory is at least as fresh.
-      if (!_hasSyncedThisSession && !_payload.isRenderable) {
+      if (!_hasSyncedThisSession && !_payload.isRenderable && !askingForADraft) {
         final cached = await dynamicThemeServiceInterface.getCachedPayload(page: page);
         final cachedHeader =
             await dynamicThemeServiceInterface.getCachedPayload(page: 'header');
@@ -197,7 +213,10 @@ class DynamicThemeController extends ChangeNotifier
       }
 
       try {
-        await _revalidate(page: page, force: force, storefront: storefront);
+        await _revalidate(
+            page: page,
+            force: force || askingForADraft,
+            storefront: storefront);
       } catch (error) {
         // A sync that dies mid-air (a parse, an unexpected null) is a failed sync, not an
         // unhandled exception: the shopper keeps whatever renders, and the next resume retries.
@@ -399,15 +418,49 @@ class DynamicThemeController extends ChangeNotifier
     await refresh();
   }
 
-  /// The shopper moved to another storefront.
+  /// Show the unpublished draft a signed preview token names, on this phone, now (J-V1).
   ///
-  /// The home page, its header, every page opened since and the data each section fetched all describe the storefront they left, and the
-  /// version check on this build's revision knows nothing about it: the same revision number can be another storefront's page. So all of
-  /// it is dropped, which is what puts the app's own home on screen at once instead of the other storefront's, and the page of the new
-  /// storefront is read from the cache or fetched by force. A sync already in flight is not trusted either: it finishes without
-  /// keeping what it fetched, and the refresh runs when it ends.
-  @override
-  Future<void> onStorefrontChanged(StorefrontChange change) async {
+  /// Everything held is dropped FIRST, and before any await, exactly as a change of storefront
+  /// drops it: half a published page beside half a draft is the one thing a merchant deciding what
+  /// to publish must never be shown. The draft is then fetched by force.
+  ///
+  /// False, and nothing dropped or fetched, when this build accepts no preview token or the link
+  /// carried none — so a build without the define, and a link without a token, behave exactly as
+  /// they do today. [enabled] defaults to what this build accepts and is named only by a test, the
+  /// way `OrderMarket` already takes the storefront switch, so that both answers are exercised by
+  /// one build.
+  Future<bool> showDraft(String? token,
+      {bool enabled = ThemePreview.enabledInThisBuild}) async {
+    if (!ThemePreview.show(token, enabled: enabled)) {
+      return false;
+    }
+
+    await _startOver();
+
+    return true;
+  }
+
+  /// Stop showing a draft and put the shop back, by force: the cache and the revision check both
+  /// speak for the published page, which is precisely what has to come back.
+  Future<void> stopShowingADraft() async {
+    if (!ThemePreview.isAskingForADraft) {
+      return;
+    }
+
+    ThemePreview.stop();
+
+    await _startOver();
+  }
+
+  /// Drop every page, header and section this controller holds and fetch again by force.
+  ///
+  /// Shared by the two preview entry points above and by [onStorefrontChanged], which all three
+  /// change what the theme endpoint will answer without changing any revision number the version
+  /// check could notice. Everything is dropped BEFORE the first await, so the app's own home goes
+  /// on screen at once rather than the page that is no longer the right one, and a sync already in
+  /// flight is not trusted: it finishes without keeping what it fetched, and the refresh runs when
+  /// it ends.
+  Future<void> _startOver() async {
     _contentEpoch++;
     _pages.clear();
     _pagesFailed.clear();
@@ -427,4 +480,14 @@ class DynamicThemeController extends ChangeNotifier
 
     await refresh();
   }
+
+  /// The shopper moved to another storefront.
+  ///
+  /// The home page, its header, every page opened since and the data each section fetched all describe the storefront they left, and the
+  /// version check on this build's revision knows nothing about it: the same revision number can be another storefront's page. So all of
+  /// it is dropped, which is what puts the app's own home on screen at once instead of the other storefront's, and the page of the new
+  /// storefront is read from the cache or fetched by force. A sync already in flight is not trusted either: it finishes without
+  /// keeping what it fetched, and the refresh runs when it ends.
+  @override
+  Future<void> onStorefrontChanged(StorefrontChange change) => _startOver();
 }

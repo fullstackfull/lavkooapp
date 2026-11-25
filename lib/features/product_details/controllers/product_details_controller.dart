@@ -11,6 +11,7 @@ import 'package:syriapharmacy/features/product_details/enums/preview_type.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/storefront/storefront_change_notifier.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
+import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
@@ -79,7 +80,7 @@ class ProductDetailsController extends ChangeNotifier
             contentType: 'product',
             contentName: _productDetailsModel!.name ?? 'Product',
             price: _productDetailsModel!.unitPrice ?? 0.0,
-            currency: 'SYP',
+            currency: PriceConverter.analyticsCurrencyCode(Get.context),
           );
         }
 
@@ -140,7 +141,7 @@ class ProductDetailsController extends ChangeNotifier
           contentType: 'product',
           contentName: product.name ?? 'Product',
           price: product.unitPrice ?? 0.0,
-          currency: 'SYP',
+          currency: PriceConverter.analyticsCurrencyCode(Get.context),
         );
       }
       return product;

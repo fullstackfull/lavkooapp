@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/domain/models/config_model.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/order_market.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_money_block.dart';
 import 'package:syriapharmacy/features/storefront/domain/services/storefront_service_interface.dart';
 import 'package:syriapharmacy/features/storefront/storefront_choice.dart';
 import 'package:syriapharmacy/features/storefront/storefront_config.dart';
@@ -40,7 +42,9 @@ class _SplashWithConfig extends SplashController {
 final CurrencyList _saudiRiyal =
     CurrencyList(id: 1, code: 'SAR', symbol: 'SR', exchangeRate: 3.75);
 
-ConfigModel _configWith({String position = 'left'}) => ConfigModel(
+ConfigModel _configWith(
+        {String position = 'left', Map<String, Object?>? storefrontMoney}) =>
+    ConfigModel(
       currencySymbolPosition: position,
       currencyList: [
         CurrencyList(id: 1, code: 'SAR', symbol: 'SR', exchangeRate: 3.75),
@@ -48,6 +52,7 @@ ConfigModel _configWith({String position = 'left'}) => ConfigModel(
         CurrencyList(id: 3, code: 'AED', symbol: 'AED', exchangeRate: 3.67),
         CurrencyList(id: 4, code: 'OMR', symbol: 'OMR', exchangeRate: 0.385),
       ],
+      storefrontMoney: StorefrontMoneyBlock.fromJson(storefrontMoney),
     );
 
 Future<BuildContext> _contextOn({
@@ -239,5 +244,96 @@ void main() {
       expect(PriceConverter.currencyCodeToSend(context), 'SAR');
       expect(PriceConverter.currencySymbolToShow(context), 'SR');
     }, skip: !StorefrontConfig.enabled);
+  });
+
+  /// B-03, J-05: the shop sends the money of the market it answered for (`storefront_money` of `StorefrontCurrency::apiMoney`), and the app
+  /// writes with THAT rather than with its own copy of the decimals. The cases above all run with no block and are the proof that a shop
+  /// which sends none is written exactly as before; the cases below are what a block changes.
+  group('the money the shop names for the market', () {
+    testWidgets('writes the decimals the shop writes, not the ones in the app table',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(storefrontMoney: const <String, Object?>{
+            'currency': 'KWD',
+            'symbol': 'KD',
+            'decimals': 2,
+            'symbol_position': 'left',
+          }));
+
+      expect(PriceConverter.convertPrice(context, 12.5), 'KD 12.50');
+      expect(PriceConverter.convertPriceWithoutSymbol(context, 12.5), '12.50');
+      expect(PriceConverter.getUnitCurrency(context, 12.5), 'KD 12.50');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('and its mark on the side the shop names, over the currency list and the global setting',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'AE',
+          config: _configWith(
+              position: 'left',
+              storefrontMoney: const <String, Object?>{
+                'currency': 'AED',
+                'symbol': 'د.إ',
+                'decimals': 2,
+                'symbol_position': 'right',
+              }));
+
+      expect(PriceConverter.convertPrice(context, 12.5), '12.50 د.إ');
+      expect(PriceConverter.ownCurrencySymbol(context), 'د.إ');
+      expect(PriceConverter.currencySymbolToShow(context), 'د.إ');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('a block for another currency is not used, because it is not this money',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(storefrontMoney: const <String, Object?>{
+            'currency': 'SAR',
+            'symbol': 'SR',
+            'decimals': 0,
+          }));
+
+      expect(PriceConverter.convertPrice(context, 12.5), 'KD 12.500');
+      expect(PriceConverter.ownCurrencySymbol(context), 'KD');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('and an order keeps the decimals of the currency it was sold in',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(storefrontMoney: const <String, Object?>{
+            'currency': 'KWD',
+            'symbol': 'KD',
+            'decimals': 3,
+          }));
+
+      expect(
+          PriceConverter.convertOrderPrice(context, 12.5,
+              market: const OrderMarket(
+                  country: 'QA', currencyCode: 'QAR', currencyRate: 1.0)),
+          'QAR 12.50');
+    }, skip: !StorefrontConfig.enabled);
+
+    testWidgets('and with storefronts off it changes nothing at all',
+        (WidgetTester tester) async {
+      _tester = tester;
+      final BuildContext context = await _contextOn(
+          storefrontCode: 'KW',
+          config: _configWith(storefrontMoney: const <String, Object?>{
+            'currency': 'KWD',
+            'symbol': 'KD',
+            'decimals': 3,
+          }),
+          chosenCurrency: _saudiRiyal);
+
+      expect(PriceConverter.convertPrice(context, 12.5), '13');
+      expect(PriceConverter.convertPriceWithoutSymbol(context, 12.5), '12.5');
+      expect(PriceConverter.currencySymbolToShow(context), 'SR');
+    }, skip: StorefrontConfig.enabled);
   });
 }

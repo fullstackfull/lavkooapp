@@ -44,6 +44,7 @@ import 'package:syriapharmacy/features/review/controllers/review_controller.dart
 import 'package:syriapharmacy/features/shipping/controllers/shipping_controller.dart';
 import 'package:syriapharmacy/features/dynamic_theme/controllers/dynamic_theme_controller.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/section_renderer_registry.dart';
+import 'package:syriapharmacy/features/dynamic_theme/theme_preview.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/features/splash/screens/splash_screen.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
@@ -240,6 +241,13 @@ Future<void> main() async {
 /// launch", because the app has to finish loading its config before that screen can be built.
 Future<String?> initDynamicLinks() async {
   final uri = await AppLinks().getInitialLink();
+
+  // A merchant's theme preview link carries its token in the QUERY (`?theme_preview=…`), and only
+  // the PATH leaves this function, because navigation is the router's. The token is taken here,
+  // where the whole link is still in hand and before the first theme request is made, so the home
+  // page the app asks for on this launch is the draft the merchant opened (J-V1). A build that
+  // accepts no preview token holds nothing, and a link without one changes nothing.
+  if (uri != null) ThemePreview.show(ThemePreview.tokenIn(uri));
 
   return uri?.path;
 }

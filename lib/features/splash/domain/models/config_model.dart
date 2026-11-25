@@ -1,4 +1,5 @@
 import 'package:syriapharmacy/data/model/image_full_url.dart';
+import 'package:syriapharmacy/features/storefront/domain/models/storefront_money_block.dart';
 import 'package:syriapharmacy/features/shop/domain/enums/vacation_duration_type.dart';
 
 class ConfigModel {
@@ -29,6 +30,14 @@ class ConfigModel {
   RefundPolicy? shippingPolicy;
   List<CurrencyList>? currencyList;
   String? currencySymbolPosition;
+
+  /// The money of the storefront this config was answered for (GCC-05, J-05, B-03): the currency it trades in, that currency's mark, the
+  /// decimals the shop writes it with and which side the mark goes.
+  ///
+  /// Null for every shop that does not send it — which is every shop with storefronts off, and the default storefront of every shop — and
+  /// null means the app writes money exactly as it did before: the global [currencySymbolPosition], the mark of [currencyList] and the
+  /// decimals of its own table. Nothing here changes what the default storefront prints.
+  StorefrontMoneyBlock? storefrontMoney;
   String? businessMode;
   bool? maintenanceMode;
   List<Language>? language;
@@ -125,6 +134,7 @@ class ConfigModel {
     this.shippingPolicy,
     this.currencyList,
     this.currencySymbolPosition,
+    this.storefrontMoney,
     this.businessMode,
     this.maintenanceMode,
     this.language,
@@ -259,6 +269,7 @@ class ConfigModel {
       });
     }
     currencySymbolPosition = json['currency_symbol_position'];
+    storefrontMoney = StorefrontMoneyBlock.fromJson(json['storefront_money']);
     businessMode = json['business_mode'];
     // maintenanceMode = json['maintenance_mode'];
     if (json['language'] != null) {

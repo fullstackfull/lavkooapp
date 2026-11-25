@@ -329,7 +329,7 @@ class CheckoutController with ChangeNotifier {
       // In a real implementation, this should be called when user clicks "Proceed to Checkout"
       MetaTrackingService().logInitiateCheckout(
         value: 0.0, // You might want to calculate the actual total value
-        currency: PriceConverter.currencyCodeToSend(Get.context!) ?? 'SYP',
+        currency: PriceConverter.analyticsCurrencyCode(Get.context),
         numItems: 1, // You might want to calculate the actual number of items
       );
 
@@ -822,7 +822,7 @@ class CheckoutController with ChangeNotifier {
       // ✅ Meta Tracking: Initiate Checkout event for digital payment
       MetaTrackingService().logInitiateCheckout(
         value: 0.0, // You might want to calculate the actual total value
-        currency: PriceConverter.currencyCodeToSend(Get.context!) ?? 'SYP',
+        currency: PriceConverter.analyticsCurrencyCode(Get.context),
         numItems: 1, // You might want to calculate the actual number of items
       );
 

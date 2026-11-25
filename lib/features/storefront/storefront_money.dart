@@ -29,20 +29,28 @@ class StorefrontMoney {
           {required bool enabled}) =>
       enabled && storefront.code != StorefrontCountry.defaultCountry.code;
 
-  /// The decimals of a currency: three for KWD, BHD and OMR, two for every other.
-  static int decimalsOf(String currencyCode) =>
+  /// The decimals an amount of a currency is written with: the number the server [named] for the money of this request when it named one,
+  /// else three for KWD, BHD and OMR and two for every other currency.
+  ///
+  /// The server is preferred because the decimals a market's money is written with are the shop's setting (`decimal_point_settings`, which
+  /// `StorefrontCurrency` answers per market), while the table below is this app's copy of ISO 4217. Two copies of one rule drift, and the
+  /// client is the copy that drifts: a currency neither table knows, or decimals an operator changes, would be written one way by the
+  /// website and the server's own text and another way here. The table is the answer for every shop that sends no block, which is every
+  /// shop today.
+  static int decimalsOf(String currencyCode, {int? named}) =>
+      named ??
       _decimalsByCurrency[currencyCode.trim().toUpperCase()] ??
       _defaultDecimals;
 
   /// [amount] with the decimals of [currencyCode] and a comma between thousands, without a symbol. A missing, infinite or not-a-number
   /// amount is written as zero, and an amount that rounds to zero carries no minus sign.
   static String formatWithoutSymbol(double? amount,
-      {required String currencyCode}) {
-    final int decimals = decimalsOf(currencyCode);
+      {required String currencyCode, int? decimals}) {
+    final int places = decimalsOf(currencyCode, named: decimals);
     final double value =
         amount == null || amount.isNaN || amount.isInfinite ? 0 : amount;
 
-    final String fixed = value.abs().toStringAsFixed(decimals);
+    final String fixed = value.abs().toStringAsFixed(places);
     final List<String> parts = fixed.split('.');
     final String whole = _groupThousands(parts.first);
     final String number = parts.length > 1 ? '$whole.${parts[1]}' : whole;
@@ -56,9 +64,10 @@ class StorefrontMoney {
   static String format(double? amount,
       {required String currencyCode,
       String? symbol,
-      bool symbolOnRight = false}) {
-    final String number =
-        formatWithoutSymbol(amount, currencyCode: currencyCode);
+      bool symbolOnRight = false,
+      int? decimals}) {
+    final String number = formatWithoutSymbol(amount,
+        currencyCode: currencyCode, decimals: decimals);
     final String trimmed = symbol?.trim() ?? '';
     final String mark =
         trimmed.isEmpty ? currencyCode.trim().toUpperCase() : trimmed;

@@ -1,10 +1,18 @@
 name: CI
 
 on:
+  # EVERY pull request, whatever branch it is based on. This used to read
+  # `branches: [main]`, and the work of this repository is stacked -- a pull
+  # request based on another pull request's branch matched nothing, so it got a
+  # run only if its head happened to be pushed to a gcc/** branch, and #4 got no
+  # run at all. The run that says something is the one on the change as it will
+  # be merged, so the base filter is gone.
+  pull_request:
   push:
     branches: ['gcc/**']
-  pull_request:
-    branches: [main]
+  # So a run can be asked for on a branch without pushing an empty commit to get
+  # one.
+  workflow_dispatch:
 
 jobs:
   storefront-header:
@@ -133,6 +141,32 @@ jobs:
           test/marketing_consent_store_test.dart
           test/marketing_consent_sheet_test.dart
           test/push_topic_inventory_test.dart
+          test/analytics_currency_test.dart
+          test/storefront_money_block_test.dart
+          lib/features/dynamic_theme/theme_preview.dart
+          lib/features/dynamic_theme/widgets/theme_draft_notice.dart
+          test/theme_draft_preview_test.dart
+          lib/data/services/deep_link_resolver.dart
+          test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
+
+      # price_converter.dart carries findings of its own from before this work (a
+      # commented-out writer kept for reference, and two catch clauses that do not
+      # read their exception), so it cannot join the list above. It is analyzed for
+      # errors only, which is what a wrong name or argument in the accessors this
+      # branch added to it would be. The whole-project job analyzes it as well.
+      # config_model.dart is the shop's whole config answer and carries findings of
+      # its own from long before this work, so it cannot join the strict list either.
+      # theme_schema.dart and dynamic_home_view.dart carry findings of their own
+      # from before this work as well, so they are analyzed for errors only, which
+      # is what a wrong name or argument in the lines added to them would be.
+      - name: Analyze the price helper, the config model and the theme page for errors only
+        run: >
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+          lib/helper/price_converter.dart
+          lib/features/splash/domain/models/config_model.dart
+          lib/features/dynamic_theme/domain/models/theme_schema.dart
+          lib/features/dynamic_theme/screens/dynamic_home_view.dart
 
       # cart_screen.dart already carries two analyzer warnings of its own (two
       # unused locals), so it cannot join the list above. It is analyzed for
@@ -217,9 +251,16 @@ jobs:
           test/storefront_topic_subscriber_test.dart
           test/marketing_consent_store_test.dart
           test/push_topic_inventory_test.dart
+          test/analytics_currency_test.dart
+          test/storefront_money_block_test.dart
+          test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
-      # hold in both settings.
+      # hold in both settings. deep_link_resolver_test.dart is here as well although
+      # it names the storefront switch itself for its new cases: the cases that were
+      # already there call the reader with the build's own default, and they have to
+      # answer the same in a build that knows about markets.
       - name: Test storefront with storefronts on
         run: >
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true
@@ -248,6 +289,10 @@ jobs:
           test/storefront_topic_subscriber_test.dart
           test/marketing_consent_store_test.dart
           test/push_topic_inventory_test.dart
+          test/analytics_currency_test.dart
+          test/storefront_money_block_test.dart
+          test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
 
       # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
       # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
@@ -390,6 +435,17 @@ jobs:
       # iOS Firebase settings. Nothing here reads the storefronts flag, so the file runs once.
       - name: J-17.4 the update screen offers a store page when the shop configures no link
         run: flutter test test/update_target_test.dart
+
+      # J-V1 criterion 2: the app sends a signed preview token, renders the draft the server
+      # answers, and never keeps one. Nothing here reads the storefronts flag; what IS a
+      # compile-time constant is whether the build accepts a preview token at all, so the file is
+      # run in both settings of THAT flag. The one group that asserts the constant names which
+      # build it is talking about and skips in the other; every other group drives the switch
+      # through the `enabled` parameter, so both answers are exercised by either run.
+      - name: J-V1.2 the app asks for a draft theme, renders it, and never keeps one
+        run: |
+          flutter test test/theme_draft_preview_test.dart
+          flutter test --dart-define=GCC_THEME_PREVIEW_ENABLED=true test/theme_draft_preview_test.dart
 
   # J-18: the whole project is analyzed and no finding may be added. The job above analyzes only the files a branch changes, so a finding added
   # anywhere else went unseen: 255 findings were recorded as the state of the app on 2026-11-18. The number is in tool/analyze_baseline.txt; the
