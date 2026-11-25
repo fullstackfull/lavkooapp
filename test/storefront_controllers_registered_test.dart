@@ -26,6 +26,8 @@ import 'package:syriapharmacy/features/product/controllers/seller_product_contro
 import 'package:syriapharmacy/features/product/domain/services/product_service_interface.dart';
 import 'package:syriapharmacy/features/product/domain/services/seller_product_service_interface.dart';
 import 'package:syriapharmacy/features/product_details/controllers/product_details_controller.dart';
+import 'package:syriapharmacy/features/profile/controllers/profile_contrroller.dart';
+import 'package:syriapharmacy/features/profile/domain/services/profile_service_interface.dart';
 import 'package:syriapharmacy/features/product_details/domain/services/product_details_service_interface.dart';
 import 'package:syriapharmacy/features/restock/controllers/restock_controller.dart';
 import 'package:syriapharmacy/features/restock/domain/services/restock_service_interface.dart';
@@ -64,6 +66,8 @@ class _FlashDealService extends Fake implements FlashDealServiceInterface {}
 class _ThemeService extends Fake implements DynamicThemeServiceInterface {}
 
 class _ProductService extends Fake implements ProductServiceInterface {}
+
+class _ProfileService extends Fake implements ProfileServiceInterface {}
 
 class _SellerProductService extends Fake
     implements SellerProductServiceInterface {}
@@ -159,6 +163,10 @@ void main() {
         LoyaltyPointController(
             loyaltyPointServiceInterface: _LoyaltyPointService(),
             storefrontChangeNotifier: notifier),
+    'ProfileController': (StorefrontChangeNotifier notifier) =>
+        ProfileController(
+            profileServiceInterface: _ProfileService(),
+            storefrontChangeNotifier: notifier),
     'WalletController': (StorefrontChangeNotifier notifier) => WalletController(
         walletServiceInterface: _WalletService(),
         storefrontChangeNotifier: notifier),
@@ -196,7 +204,7 @@ void main() {
   }
 
   test('every one of them is the one the inventory says is told', () {
-    expect(builds, hasLength(20));
+    expect(builds, hasLength(21), reason: 'ProfileController joined them: it holds the two balances the account page shows (J-09)');
   });
 
   test(

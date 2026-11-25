@@ -246,12 +246,35 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
   /// The customer is on another storefront: the shop's config, with its currencies and payment methods, is asked for again, the way the
   /// home does on every refresh. What is held stays on screen until the new answer replaces it, because the app cannot run without a
   /// config; it is never dropped, only replaced, and an answer for the storefront the customer left is not used.
+  ///
+  /// The LEGAL TEXTS are asked for again too (J-15). The server already serves each storefront its own published pages -- the terms, the
+  /// privacy policy, the refund and the shipping policy go through `StorefrontLegalPages::listShownInStorefront` before
+  /// `/api/v1/business-pages` answers -- but the app loaded them ONCE, from the dashboard, so a customer who changed market went on
+  /// reading the terms of the market they left. A legal text is the one thing in the app that must never be the wrong market's.
+  ///
+  /// They ARE dropped first, unlike the config: a stale policy on screen is worse than an empty list, and the screens that read them are
+  /// opened from a menu rather than being the app's own frame.
   @override
   Future<void> onStorefrontChanged(StorefrontChange change) async {
-    final BuildContext? context = Get.context;
-    if (context == null) return;
+    // The legal texts are dropped whether or not a screen is up: a policy of the market the customer left must not survive the change,
+    // and unlike the config it is not something the app needs in hand to run.
+    final bool reloadLegalTexts = _defaultBusinessPages != null || _businessPages != null;
+    _defaultBusinessPages = null;
+    _businessPages = null;
+    notifyListeners();
 
-    await initConfig(context, null, null);
+    final BuildContext? context = Get.context;
+
+    if (context != null) {
+      await initConfig(context, null, null);
+    }
+
+    if (reloadLegalTexts) {
+      await Future.wait(<Future<void>>[
+        getBusinessPagesList('default'),
+        getBusinessPagesList('pages'),
+      ]);
+    }
   }
 
   void setFirstTimeConnectionCheck(bool isChecked) {
