@@ -14,8 +14,16 @@
 	     The matching half is served from https://pharmacyksa.com/.well-known/apple-app-site-association,
 	     which is generated from the shop's deep-link settings and currently carries an appID of "."
 	     -- see docs/release-readiness.md, which cannot be fixed from this repository. -->
+	<!-- lavkoo.com is the host this app actually talks to (AppConstants.baseUrl) and the one the
+	     Android filter verifies, so a universal link to the shop could not open the app on iOS at
+	     all while only the old host was claimed. ADDED beside the old one rather than replacing it:
+	     iOS fetches an association file from every host named here and a host that serves none is
+	     simply not associated, so nothing that works today stops working. Dropping
+	     pharmacyksa.com, and the broken appID in the file it serves, are the owner's calls and
+	     neither can be verified from this repository. -->
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>applinks:lavkoo.com</string>
 		<string>applinks:pharmacyksa.com</string>
 	</array>
 </dict>

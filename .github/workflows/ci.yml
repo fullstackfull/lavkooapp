@@ -138,6 +138,8 @@ jobs:
           lib/features/dynamic_theme/theme_preview.dart
           lib/features/dynamic_theme/widgets/theme_draft_notice.dart
           test/theme_draft_preview_test.dart
+          lib/data/services/deep_link_resolver.dart
+          test/deep_link_resolver_test.dart
 
       # price_converter.dart carries findings of its own from before this work (a
       # commented-out writer kept for reference, and two catch clauses that do not
@@ -242,9 +244,13 @@ jobs:
           test/push_topic_inventory_test.dart
           test/analytics_currency_test.dart
           test/storefront_money_block_test.dart
+          test/deep_link_resolver_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
-      # hold in both settings.
+      # hold in both settings. deep_link_resolver_test.dart is here as well although
+      # it names the storefront switch itself for its new cases: the cases that were
+      # already there call the reader with the build's own default, and they have to
+      # answer the same in a build that knows about markets.
       - name: Test storefront with storefronts on
         run: >
           flutter test --dart-define=GCC_STOREFRONTS_ENABLED=true
@@ -275,6 +281,7 @@ jobs:
           test/push_topic_inventory_test.dart
           test/analytics_currency_test.dart
           test/storefront_money_block_test.dart
+          test/deep_link_resolver_test.dart
 
       # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
       # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
