@@ -107,10 +107,15 @@ class DynamicThemeRepository implements DynamicThemeRepositoryInterface {
           'If-None-Match': '"$knownChecksum"',
       };
 
+      // Encoded, so a token can never smuggle a second query parameter into the request. Empty when
+      // no draft was asked for, which leaves the URL byte for byte the one this app has always sent.
+      final String preview = previewToken == null
+          ? ''
+          : '&${ThemePreview.requestKey}=${Uri.encodeQueryComponent(previewToken)}';
+
       final storefront = StorefrontScope.current;
       final response = await dioClient.get(
-        '${AppConstants.themeHomeUri}?page=$page&device=${deviceClass()}'
-        '${previewToken == null ? '' : '&${ThemePreview.requestKey}=${Uri.encodeQueryComponent(previewToken)}'}',
+        '${AppConstants.themeHomeUri}?page=$page&device=${deviceClass()}$preview',
         options: Options(
           headers: headers,
           // 304 is the success case this request is built around, and 404 is a real ANSWER
