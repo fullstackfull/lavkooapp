@@ -52,7 +52,10 @@ jobs:
           test/api_cache_key_test.dart
           test/api_error_handler_storefront_test.dart
           test/shipping_refusal_test.dart
+          test/customs_duty_test.dart
           lib/features/shipping/shipping_refusal.dart
+          lib/features/shipping/customs_duty.dart
+          lib/features/checkout/widgets/customs_duty_amount_widget.dart
           test/checkout_sale_gate_test.dart
           test/dio_cache_storefront_test.dart
           test/price_converter_storefront_test.dart
@@ -174,6 +177,7 @@ jobs:
           test/storefront_choice_test.dart
           test/api_error_handler_storefront_test.dart
           test/shipping_refusal_test.dart
+          test/customs_duty_test.dart
           test/checkout_sale_gate_test.dart
           test/loyalty_earn_rate_from_config_test.dart
           test/localization_keys_test.dart

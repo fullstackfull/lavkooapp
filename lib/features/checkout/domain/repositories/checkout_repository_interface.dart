@@ -14,6 +14,9 @@ abstract class CheckoutRepositoryInterface implements RepositoryInterface {
     String? idempotencyKey,
   });
 
+  /// What the shop quotes for customs duty on this basket (H1-09).
+  Future<dynamic> customsDuty(String? addressId);
+
   Future<dynamic> offlinePaymentPlaceOrder(
       String? addressID,
       String? couponCode,

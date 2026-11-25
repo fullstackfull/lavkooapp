@@ -5,6 +5,9 @@ import 'package:syriapharmacy/features/checkout/domain/services/checkout_service
 import 'package:syriapharmacy/features/offline_payment/domain/models/offline_payment_model.dart';
 import 'package:syriapharmacy/helper/price_converter.dart';
 import 'package:syriapharmacy/features/storefront/controllers/storefront_controller.dart';
+import 'package:syriapharmacy/features/address/controllers/address_controller.dart';
+import 'package:syriapharmacy/features/address/domain/models/address_model.dart';
+import 'package:syriapharmacy/features/shipping/customs_duty.dart';
 import 'package:syriapharmacy/features/shipping/shipping_refusal.dart';
 import 'package:syriapharmacy/features/storefront/storefront_refusal.dart';
 import 'package:syriapharmacy/helper/api_checker.dart';
@@ -138,6 +141,24 @@ class CheckoutController with ChangeNotifier {
   // ============================================================
   // PLACE ORDER
   // ============================================================
+
+  CustomsDuty? _customsDuty;
+
+  /// What the shop quotes for customs duty on this basket (H1-09). Null when there is nothing to say, which is every basket that crosses
+  /// no border, and then the screen draws no line: a line about duty on an order that never approaches a border is noise.
+  CustomsDuty? get customsDuty => _customsDuty;
+
+  /// Asks the shop what the duty on this basket comes to, for the address the customer is checking out with.
+  ///
+  /// A failure leaves it null and says nothing. The refusal that stops an order on a route nobody can quote is the server's to make at
+  /// placement -- it already makes it -- so a quote that could not be fetched must not become a second, softer refusal here.
+  Future<void> getCustomsDuty(String? addressId) async {
+    final ApiResponseModel apiResponse = await checkoutServiceInterface.customsDuty(addressId);
+
+    _customsDuty = apiResponse.response?.statusCode == 200 ? CustomsDuty.fromBody(apiResponse.response?.data) : null;
+
+    notifyListeners();
+  }
 
   Future<void> placeOrder({
     required Function callback,
@@ -445,6 +466,18 @@ class CheckoutController with ChangeNotifier {
     sameAsBilling = true;
 
     notifyListeners();
+
+    // The duty depends on where the order is going, so it is asked when that is chosen rather than when the screen opens -- which is also
+    // the only moment at which there is an address to ask about (H1-09).
+    _askWhatTheDutyComesTo(index);
+  }
+
+  /// Asks about the address at [index] of the customer's own list, which is the list the checkout screen reads.
+  void _askWhatTheDutyComesTo(int index) {
+    final List<AddressModel>? addresses = Provider.of<AddressController>(Get.context!, listen: false).addressList;
+    final bool exists = addresses != null && index >= 0 && index < addresses.length;
+
+    getCustomsDuty(exists ? addresses[index].id?.toString() : null);
   }
 
   // ============================================================
