@@ -1,10 +1,18 @@
 name: CI
 
 on:
-  push:
-    branches: ['gcc/**']
+  # EVERY pull request, whatever branch it is based on. This used to read
+  # `branches: [main]`, and the work of this repository is stacked -- a pull
+  # request based on another pull request's branch matched nothing, so it got a
+  # run only if its head happened to be pushed to a gcc/** branch, and #4 got no
+  # run at all. The run that says something is the one on the change as it will
+  # be merged, so the base filter is gone.
   pull_request:
-    branches: [main]
+  push:
+    branches: ['gcc/**', 'wt/**']
+  # So a run can be asked for on a branch without pushing an empty commit to get
+  # one.
+  workflow_dispatch:
 
 jobs:
   storefront-header:
@@ -140,6 +148,7 @@ jobs:
           test/theme_draft_preview_test.dart
           lib/data/services/deep_link_resolver.dart
           test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
 
       # price_converter.dart carries findings of its own from before this work (a
       # commented-out writer kept for reference, and two catch clauses that do not
@@ -245,6 +254,7 @@ jobs:
           test/analytics_currency_test.dart
           test/storefront_money_block_test.dart
           test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
 
       # The groups that run only with the flag on, and everything new that has to
       # hold in both settings. deep_link_resolver_test.dart is here as well although
@@ -282,6 +292,7 @@ jobs:
           test/analytics_currency_test.dart
           test/storefront_money_block_test.dart
           test/deep_link_resolver_test.dart
+          test/ci_runs_on_every_pull_request_test.dart
 
       # The pins of the criteria below are tests of the source or of a controller, and say in their own file what each one covers and what it does
       # not. A test that needs a storefront to be browse-only runs in both settings of the build flag, because the flag is a compile-time
