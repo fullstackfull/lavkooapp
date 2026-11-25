@@ -1,4 +1,5 @@
 import 'package:syriapharmacy/data/model/api_response.dart';
+import 'package:syriapharmacy/features/address/domain/models/address_catalog_models.dart';
 import 'package:syriapharmacy/features/address/domain/models/address_model.dart';
 import 'package:syriapharmacy/features/address/domain/models/label_model.dart';
 import 'package:syriapharmacy/features/address/domain/repositories/address_repository_interface.dart';
@@ -78,4 +79,12 @@ class AddressService implements AddressServiceInterface {
         await addressRepoInterface.getDeliveryRestrictedZipList();
     return apiResponse;
   }
+
+  @override
+  Future<List<AddressRegionModel>> getAddressRegions() =>
+      addressRepoInterface.getAddressRegions();
+
+  @override
+  Future<List<AddressCityModel>> getAddressCities({int? regionId}) =>
+      addressRepoInterface.getAddressCities(regionId: regionId);
 }

@@ -3272,5 +3272,11 @@
   "deep_link_other_market_title": "هذا الرابط لمتجر آخر",
   "deep_link_other_market_body": "يفتح هذا الرابط صفحة من متجر {store}، وله منتجاته وأسعاره وسلته الخاصة. هل تريد فتحه هناك أم البقاء في متجرك الحالي؟",
   "deep_link_open_there": "افتحه هناك",
-  "deep_link_stay_here": "ابق هنا"
+  "deep_link_stay_here": "ابق هنا",
+  "address_region": "المنطقة",
+  "address_city_from_catalog": "المدينة",
+  "address_district": "الحي",
+  "national_address": "العنوان الوطني",
+  "national_address_hint": "الرمز المختصر للعنوان الوطني",
+  "address_catalog_choice_required": "اختر واحدًا"
 }

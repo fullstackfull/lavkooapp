@@ -14,6 +14,7 @@ import 'package:syriapharmacy/localization/language_constrants.dart';
 import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/features/auth/controllers/auth_controller.dart';
 import 'package:syriapharmacy/features/address/controllers/address_controller.dart';
+import 'package:syriapharmacy/features/address/widgets/address_catalog_fields_widget.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/theme/controllers/theme_controller.dart';
 import 'package:syriapharmacy/utill/custom_themes.dart';
@@ -682,7 +683,11 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                             ),
                             const SizedBox(
                                 height: Dimensions.paddingSizeDefaultAddress),
-                            const SizedBox(),
+                            // The central catalogue's region, city, district and National Address (J-14).
+                            // Draws nothing at all unless this build asks for the catalogue AND the store
+                            // has rows in it, so the form above is untouched on every installation that
+                            // has not imported one.
+                            AddressCatalogFieldsWidget(existing: widget.address),
                             const SizedBox(
                                 height: Dimensions.paddingSizeDefaultAddress),
                             Container(
@@ -742,6 +747,16 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                                                 : locationController
                                                     .position.longitude
                                                     .toString(),
+                                            // All four are null unless the catalogue was offered and used,
+                                            // and a null is left out of the body rather than sent as one.
+                                            regionId: addressController
+                                                .chosenRegion?.id,
+                                            cityId: addressController
+                                                .chosenCity?.id,
+                                            district: addressController
+                                                .addressDistrict,
+                                            nationalAddress: addressController
+                                                .nationalAddress,
                                           );
 
                                           if (widget.isEnableUpdate) {

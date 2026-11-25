@@ -3216,5 +3216,11 @@
   "deep_link_other_market_title": "This link is for another store",
   "deep_link_other_market_body": "This link opens a page of the {store} store, which has its own products, prices and cart. Open it there, or stay where you are?",
   "deep_link_open_there": "Open there",
-  "deep_link_stay_here": "Stay here"
+  "deep_link_stay_here": "Stay here",
+  "address_region": "Region",
+  "address_city_from_catalog": "City",
+  "address_district": "District",
+  "national_address": "National Address",
+  "national_address_hint": "Short national address code",
+  "address_catalog_choice_required": "Choose one"
 }
