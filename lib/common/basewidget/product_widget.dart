@@ -18,6 +18,8 @@ import 'package:syriapharmacy/features/product_details/widgets/cart_bottom_sheet
 import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:syriapharmacy/features/product_details/controllers/product_details_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:syriapharmacy/features/product_details/domain/models/product_details_model.dart';
+import 'package:syriapharmacy/main.dart';
 import 'package:syriapharmacy/features/splash/controllers/splash_controller.dart';
 import 'package:syriapharmacy/utill/app_constants.dart';
 
@@ -45,14 +47,14 @@ class ProductWidget extends StatefulWidget {
   final ProductCardStyle style;
   const ProductWidget(
       {super.key,
-      required this.productModel,
-      this.productNameLine = 1,
-      this.margin,
-      this.sellerNavigationModel,
-      this.heroTag,
-      this.showCartButton = true,
-      this.rank,
-      this.style = ProductCardStyle.standard});
+        required this.productModel,
+        this.productNameLine = 1,
+        this.margin,
+        this.sellerNavigationModel,
+        this.heroTag,
+        this.showCartButton = true,
+        this.rank,
+        this.style = ProductCardStyle.standard});
 
   @override
   State<ProductWidget> createState() => _ProductWidgetState();
@@ -103,304 +105,304 @@ class _ProductWidgetState extends State<ProductWidget> {
         16;
 
     return LayoutBuilder(builder: (context, cardConstraints) {
-    final double? imageCap = cardConstraints.maxHeight.isFinite
-        ? (cardConstraints.maxHeight - (margin * 2) - 2 - detailsHeight)
-            .clamp(56.0, double.infinity)
-            .toDouble()
-        : null;
+      final double? imageCap = cardConstraints.maxHeight.isFinite
+          ? (cardConstraints.maxHeight - (margin * 2) - 2 - detailsHeight)
+          .clamp(56.0, double.infinity)
+          .toDouble()
+          : null;
 
-    return InkWell(
-      onTap: () {
-        RouterHelper.getProductDetailsRoute(
-          action: RouteAction.push,
-          productId: widget.productModel.id,
-          slug: widget.productModel.slug,
-          heroTag: finalHeroTag,
-          image: widget.productModel.thumbnailFullUrl?.path,
-        );
-      },
-      child: Container(
-        margin:
-            EdgeInsets.all(widget.margin ?? Dimensions.paddingSizeExtraSmall),
-        // Direction B card: hairline ink border, flat white field — no drop shadow.
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: BrandColors.hairline, width: 1),
-          color: Theme.of(context).highlightColor,
-        ),
-        child: Stack(children: [
-          SingleChildScrollView(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              LayoutBuilder(
-                  builder: (context, boxConstraint) => ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          topRight: Radius.circular(12),
-                        ),
-                        child: Stack(children: [
-                          Hero(
-                            tag: finalHeroTag,
-                            child: ColoredBox(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white.withValues(alpha: .04)
-                                  : BrandColors.surface,
-                              // Packaged products sit contained on the lilac
-                              // field, per the approved photography treatment.
-                              child: SizedBox(
-                                height: imageCap == null
-                                    ? boxConstraint.maxWidth
-                                    : (boxConstraint.maxWidth < imageCap
-                                        ? boxConstraint.maxWidth
-                                        : imageCap),
-                                width: boxConstraint.maxWidth,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: CustomImageWidget(
-                                    key: productImageKey,
-                                    image:
-                                        '${widget.productModel.thumbnailFullUrl?.path}',
-                                    fit: BoxFit.contain,
-                                  ),
+      return InkWell(
+        onTap: () {
+          RouterHelper.getProductDetailsRoute(
+            action: RouteAction.push,
+            productId: widget.productModel.id,
+            slug: widget.productModel.slug,
+            heroTag: finalHeroTag,
+            image: widget.productModel.thumbnailFullUrl?.path,
+          );
+        },
+        child: Container(
+          margin:
+          EdgeInsets.all(widget.margin ?? Dimensions.paddingSizeExtraSmall),
+          // Direction B card: hairline ink border, flat white field — no drop shadow.
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: BrandColors.hairline, width: 1),
+            color: Theme.of(context).highlightColor,
+          ),
+          child: Stack(children: [
+            SingleChildScrollView(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                LayoutBuilder(
+                    builder: (context, boxConstraint) => ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                      child: Stack(children: [
+                        Hero(
+                          tag: finalHeroTag,
+                          child: ColoredBox(
+                            color: Theme.of(context).brightness ==
+                                Brightness.dark
+                                ? Colors.white.withValues(alpha: .04)
+                                : BrandColors.surface,
+                            // Packaged products sit contained on the lilac
+                            // field, per the approved photography treatment.
+                            child: SizedBox(
+                              height: imageCap == null
+                                  ? boxConstraint.maxWidth
+                                  : (boxConstraint.maxWidth < imageCap
+                                  ? boxConstraint.maxWidth
+                                  : imageCap),
+                              width: boxConstraint.maxWidth,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: CustomImageWidget(
+                                  key: productImageKey,
+                                  image:
+                                  '${widget.productModel.thumbnailFullUrl?.path}',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),
                           ),
-                          if (imageBadge != null)
-                            // One pill rides the image's top-start corner, by the
-                            // approved priority: ink «#N» rank, magenta «−40%»
-                            // saving, or blue «جديد».
-                            PositionedDirectional(
-                              top: 7,
-                              start: 8,
-                              child: imageBadge,
-                            ),
-                          if (outOfStock) ...[
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.18),
-                                ),
-                                child: Center(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(30),
-                                    child: BackdropFilter(
-                                      filter:
-                                          ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Colors.black.withValues(alpha: 0.5),
-                                          borderRadius: BorderRadius.circular(30),
-                                          border: Border.all(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.15),
-                                            width: 0.8,
+                        ),
+                        if (imageBadge != null)
+                        // One pill rides the image's top-start corner, by the
+                        // approved priority: ink «#N» rank, magenta «−40%»
+                        // saving, or blue «جديد».
+                          PositionedDirectional(
+                            top: 7,
+                            start: 8,
+                            child: imageBadge,
+                          ),
+                        if (outOfStock) ...[
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.18),
+                              ),
+                              child: Center(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: BackdropFilter(
+                                    filter:
+                                    ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color:
+                                        Colors.black.withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.15),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 5,
+                                            height: 5,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFFF3B30),
+                                              shape: BoxShape.circle,
+                                            ),
                                           ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 5,
-                                              height: 5,
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFFFF3B30),
-                                                shape: BoxShape.circle,
-                                              ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            getTranslated(
+                                                'out_of_stock', context) ??
+                                                '',
+                                            style: textBold.copyWith(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              letterSpacing: 0.1,
                                             ),
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              getTranslated(
-                                                      'out_of_stock', context) ??
-                                                  '',
-                                              style: textBold.copyWith(
-                                                color: Colors.white,
-                                                fontSize: 10,
-                                                letterSpacing: 0.1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ]),
-                      )),
-            
-              // Product Details — the areas the card always reserves, so a
-              // longer name can never push the price or the button out of view.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    Dimensions.paddingSizeSmall, 6,
-                    Dimensions.paddingSizeSmall, Dimensions.paddingSizeSmall),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Brand and rating: «★ 4.8 (214) · CERAVE». Unreviewed
-                      // products keep the brand alone rather than «(0) 0.0»,
-                      // and the row keeps its height either way.
-                      SizedBox(
-                        height: 15,
-                        child: Row(children: [
-                          if ((widget.productModel.reviewCount ?? 0) > 0) ...[
-                            const Icon(Icons.star_rate_rounded,
-                                color: BrandColors.star, size: 13),
-                            const SizedBox(width: 2),
-                          ],
-                          Flexible(
-                            child: Text(
-                              _metaLine(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textRegular.copyWith(
-                                  fontSize: 10,
-                                  color: Theme.of(context).hintColor),
-                            ),
                           ),
-                        ]),
-                      ),
+                        ],
+                      ]),
+                    )),
 
-                      // The name gets its two lines on a standard card.
-                      SizedBox(
-                        height: 18.0 * nameLines,
-                        child: Text(widget.productModel.name ?? '',
-                            textAlign: TextAlign.start,
-                            style: textMedium.copyWith(
-                              fontSize: Dimensions.fontSizeDefault,
-                              height: 1.25,
-                              color:
-                                  Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                            maxLines: nameLines,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-
-                      // The selling price, always present and always the
-                      // loudest thing under the name.
-                      SizedBox(
-                        height: 21,
-                        child: Builder(
-                          builder: (context) {
-                            // ignore: unused_local_variable
-                            final splash = context.watch<SplashController>();
-                            return FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: AlignmentDirectional.centerStart,
-                              child: Text(
-                                PriceConverter.convertPrice(
-                                  context,
-                                  widget.productModel.unitPrice,
-                                  discountType: (widget.productModel
-                                                  .clearanceSale?.discountAmount ??
-                                              0) >
-                                          0
-                                      ? widget.productModel.clearanceSale
-                                          ?.discountType
-                                      : widget.productModel.discountType,
-                                  discount: (widget.productModel.clearanceSale
-                                                  ?.discountAmount ??
-                                              0) >
-                                          0
-                                      ? widget.productModel.clearanceSale
-                                          ?.discountAmount
-                                      : widget.productModel.discount,
-                                ),
-                                maxLines: 1,
-                                style: robotoBold.copyWith(
-                                    color: hasDiscount()
-                                        ? BrandColors.magenta
-                                        : Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.color,
-                                    fontSize: large ? 18 : 16),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      // What it used to cost, and how much is off.
-                      if (!compact)
+                // Product Details — the areas the card always reserves, so a
+                // longer name can never push the price or the button out of view.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      Dimensions.paddingSizeSmall, 6,
+                      Dimensions.paddingSizeSmall, Dimensions.paddingSizeSmall),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Brand and rating: «★ 4.8 (214) · CERAVE». Unreviewed
+                        // products keep the brand alone rather than «(0) 0.0»,
+                        // and the row keeps its height either way.
                         SizedBox(
                           height: 15,
-                          child: hasDiscount()
-                              ? Row(children: [
-                                  Flexible(
-                                    child: Text(
-                                      PriceConverter.convertPrice(context,
-                                          widget.productModel.unitPrice),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: titleRegular.copyWith(
-                                        color: Theme.of(context).hintColor,
-                                        decoration: TextDecoration.lineThrough,
-                                        decorationColor:
-                                            Theme.of(context).hintColor,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                                  if (_discountPercent() != null)
-                                    Container(
-                                      margin: const EdgeInsetsDirectional.only(
-                                          start: 5),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 5, vertical: 1),
-                                      decoration: BoxDecoration(
-                                        color: BrandColors.magenta
-                                            .withValues(alpha: .12),
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        '−${_discountPercent()}%',
-                                        style: textBold.copyWith(
-                                            fontSize: 9,
-                                            color: BrandColors.magenta),
-                                      ),
-                                    ),
-                                ])
-                              : const SizedBox.shrink(),
+                          child: Row(children: [
+                            if ((widget.productModel.reviewCount ?? 0) > 0) ...[
+                              const Icon(Icons.star_rate_rounded,
+                                  color: BrandColors.star, size: 13),
+                              const SizedBox(width: 2),
+                            ],
+                            Flexible(
+                              child: Text(
+                                _metaLine(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textRegular.copyWith(
+                                    fontSize: 10,
+                                    color: Theme.of(context).hintColor),
+                              ),
+                            ),
+                          ]),
                         ),
 
-                      // The purchase action: its own full-width row, so it is
-                      // never squeezed by a long price or a long name.
-                      if (!compact) ...[
-                        const SizedBox(height: 6),
+                        // The name gets its two lines on a standard card.
                         SizedBox(
-                          height: 30,
-                          child: outOfStock
-                              ? _soldOutButton(context)
-                              : (widget.showCartButton
-                                  ? _addStates(context)
-                                  : const SizedBox.shrink()),
+                          height: 18.0 * nameLines,
+                          child: Text(widget.productModel.name ?? '',
+                              textAlign: TextAlign.start,
+                              style: textMedium.copyWith(
+                                fontSize: Dimensions.fontSizeDefault,
+                                height: 1.25,
+                                color:
+                                Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                              maxLines: nameLines,
+                              overflow: TextOverflow.ellipsis),
                         ),
-                      ],
-                    ]),
-              ),
-            ]),
-          ),
-          Positioned(
-            top: Dimensions.paddingSizeSmall,
-            right: isLtr ? Dimensions.paddingSizeSmall : null,
-            left: !isLtr ? Dimensions.paddingSizeSmall : null,
-            child: FavouriteButtonWidget(
-              sellerNavigationModel: widget.sellerNavigationModel,
-              backgroundColor: Theme.of(context).cardColor,
-              productId: widget.productModel.id,
+
+                        // The selling price, always present and always the
+                        // loudest thing under the name.
+                        SizedBox(
+                          height: 21,
+                          child: Builder(
+                            builder: (context) {
+                              // ignore: unused_local_variable
+                              final splash = context.watch<SplashController>();
+                              return FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Text(
+                                  PriceConverter.convertPrice(
+                                    context,
+                                    widget.productModel.unitPrice,
+                                    discountType: (widget.productModel
+                                        .clearanceSale?.discountAmount ??
+                                        0) >
+                                        0
+                                        ? widget.productModel.clearanceSale
+                                        ?.discountType
+                                        : widget.productModel.discountType,
+                                    discount: (widget.productModel.clearanceSale
+                                        ?.discountAmount ??
+                                        0) >
+                                        0
+                                        ? widget.productModel.clearanceSale
+                                        ?.discountAmount
+                                        : widget.productModel.discount,
+                                  ),
+                                  maxLines: 1,
+                                  style: robotoBold.copyWith(
+                                      color: hasDiscount()
+                                          ? BrandColors.magenta
+                                          : Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.color,
+                                      fontSize: large ? 18 : 16),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+
+                        // What it used to cost, and how much is off.
+                        if (!compact)
+                          SizedBox(
+                            height: 15,
+                            child: hasDiscount()
+                                ? Row(children: [
+                              Flexible(
+                                child: Text(
+                                  PriceConverter.convertPrice(context,
+                                      widget.productModel.unitPrice),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: titleRegular.copyWith(
+                                    color: Theme.of(context).hintColor,
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor:
+                                    Theme.of(context).hintColor,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                              if (_discountPercent() != null)
+                                Container(
+                                  margin: const EdgeInsetsDirectional.only(
+                                      start: 5),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: BrandColors.magenta
+                                        .withValues(alpha: .12),
+                                    borderRadius:
+                                    BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    '−${_discountPercent()}%',
+                                    style: textBold.copyWith(
+                                        fontSize: 9,
+                                        color: BrandColors.magenta),
+                                  ),
+                                ),
+                            ])
+                                : const SizedBox.shrink(),
+                          ),
+
+                        // The purchase action: its own full-width row, so it is
+                        // never squeezed by a long price or a long name.
+                        if (!compact) ...[
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            height: 30,
+                            child: outOfStock
+                                ? _soldOutButton(context)
+                                : (widget.showCartButton
+                                ? _addStates(context)
+                                : const SizedBox.shrink()),
+                          ),
+                        ],
+                      ]),
+                ),
+              ]),
             ),
-          ),
-        ]),
-      ),
-    ).animateCardEntrance();
+            Positioned(
+              top: Dimensions.paddingSizeSmall,
+              right: isLtr ? Dimensions.paddingSizeSmall : null,
+              left: !isLtr ? Dimensions.paddingSizeSmall : null,
+              child: FavouriteButtonWidget(
+                sellerNavigationModel: widget.sellerNavigationModel,
+                backgroundColor: Theme.of(context).cardColor,
+                productId: widget.productModel.id,
+              ),
+            ),
+          ]),
+        ),
+      ).animateCardEntrance();
     });
   }
 
@@ -425,7 +427,7 @@ class _ProductWidgetState extends State<ProductWidget> {
       },
       child: Container(
         margin:
-            EdgeInsets.all(widget.margin ?? Dimensions.paddingSizeExtraSmall),
+        EdgeInsets.all(widget.margin ?? Dimensions.paddingSizeExtraSmall),
         padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
@@ -457,7 +459,7 @@ class _ProductWidgetState extends State<ProductWidget> {
                       child: CustomImageWidget(
                         key: productImageKey,
                         image:
-                            '${widget.productModel.thumbnailFullUrl?.path}',
+                        '${widget.productModel.thumbnailFullUrl?.path}',
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -526,18 +528,18 @@ class _ProductWidgetState extends State<ProductWidget> {
                           context,
                           widget.productModel.unitPrice,
                           discountType: (widget.productModel.clearanceSale
-                                          ?.discountAmount ??
-                                      0) >
-                                  0
+                              ?.discountAmount ??
+                              0) >
+                              0
                               ? widget
-                                  .productModel.clearanceSale?.discountType
+                              .productModel.clearanceSale?.discountType
                               : widget.productModel.discountType,
                           discount: (widget.productModel.clearanceSale
-                                          ?.discountAmount ??
-                                      0) >
-                                  0
+                              ?.discountAmount ??
+                              0) >
+                              0
                               ? widget
-                                  .productModel.clearanceSale?.discountAmount
+                              .productModel.clearanceSale?.discountAmount
                               : widget.productModel.discount,
                         ),
                         maxLines: 1,
@@ -608,19 +610,19 @@ class _ProductWidgetState extends State<ProductWidget> {
   /// An out-of-stock product keeps the action row so the grid stays level, and
   /// spends it saying the one thing that matters.
   Widget _soldOutButton(BuildContext context) => Container(
-        width: double.infinity,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Theme.of(context).disabledColor.withValues(alpha: .10),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Text(
-          getTranslated('out_of_stock', context) ?? '',
-          maxLines: 1,
-          style: robotoBold.copyWith(
-              fontSize: 11, color: Theme.of(context).hintColor),
-        ),
-      );
+    width: double.infinity,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: Theme.of(context).disabledColor.withValues(alpha: .10),
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Text(
+      getTranslated('out_of_stock', context) ?? '',
+      maxLines: 1,
+      style: robotoBold.copyWith(
+          fontSize: 11, color: Theme.of(context).hintColor),
+    ),
+  );
 
   /// «★ 4.8 (214) · BRAND», «BRAND» alone when unreviewed, or nothing.
   String _metaLine() {
@@ -655,14 +657,14 @@ class _ProductWidgetState extends State<ProductWidget> {
   }
 
   Widget _badgePill(String text, Color color) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(text,
-            style: textBold.copyWith(fontSize: 10, color: Colors.white)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(text,
+        style: textBold.copyWith(fontSize: 10, color: Colors.white)),
+  );
 
   bool _isNewArrival() {
     final created = DateTime.tryParse(widget.productModel.createdAt ?? '');
@@ -749,65 +751,65 @@ class _ProductWidgetState extends State<ProductWidget> {
         child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-          // Same order as the cart screen's own stepper — decrement at the
-          // reading edge — so one gesture never means two different things.
-          // At the minimum it turns into the cart screen's delete affordance
-          // instead of silently dropping the line.
-          InkWell(
-            onTap: () {
-              if (busy) return;
-              // The list re-indexes on every cart refresh: resolve this row's
-              // position now, not at build time.
-              final int live =
+              // Same order as the cart screen's own stepper — decrement at the
+              // reading edge — so one gesture never means two different things.
+              // At the minimum it turns into the cart screen's delete affordance
+              // instead of silently dropping the line.
+              InkWell(
+                onTap: () {
+                  if (busy) return;
+                  // The list re-indexes on every cart refresh: resolve this row's
+                  // position now, not at build time.
+                  final int live =
                   cart.cartList.indexWhere((row) => row.id == item.id);
-              if (live == -1) return;
-              if (quantity > minQty) {
-                cart.updateCartProductQuantity(
-                    item.id, quantity - 1, context, false, live);
-              } else {
-                cart.removeFromCartAPI(item.id, live);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-              child: quantity > minQty
-                  ? Text('−',
+                  if (live == -1) return;
+                  if (quantity > minQty) {
+                    cart.updateCartProductQuantity(
+                        item.id, quantity - 1, context, false, live);
+                  } else {
+                    cart.removeFromCartAPI(item.id, live);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                  child: quantity > minQty
+                      ? Text('−',
                       style: robotoBold.copyWith(
                           fontSize: 15, color: Theme.of(context).hintColor))
-                  : Icon(Icons.delete_outline_rounded,
+                      : Icon(Icons.delete_outline_rounded,
                       size: 15, color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            child: Text('$quantity',
-                style: robotoBold.copyWith(
-                    fontSize: 13,
-                    color: Theme.of(context).textTheme.bodyLarge?.color)),
-          ),
-          InkWell(
-            onTap: () {
-              if (busy) return;
-              final int live =
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Text('$quantity',
+                    style: robotoBold.copyWith(
+                        fontSize: 13,
+                        color: Theme.of(context).textTheme.bodyLarge?.color)),
+              ),
+              InkWell(
+                onTap: () {
+                  if (busy) return;
+                  final int live =
                   cart.cartList.indexWhere((row) => row.id == item.id);
-              if (live == -1) return;
-              if (digital || maxQty == null || quantity < maxQty) {
-                cart.updateCartProductQuantity(
-                    item.id, quantity + 1, context, true, live);
-              } else {
-                showCustomSnackBarWidget(
-                    getTranslated('out_of_stock', context), context,
-                    snackBarType: SnackBarType.warning);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-              child: Text('＋',
-                  style: robotoBold.copyWith(
-                      fontSize: 15, color: BrandColors.primary)),
-            ),
-          ),
-        ]),
+                  if (live == -1) return;
+                  if (digital || maxQty == null || quantity < maxQty) {
+                    cart.updateCartProductQuantity(
+                        item.id, quantity + 1, context, true, live);
+                  } else {
+                    showCustomSnackBarWidget(
+                        getTranslated('out_of_stock', context), context,
+                        snackBarType: SnackBarType.warning);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                  child: Text('＋',
+                      style: robotoBold.copyWith(
+                          fontSize: 15, color: BrandColors.primary)),
+                ),
+              ),
+            ]),
       );
     });
   }
@@ -819,8 +821,8 @@ class _ProductWidgetState extends State<ProductWidget> {
     final clearance = widget.productModel.clearanceSale;
     final bool clearanceWins = (clearance?.discountAmount ?? 0) > 0;
     final double amount =
-        ((clearanceWins ? clearance?.discountAmount : widget.productModel.discount) ?? 0)
-            .toDouble();
+    ((clearanceWins ? clearance?.discountAmount : widget.productModel.discount) ?? 0)
+        .toDouble();
     final String? type = clearanceWins
         ? clearance?.discountType
         : widget.productModel.discountType;
@@ -832,43 +834,60 @@ class _ProductWidgetState extends State<ProductWidget> {
     return (rounded > 0 && rounded <= 99) ? rounded : null;
   }
 
-  Future<void> _openCartSheet(BuildContext context) async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        // Back during the fetch must dismiss the loader, not the listing.
-        builder: (_) => const PopScope(
-            canPop: false,
-            child: Center(child: CircularProgressIndicator())));
-    final detailsController =
-        Provider.of<ProductDetailsController>(context, listen: false);
-    await detailsController.getProductDetails(context,
-        widget.productModel.id.toString(), widget.productModel.slug.toString());
-    if (!context.mounted) return;
-    Navigator.pop(context);
+  /// يمنع فتح أكثر من نافذة عند الضغط المتكرر على زر "أضف"
+  bool _openingCartSheet = false;
 
-    // A failed fetch leaves the PREVIOUS product in the controller; opening the
-    // sheet on it would add the wrong product to the cart.
-    if (detailsController.productDetailsModel?.id != widget.productModel.id) {
-      showCustomSnackBarWidget(
-          getTranslated('product_not_found', context) ?? '', context,
+  Future<void> _openCartSheet(BuildContext context) async {
+    if (_openingCartSheet) return;
+    _openingCartSheet = true;
+
+    // نحفظ الـ Navigator قبل أي انتظار: إذا اختفى هذا المنتج من القائمة أثناء التحميل
+    // يبقى بإمكاننا إغلاق مؤشر التحميل، فلا تعلق الشاشة عليه.
+    final NavigatorState navigator = Navigator.of(context);
+    final detailsController = Provider.of<ProductDetailsController>(context, listen: false);
+    bool loaderOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      // Back during the fetch must dismiss the loader, not the listing.
+      builder: (_) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
+    ).whenComplete(() => loaderOpen = false);
+
+    ProductDetailsModel? product;
+    try {
+      // جلب مستقل لا يغيّر صفحة التفاصيل المفتوحة (كان سبب تعليق التحميل)
+      product = await detailsController.fetchProductForCartSheet(widget.productModel.slug.toString());
+    } catch (e) {
+      debugPrint('Quick add fetch failed: $e');
+    } finally {
+      if (loaderOpen && navigator.mounted) navigator.pop();
+      _openingCartSheet = false;
+    }
+
+    final BuildContext sheetContext = context.mounted ? context : navigator.context;
+    if (!sheetContext.mounted) return;
+
+    // نتأكد أن المنتج الذي وصل هو نفسه الذي ضغط عليه المستخدم
+    if (product == null || product.id != widget.productModel.id) {
+      showCustomSnackBarWidget(getTranslated('product_not_found', sheetContext) ?? '', sheetContext,
           snackBarType: SnackBarType.error);
       return;
     }
 
+    final ProductDetailsModel sheetProduct = product;
     showModalBottomSheet(
-      context: context,
+      context: sheetContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (con) => CartBottomSheetWidget(
-        product: Provider.of<ProductDetailsController>(context, listen: false)
-            .productDetailsModel,
+        product: sheetProduct,
         callback: () {
           if (Navigator.of(con).canPop()) {
             Navigator.of(con).pop();
           }
-          showCustomSnackBarWidget(
-              getTranslated('added_to_cart', context)!, context,
+          final BuildContext msgContext = Get.context ?? con;
+          showCustomSnackBarWidget(getTranslated('added_to_cart', msgContext)!, msgContext,
               snackBarType: SnackBarType.success);
           AppConstants.runAddToCartAnimation?.call(productImageKey);
         },
@@ -879,5 +898,5 @@ class _ProductWidgetState extends State<ProductWidget> {
   bool hasDiscount() =>
       (widget.productModel.discount != null &&
           widget.productModel.discount! > 0) ||
-      (widget.productModel.clearanceSale?.discountAmount ?? 0) > 0;
+          (widget.productModel.clearanceSale?.discountAmount ?? 0) > 0;
 }
