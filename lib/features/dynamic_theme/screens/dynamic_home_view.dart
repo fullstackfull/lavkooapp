@@ -10,6 +10,8 @@ import 'package:syriapharmacy/features/dynamic_theme/domain/models/theme_schema.
 import 'package:syriapharmacy/features/dynamic_theme/engine/section_renderer_registry.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/theme_engine.dart';
 import 'package:syriapharmacy/features/dynamic_theme/engine/theme_style.dart';
+import 'package:syriapharmacy/features/dynamic_theme/widgets/theme_draft_notice.dart';
+import 'package:syriapharmacy/utill/dimensions.dart';
 
 /// The published home content, embedded INSIDE the app's own home screen.
 ///
@@ -156,6 +158,12 @@ class _DynamicHomeSectionsState extends State<DynamicHomeSections> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Nothing is added to the page unless the server answered a draft, which it does
+              // only for a request that carried a signed preview token (J-V1): for every shopper,
+              // on every build, this list is the one it has always been.
+              if (controller.isShowingADraft)
+                const ThemeDraftNotice(
+                    margin: EdgeInsets.all(Dimensions.paddingSizeSmall)),
               for (final section in [
                 ...controller.headerSections,
                 ...controller.sections,

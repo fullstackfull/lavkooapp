@@ -668,7 +668,7 @@ class CartScreenState extends State<CartScreen> {
                                             // ✅ Meta Tracking: Initiate Checkout
                                             MetaTrackingService().logInitiateCheckout(
                                               value: amount + tax + shippingAmount - freeDeliveryAmountDiscount,
-                                              currency: 'SYP',
+                                              currency: PriceConverter.analyticsCurrencyCode(context),
                                               numItems: totalQuantity,
                                             );
                                             int sellerGroupLenght = 0;

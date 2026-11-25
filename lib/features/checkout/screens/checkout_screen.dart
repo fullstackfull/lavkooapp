@@ -726,7 +726,7 @@ class CheckoutScreenState extends State<CheckoutScreen> {
         MetaTrackingService().logPurchase(
           orderId: orderId,
           amount: widget.totalOrderAmount + widget.shippingFee - widget.discount + widget.tax,
-          currency: PriceConverter.currencyCodeToSend(context) ?? 'SYP',
+          currency: PriceConverter.analyticsCurrencyCode(context),
           items: widget.cartList.map((cart) => {
             'product_id': cart.productId?.toString(),
             'product_name': cart.name,

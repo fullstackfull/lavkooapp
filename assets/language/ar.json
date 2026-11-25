@@ -219,6 +219,7 @@
   "could_not_open_payment_app": "لم نتمكن من فتح ذلك التطبيق. يرجى اختيار طريقة دفع أخرى.",
   "order_could_not_be_placed": "لم يتم تنفيذ طلبك. يرجى المحاولة مرة أخرى.",
   "storefront_browse_only_notice": "هذا المتجر متاح للتصفح فقط. الطلبات والمدفوعات غير متاحة حتى الآن.",
+  "theme_draft_preview_notice": "أنت تشاهد مسودة غير منشورة لهذه الصفحة. ولا يزال العملاء يشاهدون المتجر المنشور.",
   "storefront_maintenance_title": "هذا المتجر تحت الصيانة",
   "storefront_maintenance_body": "طلباتك ومدفوعاتك السابقة لا تتأثر. يرجى العودة قريبًا.",
   "storefront_maintenance_expected_back": "العودة المتوقعة",
