@@ -1,11 +1,13 @@
 // assets/lottie copy/chat.json assets/lottie copy/empty.json assets/lottie copy/fire.json assets/lottie copy/getnotification.json assets/lottie copy/succes.json assets/lottie copy/Whatsapp.json
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:syriapharmacy/services/meta_tracking_service.dart';
 import 'package:syriapharmacy/services/tracking_permission_helper.dart';
 
 import 'firebase_options.dart';
+
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -75,6 +77,7 @@ import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+
 import 'di_container.dart' as di;
 import 'features/splash/domain/models/config_model.dart';
 import 'helper/custom_delegate.dart';
@@ -90,8 +93,11 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback = (
+        X509Certificate cert,
+        String host,
+        int port,
+      ) => true;
   }
 }
 
@@ -112,9 +118,7 @@ Future<void> main() async {
   // Monitoring panel never hears about otherwise.
   AppHealthReporter.install();
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
 
   if (Firebase.apps.isEmpty) {
@@ -139,14 +143,15 @@ Future<void> main() async {
 
   flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.requestNotificationsPermission();
   String? path;
   NotificationBody? body;
 
   try {
-    final RemoteMessage? remoteMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
+    final RemoteMessage? remoteMessage = await FirebaseMessaging.instance
+        .getInitialMessage();
     if (remoteMessage != null) {
       body = NotificationHelper.convertNotification(remoteMessage.data);
     }
@@ -157,79 +162,113 @@ Future<void> main() async {
 
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (context) => NewsProvider()),
-      ChangeNotifierProvider(create: (context) => di.sl<CategoryController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ShopController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<FlashDealController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<FeaturedDealController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<BrandController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ProductController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<BannerController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<ProductDetailsController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<OnBoardingController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<AuthController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<SearchProductController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<CouponController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ChatController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<OrderController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<NotificationController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ProfileController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<WishListController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<SplashController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<DynamicThemeController>()),
-      // Not a ChangeNotifier: the registry never changes after startup. Provided so a renderer
-      // can be reached from the widget tree instead of the service locator, which is what keeps
-      // the renderers testable with a registry built for the test.
-      Provider<SectionRendererRegistry>(
-          create: (context) => di.sl<SectionRendererRegistry>()),
-      ChangeNotifierProvider(create: (context) => di.sl<CartController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<SupportTicketController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<LocalizationController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ThemeController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<GoogleSignInController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<FacebookLoginController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<AddressController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<WalletController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<CompareController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<CheckoutController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<LoyaltyPointController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<LocationController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ContactUsController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ShippingController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<OrderDetailsController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<RefundController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ReOrderController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<ReviewController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<SellerProductController>()),
-      ChangeNotifierProvider(create: (context) => di.sl<RestockController>()),
-      ChangeNotifierProvider(
-          create: (context) => di.sl<StorefrontController>()),
-      // What the storefront chooser does with a choice: it uses the controller above, so the screens that listen to it hear the choice.
-      Provider<StorefrontSwitcher>(
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => NewsProvider()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<CategoryController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<ShopController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<FlashDealController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<FeaturedDealController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<BrandController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<ProductController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<BannerController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<ProductDetailsController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<OnBoardingController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<AuthController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<SearchProductController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<CouponController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<ChatController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<OrderController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<NotificationController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<ProfileController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<WishListController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<SplashController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<DynamicThemeController>(),
+        ),
+        // Not a ChangeNotifier: the registry never changes after startup. Provided so a renderer
+        // can be reached from the widget tree instead of the service locator, which is what keeps
+        // the renderers testable with a registry built for the test.
+        Provider<SectionRendererRegistry>(
+          create: (context) => di.sl<SectionRendererRegistry>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<CartController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<SupportTicketController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<LocalizationController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<ThemeController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<GoogleSignInController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<FacebookLoginController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<AddressController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<WalletController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<CompareController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<CheckoutController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<LoyaltyPointController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<LocationController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<ContactUsController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<ShippingController>(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<OrderDetailsController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<RefundController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<ReOrderController>()),
+        ChangeNotifierProvider(create: (context) => di.sl<ReviewController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<SellerProductController>(),
+        ),
+        ChangeNotifierProvider(create: (context) => di.sl<RestockController>()),
+        ChangeNotifierProvider(
+          create: (context) => di.sl<StorefrontController>(),
+        ),
+        // What the storefront chooser does with a choice: it uses the controller above, so the screens that listen to it hear the choice.
+        Provider<StorefrontSwitcher>(
           create: (context) => StorefrontSwitcher(
-                storefrontController:
-                    Provider.of<StorefrontController>(context, listen: false),
-                applyHeaders: () => di.sl<DioClient>().updateHeader(null, null),
-                changeNotifier: di.sl<StorefrontChangeNotifier>(),
-              )),
-    ],
-    child: MyApp(body: body, route: path),
-  ));
+            storefrontController: Provider.of<StorefrontController>(
+              context,
+              listen: false,
+            ),
+            applyHeaders: () => di.sl<DioClient>().updateHeader(null, null),
+            changeNotifier: di.sl<StorefrontChangeNotifier>(),
+          ),
+        ),
+      ],
+      child: MyApp(body: body, route: path),
+    ),
+  );
 }
 
 /// The path the app was opened on, when it was opened by a link.
@@ -285,36 +324,49 @@ class _MyAppState extends State<MyApp> {
     return tc.darkTheme
         ? dark(
             primaryColor: tc.selectedPrimaryColor,
-            secondaryColor: tc.selectedSecondaryColor)
+            secondaryColor: tc.selectedSecondaryColor,
+          )
         : light(
             primaryColor: tc.selectedPrimaryColor,
-            secondaryColor: tc.selectedSecondaryColor);
+            secondaryColor: tc.selectedSecondaryColor,
+          );
   }
 
   void _loadData() async {
     if (widget.route != null) {
-      final AuthController authProvider =
-          Provider.of<AuthController>(context, listen: false);
+      final AuthController authProvider = Provider.of<AuthController>(
+        context,
+        listen: false,
+      );
 
       if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-        await Provider.of<ProfileController>(context, listen: false)
-            .getUserInfo(context);
+        await Provider.of<ProfileController>(
+          context,
+          listen: false,
+        ).getUserInfo(context);
       }
 
       if (mounted) {
-        Provider.of<SplashController>(context, listen: false)
-            .initConfig(context, (_) {}, (ConfigModel? configModel) async {
-          if (configModel != null) {
-            // A launch from a link loads the config here and may never reach the splash screen, which asks at its own start.
-            if (StorefrontConfig.enabled) {
-              unawaited(Provider.of<StorefrontSwitcher>(context, listen: false)
-                  .followTheServersList());
+        Provider.of<SplashController>(context, listen: false).initConfig(
+          context,
+          (_) {},
+          (ConfigModel? configModel) async {
+            if (configModel != null) {
+              // A launch from a link loads the config here and may never reach the splash screen, which asks at its own start.
+              if (StorefrontConfig.enabled) {
+                unawaited(
+                  Provider.of<StorefrontSwitcher>(
+                    context,
+                    listen: false,
+                  ).followTheServersList(),
+                );
+              }
+              if (authProvider.isLoggedIn()) {
+                await authProvider.updateToken(context);
+              }
             }
-            if (authProvider.isLoggedIn()) {
-              await authProvider.updateToken(context);
-            }
-          }
-        });
+          },
+        );
       }
     }
   }
@@ -331,57 +383,59 @@ class _MyAppState extends State<MyApp> {
       Provider.of<ThemeController>(context, listen: false),
     );
 
-    return Consumer<SplashController>(builder: (context, splashController, _) {
-      if ((widget.route != null && splashController.configModel == null)) {
-        // Splash screen — use ThemeController directly (no animation needed)
-        return Consumer<ThemeController>(
-          builder: (context, themeController, _) => Theme(
-            data: _resolveTheme(themeController),
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: MediaQuery(
-                data: MediaQueryData.fromView(View.of(context)),
-                child: SplashWidget(),
+    return Consumer<SplashController>(
+      builder: (context, splashController, _) {
+        if ((widget.route != null && splashController.configModel == null)) {
+          // Splash screen — use ThemeController directly (no animation needed)
+          return Consumer<ThemeController>(
+            builder: (context, themeController, _) => Theme(
+              data: _resolveTheme(themeController),
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: MediaQuery(
+                  data: MediaQueryData.fromView(View.of(context)),
+                  child: SplashWidget(),
+                ),
               ),
             ),
-          ),
-        );
-      }
-
-      // ThemeProvider is created ONCE — ripple animation works correctly
-      return ThemeProvider(
-        initTheme: _initialTheme!,
-        duration: const Duration(milliseconds: 700),
-        builder: (_, theme) {
-          return Consumer<LocalizationController>(
-            builder: (context, localizationController, _) {
-              return MaterialApp.router(
-                routerConfig: RouterHelper.goRoutes,
-                title: AppConstants.appName,
-                debugShowCheckedModeBanner: false,
-                theme: theme,
-                locale: localizationController.locale,
-            localizationsDelegates: [
-              AppLocalization.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              FallbackLocalizationDelegate()
-            ],
-            builder: (context, child) {
-              return MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.noScaling),
-                child: SafeArea(top: false, child: child!),
-              );
-            },
-            supportedLocales: locals,
-              );
-            },
           );
-        },
-      );
-    });
+        }
+
+        // ThemeProvider is created ONCE — ripple animation works correctly
+        return ThemeProvider(
+          initTheme: _initialTheme!,
+          duration: const Duration(milliseconds: 700),
+          builder: (_, theme) {
+            return Consumer<LocalizationController>(
+              builder: (context, localizationController, _) {
+                return MaterialApp.router(
+                  routerConfig: RouterHelper.goRoutes,
+                  title: AppConstants.appName,
+                  debugShowCheckedModeBanner: false,
+                  theme: theme,
+                  locale: localizationController.locale,
+                  localizationsDelegates: [
+                    AppLocalization.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    FallbackLocalizationDelegate(),
+                  ],
+                  builder: (context, child) {
+                    return MediaQuery(
+                      data: MediaQuery.of(context)
+                          .copyWith(textScaler: TextScaler.noScaling),
+                      child: SafeArea(top: false, child: child!),
+                    );
+                  },
+                  supportedLocales: locals,
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }
 
