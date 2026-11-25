@@ -11,8 +11,10 @@ class GoogleSignInController with ChangeNotifier {
   String? accessToken;
   String errorMessage = '';
 
+  late final Future<void> _initFuture;
+
   GoogleSignInController() {
-    _initialize();
+    _initFuture = _initialize();
   }
 
   Future<void> _initialize() async {
@@ -55,6 +57,7 @@ class GoogleSignInController with ChangeNotifier {
   Future<void> login() async {
     try {
       errorMessage = '';
+      await _initFuture;
 
       final completer = Completer<void>();
 

@@ -40,29 +40,29 @@ class CartBottomSheetWidget extends StatefulWidget {
 
 class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
   final TextEditingController productQuantityController =
-      TextEditingController();
+  TextEditingController();
 
   bool isFirstTime = true;
   int? quantity;
 
+  /// نحفظ مرجع الكنترولر مرة واحدة: استخدام context داخل dispose أو بعد إغلاق النافذة
+  /// كان يسبب الخطأ "Looking up a deactivated widget's ancestor is unsafe"،
+  /// ويمنع إزالة المستمع فيبقى يُستدعى بعد إغلاق النافذة.
+  late final ProductDetailsController _detailsController;
+
   @override
   void initState() {
-    Provider.of<ProductDetailsController>(context, listen: false).initData(
-        widget.product!, widget.product?.minimumOrderQty ?? 1, context);
-    Provider.of<ProductDetailsController>(context, listen: false)
-        .initDigitalVariationIndex();
-    productQuantityController.text =
-        (widget.product?.minimumOrderQty ?? 1).toString();
-
-    Provider.of<ProductDetailsController>(context, listen: false)
-        .addListener(_syncQuantity);
     super.initState();
+    _detailsController = Provider.of<ProductDetailsController>(context, listen: false);
+    _detailsController.initData(widget.product!, widget.product?.minimumOrderQty ?? 1, context);
+    _detailsController.initDigitalVariationIndex();
+    productQuantityController.text = (widget.product?.minimumOrderQty ?? 1).toString();
+    _detailsController.addListener(_syncQuantity);
   }
 
   void _syncQuantity() {
-    final qty = Provider.of<ProductDetailsController>(context, listen: false)
-        .quantity
-        .toString();
+    if (!mounted) return;
+    final qty = _detailsController.quantity.toString();
     if (productQuantityController.text != qty) {
       productQuantityController.text = qty;
       productQuantityController.selection = TextSelection.fromPosition(
@@ -73,8 +73,7 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
   @override
   void dispose() {
-    Provider.of<ProductDetailsController>(context, listen: false)
-        .removeListener(_syncQuantity);
+    _detailsController.removeListener(_syncQuantity);
     productQuantityController.dispose();
     super.dispose();
   }
@@ -82,13 +81,13 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
   @override
   Widget build(BuildContext context) {
     ({double? end, double? start})? priceRange =
-        ProductHelper.getProductPriceRange(widget.product);
+    ProductHelper.getProductPriceRange(widget.product);
     double? startingPrice = priceRange.start;
     double? endingPrice = priceRange.end;
 
     return Padding(
       padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -111,8 +110,8 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                     widget.product!.colorImagesFullUrl != null &&
                     widget.product!.colorImagesFullUrl!.isNotEmpty) {
                   for (int i = 0;
-                      i < widget.product!.colorImagesFullUrl!.length;
-                      i++) {
+                  i < widget.product!.colorImagesFullUrl!.length;
+                  i++) {
                     if (widget.product!.colorImagesFullUrl![i].color ==
                         '${widget.product!.colors?[productDetailsController.variantIndex ?? 0].code?.substring(1, 7)}') {
                       colorWiseSelectedImage = widget
@@ -123,14 +122,14 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
                 Variation? variation;
                 String? variantName = (widget.product!.colors != null &&
-                        widget.product!.colors!.isNotEmpty)
+                    widget.product!.colors!.isNotEmpty)
                     ? widget.product!
-                        .colors![productDetailsController.variantIndex!].name
+                    .colors![productDetailsController.variantIndex!].name
                     : null;
                 List<String> variationList = [];
                 for (int index = 0;
-                    index < widget.product!.choiceOptions!.length;
-                    index++) {
+                index < widget.product!.choiceOptions!.length;
+                index++) {
                   variationList.add(widget.product!.choiceOptions![index]
                       .options![productDetailsController.variationIndex![index]]
                       .trim());
@@ -176,10 +175,10 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
                 if (variationFileType.isNotEmpty && extensions.isNotEmpty) {
                   variantKey =
-                      '${variationFileType[productDetailsController.digitalVariationIndex!]}-${extensions[productDetailsController.digitalVariationIndex!][productDetailsController.digitalVariationSubindex!]}';
+                  '${variationFileType[productDetailsController.digitalVariationIndex!]}-${extensions[productDetailsController.digitalVariationIndex!][productDetailsController.digitalVariationSubindex!]}';
                   for (int i = 0;
-                      i < widget.product!.digitalVariation!.length;
-                      i++) {
+                  i < widget.product!.digitalVariation!.length;
+                  i++) {
                     if (widget.product!.digitalVariation?[i].variantKey ==
                         variantKey) {
                       price = double.tryParse(widget
@@ -209,25 +208,25 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                 }
                 avg = total / widget.product!.reviews!.length;
                 String ratting = widget.product!.reviews != null &&
-                        widget.product!.reviews!.isNotEmpty
+                    widget.product!.reviews!.isNotEmpty
                     ? avg.toString()
                     : "0";
 
                 CartModelBody cart = CartModelBody(
                     productId: widget.product!.id,
                     variant: (widget.product!.colors != null &&
-                            widget.product!.colors!.isNotEmpty)
+                        widget.product!.colors!.isNotEmpty)
                         ? widget
-                            .product!
-                            .colors![productDetailsController.variantIndex!]
-                            .name
+                        .product!
+                        .colors![productDetailsController.variantIndex!]
+                        .name
                         : '',
                     color: (widget.product!.colors != null &&
-                            widget.product!.colors!.isNotEmpty)
+                        widget.product!.colors!.isNotEmpty)
                         ? widget
-                            .product!
-                            .colors![productDetailsController.variantIndex!]
-                            .code
+                        .product!
+                        .colors![productDetailsController.variantIndex!]
+                        .code
                         : '',
                     variation: variation,
                     quantity: productDetailsController.quantity,
@@ -275,7 +274,7 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                 if (isExistInCart && isFirstTime) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Provider.of<ProductDetailsController>(context,
-                            listen: false)
+                        listen: false)
                         .setQuantity(cartQuantity);
                   });
                   isFirstTime = false;
@@ -412,7 +411,7 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                         child: Stack(children: [
                           Container(
                             padding:
-                                EdgeInsets.all(Dimensions.paddingSizeSmall),
+                            EdgeInsets.all(Dimensions.paddingSizeSmall),
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(
                                     Dimensions.radiusDefault),
@@ -431,7 +430,7 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                         height: 100,
                                         decoration: BoxDecoration(
                                             borderRadius:
-                                                BorderRadius.circular(5),
+                                            BorderRadius.circular(5),
                                             border: Border.all(
                                                 width: .5,
                                                 color: Theme.of(context)
@@ -439,20 +438,20 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                                     .withValues(alpha: .20))),
                                         child: ClipRRect(
                                             borderRadius:
-                                                BorderRadius.circular(5),
+                                            BorderRadius.circular(5),
                                             child: CustomImageWidget(
                                                 image: (widget.product!
-                                                                .colors !=
-                                                            null &&
-                                                        widget.product!.colors!
-                                                            .isNotEmpty &&
-                                                        widget.product!
-                                                                .imagesFullUrl !=
-                                                            null &&
-                                                        widget
-                                                            .product!
-                                                            .imagesFullUrl!
-                                                            .isNotEmpty)
+                                                    .colors !=
+                                                    null &&
+                                                    widget.product!.colors!
+                                                        .isNotEmpty &&
+                                                    widget.product!
+                                                        .imagesFullUrl !=
+                                                        null &&
+                                                    widget
+                                                        .product!
+                                                        .imagesFullUrl!
+                                                        .isNotEmpty)
                                                     ? '$colorWiseSelectedImage'
                                                     : '${widget.product!.thumbnailFullUrl?.path}'))),
                                   ]),
@@ -461,177 +460,177 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                     width: Dimensions.paddingSizeLarge),
                                 Expanded(
                                     child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(widget.product!.name ?? '',
-                                        style: titilliumRegular.copyWith(
-                                            fontSize: Dimensions.fontSizeLarge,
-                                            color: Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge
-                                                ?.color),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis),
-                                    const SizedBox(
-                                        height:
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(widget.product!.name ?? '',
+                                            style: titilliumRegular.copyWith(
+                                                fontSize: Dimensions.fontSizeLarge,
+                                                color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.color),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis),
+                                        const SizedBox(
+                                            height:
                                             Dimensions.paddingSizeExtraSmall),
-                                    if ((widget.product?.reviewsCount ?? 0) <
+                                        if ((widget.product?.reviewsCount ?? 0) <
                                             0 ||
-                                        double.parse(ratting) > 0) ...[
-                                      Row(
-                                          mainAxisAlignment:
+                                            double.parse(ratting) > 0) ...[
+                                          Row(
+                                              mainAxisAlignment:
                                               MainAxisAlignment.start,
-                                          crossAxisAlignment:
+                                              crossAxisAlignment:
                                               CrossAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.star,
-                                                color:
+                                              children: [
+                                                Icon(Icons.star,
+                                                    color:
                                                     Provider.of<ThemeController>(
-                                                                context)
-                                                            .darkTheme
+                                                        context)
+                                                        .darkTheme
                                                         ? Colors.white
                                                         : Colors.orange,
-                                                size: 15),
-                                            Text(
-                                                double.parse(ratting)
-                                                    .toStringAsFixed(1),
-                                                style: textMedium.copyWith(
-                                                    fontSize: Dimensions
-                                                        .fontSizeDefault,
-                                                    color: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyLarge
-                                                        ?.color)),
-                                            Text(
-                                                '(${widget.product?.reviewsCount ?? '0'})',
-                                                style: textRegular.copyWith(
-                                                    fontSize: Dimensions
-                                                        .fontSizeDefault,
-                                                    color: Theme.of(context)
-                                                        .hintColor)),
-                                          ]),
-                                      const SizedBox(
-                                          height:
+                                                    size: 15),
+                                                Text(
+                                                    double.parse(ratting)
+                                                        .toStringAsFixed(1),
+                                                    style: textMedium.copyWith(
+                                                        fontSize: Dimensions
+                                                            .fontSizeDefault,
+                                                        color: Theme.of(context)
+                                                            .textTheme
+                                                            .bodyLarge
+                                                            ?.color)),
+                                                Text(
+                                                    '(${widget.product?.reviewsCount ?? '0'})',
+                                                    style: textRegular.copyWith(
+                                                        fontSize: Dimensions
+                                                            .fontSizeDefault,
+                                                        color: Theme.of(context)
+                                                            .hintColor)),
+                                              ]),
+                                          const SizedBox(
+                                              height:
                                               Dimensions.paddingSizeExtraSmall),
-                                    ],
-                                    if ((widget.product?.reviewsCount ?? 0) <
+                                        ],
+                                        if ((widget.product?.reviewsCount ?? 0) <
                                             0 ||
-                                        double.parse(ratting) > 0)
-                                      const SizedBox(
-                                          height: Dimensions.paddingSizeSmall),
-                                    Column(
-                                        crossAxisAlignment:
+                                            double.parse(ratting) > 0)
+                                          const SizedBox(
+                                              height: Dimensions.paddingSizeSmall),
+                                        Column(
+                                            crossAxisAlignment:
                                             CrossAxisAlignment.start,
-                                        children: [
-                                          (widget.product?.discount != null &&
-                                                      (widget.product
-                                                                  ?.discount ??
-                                                              0) >
-                                                          0) ||
+                                            children: [
+                                              (widget.product?.discount != null &&
+                                                  (widget.product
+                                                      ?.discount ??
+                                                      0) >
+                                                      0) ||
                                                   (widget.product?.clearanceSale
-                                                              ?.discountAmount ??
-                                                          0) >
+                                                      ?.discountAmount ??
+                                                      0) >
                                                       0
-                                              ? CustomDirectionalityWidget(
-                                                  child: Text(
-                                                      '${PriceConverter.convertPrice(context, startingPrice)}'
-                                                      '${endingPrice != null ? ' - ${PriceConverter.convertPrice(context, endingPrice)}' : ''}',
-                                                      style: titilliumRegular.copyWith(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .hintColor,
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .lineThrough,
-                                                          fontSize: Dimensions
-                                                              .fontSizeLarge)),
-                                                )
-                                              : const SizedBox(),
-                                          SizedBox(
-                                              width: Dimensions
-                                                  .paddingSizeExtraSmall),
-                                          CustomDirectionalityWidget(
-                                            child: Text(
-                                                '${startingPrice != null ? PriceConverter.convertPrice(
-                                                    context,
-                                                    startingPrice,
-                                                    discount: (widget
-                                                                    .product
-                                                                    ?.clearanceSale
-                                                                    ?.discountAmount ??
-                                                                0) >
-                                                            0
-                                                        ? widget
-                                                            .product
-                                                            ?.clearanceSale
-                                                            ?.discountAmount
-                                                        : widget
-                                                            .product?.discount,
-                                                    discountType: (widget
-                                                                    .product
-                                                                    ?.clearanceSale
-                                                                    ?.discountAmount ??
-                                                                0) >
-                                                            0
-                                                        ? widget
-                                                            .product
-                                                            ?.clearanceSale
-                                                            ?.discountType
-                                                        : widget.product
-                                                            ?.discountType,
-                                                  ) : ''}'
-                                                '${endingPrice != null ? ' - ${PriceConverter.convertPrice(
-                                                    context,
-                                                    endingPrice,
-                                                    discount: (widget
-                                                                    .product
-                                                                    ?.clearanceSale
-                                                                    ?.discountAmount ??
-                                                                0) >
-                                                            0
-                                                        ? widget
-                                                            .product
-                                                            ?.clearanceSale
-                                                            ?.discountAmount
-                                                        : widget
-                                                            .product?.discount,
-                                                    discountType: widget
-                                                        .product?.discountType,
-                                                  )}' : ''}',
-                                                style:
+                                                  ? CustomDirectionalityWidget(
+                                                child: Text(
+                                                    '${PriceConverter.convertPrice(context, startingPrice)}'
+                                                        '${endingPrice != null ? ' - ${PriceConverter.convertPrice(context, endingPrice)}' : ''}',
+                                                    style: titilliumRegular.copyWith(
+                                                        color:
+                                                        Theme.of(context)
+                                                            .hintColor,
+                                                        decoration:
+                                                        TextDecoration
+                                                            .lineThrough,
+                                                        fontSize: Dimensions
+                                                            .fontSizeLarge)),
+                                              )
+                                                  : const SizedBox(),
+                                              SizedBox(
+                                                  width: Dimensions
+                                                      .paddingSizeExtraSmall),
+                                              CustomDirectionalityWidget(
+                                                child: Text(
+                                                    '${startingPrice != null ? PriceConverter.convertPrice(
+                                                      context,
+                                                      startingPrice,
+                                                      discount: (widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountAmount ??
+                                                          0) >
+                                                          0
+                                                          ? widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountAmount
+                                                          : widget
+                                                          .product?.discount,
+                                                      discountType: (widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountAmount ??
+                                                          0) >
+                                                          0
+                                                          ? widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountType
+                                                          : widget.product
+                                                          ?.discountType,
+                                                    ) : ''}'
+                                                        '${endingPrice != null ? ' - ${PriceConverter.convertPrice(
+                                                      context,
+                                                      endingPrice,
+                                                      discount: (widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountAmount ??
+                                                          0) >
+                                                          0
+                                                          ? widget
+                                                          .product
+                                                          ?.clearanceSale
+                                                          ?.discountAmount
+                                                          : widget
+                                                          .product?.discount,
+                                                      discountType: widget
+                                                          .product?.discountType,
+                                                    )}' : ''}',
+                                                    style:
                                                     titilliumSemiBold.copyWith(
-                                                  color: Theme.of(context)
-                                                      .primaryColor,
-                                                  fontSize: Dimensions
-                                                      .fontSizeExtraLarge,
-                                                )),
-                                          ),
-                                        ]),
-                                  ],
-                                )),
+                                                      color: Theme.of(context)
+                                                          .primaryColor,
+                                                      fontSize: Dimensions
+                                                          .fontSizeExtraLarge,
+                                                    )),
+                                              ),
+                                            ]),
+                                      ],
+                                    )),
                               ],
                             ),
                           ),
                           widget.product != null &&
-                                  widget.product!.discount != null &&
-                                  ((widget.product!.discount! > 0) ||
-                                      (widget.product?.clearanceSale
-                                                  ?.discountAmount ??
-                                              0) >
-                                          0)
+                              widget.product!.discount != null &&
+                              ((widget.product!.discount! > 0) ||
+                                  (widget.product?.clearanceSale
+                                      ?.discountAmount ??
+                                      0) >
+                                      0)
                               ? DiscountTagDetailsWidget(
-                                  productModel: widget.product!,
-                                  positionedTop: 0,
-                                  topLeftBorderRadius: Dimensions.radiusDefault,
-                                  bottomRightBorderRadius:
-                                      Dimensions.radiusDefault)
+                              productModel: widget.product!,
+                              positionedTop: 0,
+                              topLeftBorderRadius: Dimensions.radiusDefault,
+                              bottomRightBorderRadius:
+                              Dimensions.radiusDefault)
                               : const SizedBox.shrink(),
                         ]),
                       ),
                       SizedBox(height: Dimensions.paddingSizeSmall),
 
                       if ((widget.product!.colors != null &&
-                              widget.product!.colors!.isNotEmpty) ||
+                          widget.product!.colors!.isNotEmpty) ||
                           (widget.product!.choiceOptions != null &&
                               widget.product!.choiceOptions!.isNotEmpty) ||
                           (variationFileType.isNotEmpty))
@@ -653,17 +652,17 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                               const SizedBox(
                                   height: Dimensions.paddingSizeDefault),
                               (widget.product!.colors != null &&
-                                      widget.product!.colors!.isNotEmpty)
+                                  widget.product!.colors!.isNotEmpty)
                                   ? ColorSelectionWidget(
-                                      product: widget.product!,
-                                      detailsController:
-                                          productDetailsController)
+                                  product: widget.product!,
+                                  detailsController:
+                                  productDetailsController)
                                   : const SizedBox(),
 
                               (widget.product!.colors != null &&
-                                      widget.product!.colors!.isNotEmpty)
+                                  widget.product!.colors!.isNotEmpty)
                                   ? const SizedBox(
-                                      height: Dimensions.paddingSizeSmall)
+                                  height: Dimensions.paddingSizeSmall)
                                   : const SizedBox(),
 
                               // Variation
@@ -673,29 +672,29 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                 child: ListView.builder(
                                   shrinkWrap: true,
                                   itemCount:
-                                      widget.product!.choiceOptions!.length,
+                                  widget.product!.choiceOptions!.length,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemBuilder: (ctx, index) {
                                     final choice =
-                                        widget.product!.choiceOptions![index];
+                                    widget.product!.choiceOptions![index];
 
                                     return Column(
                                       children: [
                                         Row(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                   '${widget.product!.choiceOptions![index].title?.toCapitalized()} ',
                                                   style:
-                                                      titilliumRegular.copyWith(
-                                                          fontSize: Dimensions
-                                                              .fontSizeDefault,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .titleMedium
-                                                                  ?.color)),
+                                                  titilliumRegular.copyWith(
+                                                      fontSize: Dimensions
+                                                          .fontSizeDefault,
+                                                      color:
+                                                      Theme.of(context)
+                                                          .textTheme
+                                                          .titleMedium
+                                                          ?.color)),
                                               const SizedBox(
                                                   width: Dimensions
                                                       .paddingSizeExtraSmall),
@@ -704,101 +703,101 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                               Expanded(
                                                 child: Wrap(
                                                   spacing:
-                                                      8, // horizontal spacing between options
+                                                  8, // horizontal spacing between options
                                                   runSpacing:
-                                                      8, // vertical spacing between rows
+                                                  8, // vertical spacing between rows
                                                   children: List.generate(
                                                       choice.options!.length,
-                                                      (i) {
-                                                    final option = choice
-                                                        .options![i]
-                                                        .trim();
-                                                    final isSelected =
-                                                        productDetailsController
-                                                                    .variationIndex![
-                                                                index] ==
-                                                            i;
+                                                          (i) {
+                                                        final option = choice
+                                                            .options![i]
+                                                            .trim();
+                                                        final isSelected =
+                                                            productDetailsController
+                                                                .variationIndex![
+                                                            index] ==
+                                                                i;
 
-                                                    return InkWell(
-                                                      onTap: () {
-                                                        productDetailsController
-                                                            .setCartVariationIndex(
+                                                        return InkWell(
+                                                          onTap: () {
+                                                            productDetailsController
+                                                                .setCartVariationIndex(
                                                                 1,
                                                                 index,
                                                                 i,
                                                                 context);
-                                                        isFirstTime = true;
-                                                      },
-                                                      child: Container(
-                                                        padding:
+                                                            isFirstTime = true;
+                                                          },
+                                                          child: Container(
+                                                            padding:
                                                             const EdgeInsets
                                                                 .symmetric(
                                                                 horizontal: 8,
                                                                 vertical: 4),
-                                                        decoration:
+                                                            decoration:
                                                             BoxDecoration(
-                                                          borderRadius:
+                                                              borderRadius:
                                                               BorderRadius
                                                                   .circular(50),
-                                                          color: isSelected
-                                                              ? Theme.of(
-                                                                      context)
+                                                              color: isSelected
+                                                                  ? Theme.of(
+                                                                  context)
                                                                   .primaryColor
                                                                   .withValues(
-                                                                      alpha:
-                                                                          0.1)
-                                                              : Theme.of(
-                                                                      context)
+                                                                  alpha:
+                                                                  0.1)
+                                                                  : Theme.of(
+                                                                  context)
                                                                   .hintColor
                                                                   .withAlpha(
-                                                                      30),
-                                                          border: Border.all(
-                                                            width: 1,
-                                                            color: isSelected
-                                                                ? Theme.of(
-                                                                        context)
+                                                                  30),
+                                                              border: Border.all(
+                                                                width: 1,
+                                                                color: isSelected
+                                                                    ? Theme.of(
+                                                                    context)
                                                                     .primaryColor
-                                                                : Colors
+                                                                    : Colors
                                                                     .transparent,
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          option,
-                                                          style: titleRegular
-                                                              .copyWith(
-                                                            fontSize: Dimensions
-                                                                .fontSizeDefault,
-                                                            color: isSelected
-                                                                ? Theme.of(
-                                                                        context)
+                                                              ),
+                                                            ),
+                                                            child: Text(
+                                                              option,
+                                                              style: titleRegular
+                                                                  .copyWith(
+                                                                fontSize: Dimensions
+                                                                    .fontSizeDefault,
+                                                                color: isSelected
+                                                                    ? Theme.of(
+                                                                    context)
                                                                     .primaryColor
-                                                                : Theme.of(
-                                                                        context)
+                                                                    : Theme.of(
+                                                                    context)
                                                                     .textTheme
                                                                     .titleMedium
                                                                     ?.color,
-                                                            fontWeight:
+                                                                fontWeight:
                                                                 isSelected
                                                                     ? FontWeight
-                                                                        .w600
+                                                                    .w600
                                                                     : FontWeight
-                                                                        .w500,
+                                                                    .w500,
+                                                              ),
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }),
+                                                        );
+                                                      }),
                                                 ),
                                               ),
                                             ]),
                                         if (((widget.product!.choiceOptions
-                                                        ?.length ??
-                                                    0) -
-                                                1) >
+                                            ?.length ??
+                                            0) -
+                                            1) >
                                             index)
                                           SizedBox(
                                               height:
-                                                  Dimensions.paddingSizeLarge),
+                                              Dimensions.paddingSizeLarge),
                                       ],
                                     );
                                   },
@@ -810,151 +809,151 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                               // Digital Product Variation
                               variationFileType.isNotEmpty
                                   ? Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal:
-                                              Dimensions.homePagePadding),
-                                      child: RepaintBoundary(
-                                        child: ListView.builder(
-                                          shrinkWrap: true,
-                                          itemCount: variationFileType.length,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          itemBuilder: (ctx, index) {
-                                            return Column(
-                                              children: [
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      '${variationFileType[index][0].toUpperCase() + variationFileType[index].substring(1)} ',
-                                                      style: titilliumRegular
-                                                          .copyWith(
-                                                              fontSize: Dimensions
-                                                                  .fontSizeDefault,
-                                                              color: Theme.of(
-                                                                      context)
-                                                                  .textTheme
-                                                                  .titleMedium
-                                                                  ?.color),
-                                                    ),
-                                                    const SizedBox(
-                                                        width: Dimensions
-                                                            .paddingSizeExtraSmall),
-                                                    Expanded(
-                                                      child: Wrap(
-                                                        spacing: 8,
-                                                        runSpacing: 8,
-                                                        children: List.generate(
-                                                            extensions[index]
-                                                                .length, (i) {
-                                                          final isSelected =
-                                                              productDetailsController
-                                                                          .digitalVariationIndex ==
-                                                                      index &&
-                                                                  productDetailsController
-                                                                          .digitalVariationSubindex ==
-                                                                      i;
-                                                          return InkWell(
-                                                            onTap: () {
-                                                              productDetailsController
-                                                                  .setDigitalVariationIndex(
-                                                                      widget
-                                                                          .product!
-                                                                          .minimumOrderQty,
-                                                                      index,
-                                                                      i,
-                                                                      context);
-                                                              isFirstTime =
-                                                                  true;
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .symmetric(
-                                                                      horizontal:
-                                                                          8,
-                                                                      vertical:
-                                                                          4),
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            50),
-                                                                color: isSelected
-                                                                    ? Theme.of(
-                                                                            context)
-                                                                        .primaryColor
-                                                                        .withValues(
-                                                                            alpha:
-                                                                                0.1)
-                                                                    : Theme.of(
-                                                                            context)
-                                                                        .hintColor
-                                                                        .withAlpha(
-                                                                            30),
-                                                                border: Border.all(
-                                                                    width: 1,
-                                                                    color: isSelected
-                                                                        ? Theme.of(context)
-                                                                            .primaryColor
-                                                                        : Colors
-                                                                            .transparent),
-                                                              ),
-                                                              child: Text(
-                                                                extensions[index]
-                                                                        [i]
-                                                                    .trim(),
-                                                                maxLines: 1,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                style:
-                                                                    titleRegular
-                                                                        .copyWith(
-                                                                  fontSize:
-                                                                      Dimensions
-                                                                          .fontSizeDefault,
-                                                                  color: isSelected
-                                                                      ? Theme.of(
-                                                                              context)
-                                                                          .primaryColor
-                                                                      : Theme.of(
-                                                                              context)
-                                                                          .textTheme
-                                                                          .titleMedium
-                                                                          ?.color,
-                                                                  fontWeight: isSelected
-                                                                      ? FontWeight
-                                                                          .w600
-                                                                      : FontWeight
-                                                                          .w500,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal:
+                                    Dimensions.homePagePadding),
+                                child: RepaintBoundary(
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: variationFileType.length,
+                                    physics:
+                                    const NeverScrollableScrollPhysics(),
+                                    itemBuilder: (ctx, index) {
+                                      return Column(
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '${variationFileType[index][0].toUpperCase() + variationFileType[index].substring(1)} ',
+                                                style: titilliumRegular
+                                                    .copyWith(
+                                                    fontSize: Dimensions
+                                                        .fontSizeDefault,
+                                                    color: Theme.of(
+                                                        context)
+                                                        .textTheme
+                                                        .titleMedium
+                                                        ?.color),
+                                              ),
+                                              const SizedBox(
+                                                  width: Dimensions
+                                                      .paddingSizeExtraSmall),
+                                              Expanded(
+                                                child: Wrap(
+                                                  spacing: 8,
+                                                  runSpacing: 8,
+                                                  children: List.generate(
+                                                      extensions[index]
+                                                          .length, (i) {
+                                                    final isSelected =
+                                                        productDetailsController
+                                                            .digitalVariationIndex ==
+                                                            index &&
+                                                            productDetailsController
+                                                                .digitalVariationSubindex ==
+                                                                i;
+                                                    return InkWell(
+                                                      onTap: () {
+                                                        productDetailsController
+                                                            .setDigitalVariationIndex(
+                                                            widget
+                                                                .product!
+                                                                .minimumOrderQty,
+                                                            index,
+                                                            i,
+                                                            context);
+                                                        isFirstTime =
+                                                        true;
+                                                      },
+                                                      child: Container(
+                                                        padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal:
+                                                            8,
+                                                            vertical:
+                                                            4),
+                                                        decoration:
+                                                        BoxDecoration(
+                                                          borderRadius:
+                                                          BorderRadius
+                                                              .circular(
+                                                              50),
+                                                          color: isSelected
+                                                              ? Theme.of(
+                                                              context)
+                                                              .primaryColor
+                                                              .withValues(
+                                                              alpha:
+                                                              0.1)
+                                                              : Theme.of(
+                                                              context)
+                                                              .hintColor
+                                                              .withAlpha(
+                                                              30),
+                                                          border: Border.all(
+                                                              width: 1,
+                                                              color: isSelected
+                                                                  ? Theme.of(context)
+                                                                  .primaryColor
+                                                                  : Colors
+                                                                  .transparent),
+                                                        ),
+                                                        child: Text(
+                                                          extensions[index]
+                                                          [i]
+                                                              .trim(),
+                                                          maxLines: 1,
+                                                          overflow:
+                                                          TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                          titleRegular
+                                                              .copyWith(
+                                                            fontSize:
+                                                            Dimensions
+                                                                .fontSizeDefault,
+                                                            color: isSelected
+                                                                ? Theme.of(
+                                                                context)
+                                                                .primaryColor
+                                                                : Theme.of(
+                                                                context)
+                                                                .textTheme
+                                                                .titleMedium
+                                                                ?.color,
+                                                            fontWeight: isSelected
+                                                                ? FontWeight
+                                                                .w600
+                                                                : FontWeight
+                                                                .w500,
+                                                          ),
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                    );
+                                                  }),
                                                 ),
-                                                if ((variationFileType.length -
-                                                        1) >
-                                                    index)
-                                                  const SizedBox(
-                                                      height: Dimensions
-                                                          .paddingSizeLarge),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    )
+                                              ),
+                                            ],
+                                          ),
+                                          if ((variationFileType.length -
+                                              1) >
+                                              index)
+                                            const SizedBox(
+                                                height: Dimensions
+                                                    .paddingSizeLarge),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              )
                                   : const SizedBox(),
                               variationFileType.isNotEmpty
                                   ? const SizedBox(
-                                      height: Dimensions.paddingSizeSmall)
+                                  height: Dimensions.paddingSizeSmall)
                                   : const SizedBox()
                             ],
                           ),
@@ -979,9 +978,9 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                             quantity: productDetailsController.quantity,
                             stock: stock,
                             minimumOrderQuantity:
-                                widget.product!.minimumOrderQty,
+                            widget.product!.minimumOrderQty,
                             digitalProduct:
-                                widget.product!.productType == "digital",
+                            widget.product!.productType == "digital",
                           ),
                           const SizedBox(width: Dimensions.paddingSizeSmall),
                           SizedBox(
@@ -1020,13 +1019,13 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
                                 if (inputQty < min) {
                                   final String current =
-                                      productDetailsController.quantity
-                                          .toString();
+                                  productDetailsController.quantity
+                                      .toString();
                                   productQuantityController.text = current;
                                   productQuantityController.selection =
                                       TextSelection.fromPosition(
-                                    TextPosition(offset: current.length),
-                                  );
+                                        TextPosition(offset: current.length),
+                                      );
                                 } else if (!isDigital && inputQty > stock!) {
                                   showOverlaySnackBar(context,
                                       getTranslated('out_of_stock', context),
@@ -1035,8 +1034,8 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                   productQuantityController.text = fallback;
                                   productQuantityController.selection =
                                       TextSelection.fromPosition(
-                                    TextPosition(offset: fallback.length),
-                                  );
+                                        TextPosition(offset: fallback.length),
+                                      );
                                   productDetailsController.setQuantity(min);
                                 } else {
                                   productDetailsController
@@ -1051,9 +1050,9 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                             quantity: productDetailsController.quantity,
                             stock: stock,
                             minimumOrderQuantity:
-                                widget.product!.minimumOrderQty,
+                            widget.product!.minimumOrderQty,
                             digitalProduct:
-                                widget.product!.productType == "digital",
+                            widget.product!.productType == "digital",
                           ),
                         ]),
                       ),
@@ -1096,254 +1095,254 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
                       (stock! <= 0 && widget.product!.productType == "physical")
                           ? Provider.of<AuthController>(context, listen: false)
-                                  .isLoggedIn()
-                              ? Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: Dimensions.paddingSizeDefault,
-                                      vertical:
-                                          Dimensions.paddingSizeExtraSmall),
-                                  child: CustomButton(
-                                    isLoading:
-                                        Provider.of<CartController>(context)
-                                            .addToCartLoading,
-                                    backgroundColor: Colors.white,
-                                    textColor: Theme.of(context).primaryColor,
-                                    isBorder: true,
-                                    borderColor: Theme.of(context).primaryColor,
-                                    loadingColor:
-                                        Theme.of(context).primaryColor,
-                                    radius: Dimensions.radiusDefault,
-                                    buttonText: ((widget.product!.choiceOptions!
-                                                    .isEmpty &&
-                                                widget.product!.colors!.isEmpty)
-                                            ? widget.product!
-                                                    .isRestockRequested ==
-                                                1
-                                            : variationRestockRequested)
-                                        ? getTranslated(
-                                            'restock_requested', context)
-                                        : getTranslated(
-                                            'request_restock', context),
-                                    onTap: ((widget.product!.choiceOptions!
-                                                    .isEmpty &&
-                                                widget.product!.colors!.isEmpty)
-                                            ? widget.product!
-                                                    .isRestockRequested ==
-                                                1
-                                            : variationRestockRequested)
-                                        ? null
-                                        : () {
-                                            Provider.of<CartController>(context,
-                                                    listen: false)
-                                                .restockRequest(
-                                                    cart,
-                                                    context,
-                                                    widget.product!
-                                                        .choiceOptions!,
-                                                    productDetailsController
-                                                        .variationIndex,
-                                                    variationType:
-                                                        variationType);
-                                          },
-                                  ),
-                                )
-                              : Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: Dimensions.paddingSizeDefault,
-                                      vertical:
-                                          Dimensions.paddingSizeExtraSmall),
-                                  child: CustomButton(
-                                    textColor: Colors.white,
-                                    buttonText: getTranslated(
-                                        'request_restock', context),
-                                    onTap: () {
-                                      Navigator.of(context).pop();
-                                      showCustomSnackBarWidget(
-                                          getTranslated(
-                                              'to_request_the_restock',
-                                              context),
-                                          context,
-                                          snackBarType: SnackBarType.warning);
-                                    },
-                                  ),
-                                )
+                          .isLoggedIn()
+                          ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: Dimensions.paddingSizeDefault,
+                            vertical:
+                            Dimensions.paddingSizeExtraSmall),
+                        child: CustomButton(
+                          isLoading:
+                          Provider.of<CartController>(context)
+                              .addToCartLoading,
+                          backgroundColor: Colors.white,
+                          textColor: Theme.of(context).primaryColor,
+                          isBorder: true,
+                          borderColor: Theme.of(context).primaryColor,
+                          loadingColor:
+                          Theme.of(context).primaryColor,
+                          radius: Dimensions.radiusDefault,
+                          buttonText: ((widget.product!.choiceOptions!
+                              .isEmpty &&
+                              widget.product!.colors!.isEmpty)
+                              ? widget.product!
+                              .isRestockRequested ==
+                              1
+                              : variationRestockRequested)
+                              ? getTranslated(
+                              'restock_requested', context)
+                              : getTranslated(
+                              'request_restock', context),
+                          onTap: ((widget.product!.choiceOptions!
+                              .isEmpty &&
+                              widget.product!.colors!.isEmpty)
+                              ? widget.product!
+                              .isRestockRequested ==
+                              1
+                              : variationRestockRequested)
+                              ? null
+                              : () {
+                            Provider.of<CartController>(context,
+                                listen: false)
+                                .restockRequest(
+                                cart,
+                                context,
+                                widget.product!
+                                    .choiceOptions!,
+                                productDetailsController
+                                    .variationIndex,
+                                variationType:
+                                variationType);
+                          },
+                        ),
+                      )
+                          : Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: Dimensions.paddingSizeDefault,
+                            vertical:
+                            Dimensions.paddingSizeExtraSmall),
+                        child: CustomButton(
+                          textColor: Colors.white,
+                          buttonText: getTranslated(
+                              'request_restock', context),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            showCustomSnackBarWidget(
+                                getTranslated(
+                                    'to_request_the_restock',
+                                    context),
+                                context,
+                                snackBarType: SnackBarType.warning);
+                          },
+                        ),
+                      )
                           : Provider.of<CartController>(context)
-                                  .addToCartLoading
-                              ? const Center(
-                                  child: Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: CircularProgressIndicator()))
-                              : Container(
-                                  color:
-                                      Theme.of(context).colorScheme.onTertiary,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: Dimensions.homePagePadding,
-                                        vertical: Dimensions.paddingSizeSmall),
-                                    child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Expanded(child:
-                                              Consumer<SplashController>(
-                                                  builder: (context,
-                                                      configProvider, _) {
-                                            return CustomButton(
-                                              isBuy: true,
-                                              radius: 6,
-                                              buttonText: getTranslated(
-                                                  stock == 0 &&
-                                                          widget.product!
-                                                                  .productType ==
-                                                              "physical"
-                                                      ? 'out_of_stock'
-                                                      : 'buy_now',
-                                                  context),
-                                              onTap: () async {
-                                                final bool isLoggedIn =
-                                                    Provider.of<AuthController>(
-                                                            context,
-                                                            listen: false)
-                                                        .isLoggedIn();
+                          .addToCartLoading
+                          ? const Center(
+                          child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator()))
+                          : Container(
+                        color:
+                        Theme.of(context).colorScheme.onTertiary,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: Dimensions.homePagePadding,
+                              vertical: Dimensions.paddingSizeSmall),
+                          child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: [
+                                Expanded(child:
+                                Consumer<SplashController>(
+                                    builder: (context,
+                                        configProvider, _) {
+                                      return CustomButton(
+                                        isBuy: true,
+                                        radius: 6,
+                                        buttonText: getTranslated(
+                                            stock == 0 &&
+                                                widget.product!
+                                                    .productType ==
+                                                    "physical"
+                                                ? 'out_of_stock'
+                                                : 'buy_now',
+                                            context),
+                                        onTap: () async {
+                                          final bool isLoggedIn =
+                                          Provider.of<AuthController>(
+                                              context,
+                                              listen: false)
+                                              .isLoggedIn();
 
-                                                if (configProvider.configModel
-                                                            ?.guestCheckOut ==
-                                                        0 &&
-                                                    !isLoggedIn) {
-                                                  showModalBottomSheet(
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    context: context,
-                                                    builder: (_) =>
-                                                        const NotLoggedInBottomSheetWidget(
-                                                            fromPage: RouterHelper
-                                                                .productDetailsScreen),
-                                                  );
-                                                } else if (stock! <
-                                                        widget.product!
-                                                            .minimumOrderQty! &&
-                                                    widget.product!
-                                                            .productType ==
-                                                        "physical") {
-                                                  showCustomSnackBarWidget(
-                                                      getTranslated(
-                                                          'out_of_stock',
-                                                          context),
-                                                      context,
-                                                      snackBarType:
-                                                          SnackBarType.warning);
-                                                } else if (stock >=
-                                                        widget.product!
-                                                            .minimumOrderQty! ||
-                                                    widget.product!
-                                                            .productType ==
-                                                        "digital") {
-                                                  final ApiResponseModel
-                                                      apiResponse =
-                                                      await Provider.of<
-                                                                  CartController>(
-                                                              context,
-                                                              listen: false)
-                                                          .addToCartAPI(
-                                                    cart,
-                                                    context,
-                                                    widget.product!
-                                                        .choiceOptions!,
-                                                    productDetailsController
-                                                        .variationIndex,
-                                                    buyNow: 1,
-                                                  );
-
-                                                  if (apiResponse.response
-                                                          ?.statusCode ==
-                                                      200) {
-                                                    _onTapBuyNow(
-                                                        cart,
-                                                        Get.context!,
-                                                        widget.product!
-                                                            .choiceOptions!,
-                                                        productDetailsController
-                                                            .variationIndex,
-                                                        apiResponse.response);
-                                                  }
-                                                }
-                                              },
+                                          if (configProvider.configModel
+                                              ?.guestCheckOut ==
+                                              0 &&
+                                              !isLoggedIn) {
+                                            showModalBottomSheet(
+                                              backgroundColor:
+                                              Colors.transparent,
+                                              context: context,
+                                              builder: (_) =>
+                                              const NotLoggedInBottomSheetWidget(
+                                                  fromPage: RouterHelper
+                                                      .productDetailsScreen),
                                             );
-                                          })),
-                                          const SizedBox(
-                                              width: Dimensions
-                                                  .paddingSizeDefault),
-                                          Expanded(
-                                              child: CustomButton(
-                                            radius: 6,
-                                            buttonText: getTranslated(
-                                                stock == 0 &&
-                                                        widget.product!
-                                                                .productType ==
-                                                            "physical"
-                                                    ? 'out_of_stock'
-                                                    : isExistInCart
-                                                        ? 'update_cart'
-                                                        : 'add_to_cart',
-                                                context),
-                                            onTap: () {
-                                              if ((productDetailsController
-                                                          .quantity ??
-                                                      0) <
-                                                  (widget.product
-                                                          ?.minimumOrderQty ??
-                                                      1)) {
-                                                showCustomSnackBarWidget(
-                                                    getTranslated(
-                                                        'to_order_this_item_minimum_order_quantity_is',
-                                                        context),
-                                                    context,
-                                                    snackBarType:
-                                                        SnackBarType.warning);
-                                                return;
-                                              }
+                                          } else if (stock! <
+                                              widget.product!
+                                                  .minimumOrderQty! &&
+                                              widget.product!
+                                                  .productType ==
+                                                  "physical") {
+                                            showCustomSnackBarWidget(
+                                                getTranslated(
+                                                    'out_of_stock',
+                                                    context),
+                                                context,
+                                                snackBarType:
+                                                SnackBarType.warning);
+                                          } else if (stock >=
+                                              widget.product!
+                                                  .minimumOrderQty! ||
+                                              widget.product!
+                                                  .productType ==
+                                                  "digital") {
+                                            final ApiResponseModel
+                                            apiResponse =
+                                            await Provider.of<
+                                                CartController>(
+                                                context,
+                                                listen: false)
+                                                .addToCartAPI(
+                                              cart,
+                                              context,
+                                              widget.product!
+                                                  .choiceOptions!,
+                                              productDetailsController
+                                                  .variationIndex,
+                                              buyNow: 1,
+                                            );
 
-                                              if (stock! <
-                                                      widget.product!
-                                                          .minimumOrderQty! &&
-                                                  widget.product!.productType ==
-                                                      "physical") {
-                                                showCustomSnackBarWidget(
-                                                    getTranslated(
-                                                        'out_of_stock',
-                                                        context),
-                                                    context,
-                                                    snackBarType:
-                                                        SnackBarType.warning);
-                                              } else if (stock >=
-                                                      widget.product!
-                                                          .minimumOrderQty! ||
-                                                  widget.product!.productType ==
-                                                      "digital") {
-                                                Provider.of<CartController>(
-                                                        context,
-                                                        listen: false)
-                                                    .addToCartAPI(
+                                            if (apiResponse.response
+                                                ?.statusCode ==
+                                                200) {
+                                              _onTapBuyNow(
                                                   cart,
-                                                  context,
-                                                  widget
-                                                      .product!.choiceOptions!,
+                                                  Get.context!,
+                                                  widget.product!
+                                                      .choiceOptions!,
                                                   productDetailsController
                                                       .variationIndex,
-                                                )
-                                                    .then((apiResponse) {
-                                                  if (apiResponse.response
-                                                          ?.statusCode ==
-                                                      200) {
-                                                    widget.callback?.call();
-                                                  }
-                                                });
-                                              }
-                                            },
-                                          )),
-                                        ]),
-                                  ),
-                                ),
+                                                  apiResponse.response);
+                                            }
+                                          }
+                                        },
+                                      );
+                                    })),
+                                const SizedBox(
+                                    width: Dimensions
+                                        .paddingSizeDefault),
+                                Expanded(
+                                    child: CustomButton(
+                                      radius: 6,
+                                      buttonText: getTranslated(
+                                          stock == 0 &&
+                                              widget.product!
+                                                  .productType ==
+                                                  "physical"
+                                              ? 'out_of_stock'
+                                              : isExistInCart
+                                              ? 'update_cart'
+                                              : 'add_to_cart',
+                                          context),
+                                      onTap: () {
+                                        if ((productDetailsController
+                                            .quantity ??
+                                            0) <
+                                            (widget.product
+                                                ?.minimumOrderQty ??
+                                                1)) {
+                                          showCustomSnackBarWidget(
+                                              getTranslated(
+                                                  'to_order_this_item_minimum_order_quantity_is',
+                                                  context),
+                                              context,
+                                              snackBarType:
+                                              SnackBarType.warning);
+                                          return;
+                                        }
+
+                                        if (stock! <
+                                            widget.product!
+                                                .minimumOrderQty! &&
+                                            widget.product!.productType ==
+                                                "physical") {
+                                          showCustomSnackBarWidget(
+                                              getTranslated(
+                                                  'out_of_stock',
+                                                  context),
+                                              context,
+                                              snackBarType:
+                                              SnackBarType.warning);
+                                        } else if (stock >=
+                                            widget.product!
+                                                .minimumOrderQty! ||
+                                            widget.product!.productType ==
+                                                "digital") {
+                                          Provider.of<CartController>(
+                                              context,
+                                              listen: false)
+                                              .addToCartAPI(
+                                            cart,
+                                            context,
+                                            widget
+                                                .product!.choiceOptions!,
+                                            productDetailsController
+                                                .variationIndex,
+                                          )
+                                              .then((apiResponse) {
+                                            if (apiResponse.response
+                                                ?.statusCode ==
+                                                200) {
+                                              widget.callback?.call();
+                                            }
+                                          });
+                                        }
+                                      },
+                                    )),
+                              ]),
+                        ),
+                      ),
                     ]);
               },
             ),
@@ -1369,10 +1368,10 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
       showDialog(
           context: Get.context!,
           builder: (context) => Dialog(
-                backgroundColor: Colors.transparent,
-                child: ChooseShippingMethodDialog(shippingMethodList, cart,
-                    choices, variationIndexes, _navigateToCheckoutScreen),
-              ));
+            backgroundColor: Colors.transparent,
+            child: ChooseShippingMethodDialog(shippingMethodList, cart,
+                choices, variationIndexes, _navigateToCheckoutScreen),
+          ));
     } else {
       CartModel cart = CartModel.fromJson(response?.data['cart']);
       _navigateToCheckoutScreen(context, cart, 0);
@@ -1468,12 +1467,12 @@ class QuantityButton extends StatelessWidget {
             color: (isIncrement && quantity! >= stock! && !digitalProduct)
                 ? Theme.of(context).disabledColor
                 : (!isIncrement && quantity == 1)
-                    ? Theme.of(context).disabledColor
-                    : isIncrement
-                        ? Theme.of(context).primaryColor
-                        : Theme.of(context)
-                            .primaryColor
-                            .withValues(alpha: 0.30),
+                ? Theme.of(context).disabledColor
+                : isIncrement
+                ? Theme.of(context).primaryColor
+                : Theme.of(context)
+                .primaryColor
+                .withValues(alpha: 0.30),
 
             borderRadius: BorderRadius.circular(20),
             //border: Border.all(width: 1, color: Theme.of(context).primaryColor)
@@ -1482,11 +1481,11 @@ class QuantityButton extends StatelessWidget {
             isIncrement ? Icons.add : Icons.remove,
             color: (quantity! >= stock! && !digitalProduct)
                 ? Provider.of<ThemeController>(context).darkTheme
-                    ? Theme.of(context).cardColor.withValues(alpha: 0.50)
-                    : Theme.of(context).disabledColor
+                ? Theme.of(context).cardColor.withValues(alpha: 0.50)
+                : Theme.of(context).disabledColor
                 : isIncrement
-                    ? Theme.of(context).cardColor
-                    : Theme.of(context).cardColor,
+                ? Theme.of(context).cardColor
+                : Theme.of(context).cardColor,
             size: isCartWidget ? 26 : 26,
           ),
         ),

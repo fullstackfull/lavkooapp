@@ -63,7 +63,7 @@ class ProductDetailsController extends ChangeNotifier
     notifyListeners();
     log("=====slug===>$slug/ $productId");
     ApiResponseModel apiResponse =
-        await productDetailsServiceInterface.get(slug);
+    await productDetailsServiceInterface.get(slug);
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       _isDetails = false;
@@ -71,7 +71,7 @@ class ProductDetailsController extends ChangeNotifier
           ProductDetailsModel.fromJson(apiResponse.response!.data);
       if (_productDetailsModel != null) {
         log("=====slug===>$slug/ $productId");
-        
+
         // ✅ Meta Tracking: View Content event
         if (_productDetailsModel!.id != null) {
           MetaTrackingService().logViewContent(
@@ -82,21 +82,21 @@ class ProductDetailsController extends ChangeNotifier
             currency: 'SYP',
           );
         }
-        
+
         // Provider.of<SellerProductController>(Get.context!, listen: false).
         // getSellerProductList(_productDetailsModel?.addedBy == 'admin' ? '0' : productDetailsModel!.userId.toString(), 1, productId, reload: true);
 
         Provider.of<SellerProductController>(Get.context!, listen: false)
             .getSellerMoreProductList(
-                _productDetailsModel?.addedBy == 'admin'
-                    ? Provider.of<SplashController>(Get.context!, listen: false)
-                            .configModel
-                            ?.inHouseShop
-                            ?.slug ??
-                        ''
-                    : productDetailsModel!.seller!.shop!.slug.toString(),
-                1,
-                productId);
+            _productDetailsModel?.addedBy == 'admin'
+                ? Provider.of<SplashController>(Get.context!, listen: false)
+                .configModel
+                ?.inHouseShop
+                ?.slug ??
+                ''
+                : productDetailsModel!.seller!.shop!.slug.toString(),
+            1,
+            productId);
       }
     } else {
       _isDetails = false;
@@ -125,6 +125,32 @@ class ProductDetailsController extends ChangeNotifier
     notifyListeners();
   }
 
+  /// جلب تفاصيل منتج لنافذة "أضف للسلة" السريعة فقط.
+  ///
+  /// لا تغيّر حالة الكنترولر (المنتج المعروض، التحميل، منتجات البائع) ولا ترسل notifyListeners،
+  /// حتى لا تتأثر صفحة التفاصيل المفتوحة عند الإضافة من قسم "منتجات أخرى" أسفلها.
+  /// ترجع null عند الفشل بعد إظهار رسالة الخطأ.
+  Future<ProductDetailsModel?> fetchProductForCartSheet(String slug) async {
+    final ApiResponseModel apiResponse = await productDetailsServiceInterface.get(slug);
+    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+      final product = ProductDetailsModel.fromJson(apiResponse.response!.data);
+      if (product.id != null) {
+        MetaTrackingService().logViewContent(
+          contentId: product.id.toString(),
+          contentType: 'product',
+          contentName: product.name ?? 'Product',
+          price: product.unitPrice ?? 0.0,
+          currency: 'SYP',
+        );
+      }
+      return product;
+    }
+    if (Get.context != null) {
+      showCustomSnackBarWidget(apiResponse.error.toString(), Get.context!, snackBarType: SnackBarType.error);
+    }
+    return null;
+  }
+
   void initData(ProductDetailsModel product, int? minimumOrderQuantity,
       BuildContext context) {
     _variantIndex = 0;
@@ -146,7 +172,7 @@ class ProductDetailsController extends ChangeNotifier
 
   void getCount(String productID, BuildContext context) async {
     ApiResponseModel apiResponse =
-        await productDetailsServiceInterface.getCount(productID);
+    await productDetailsServiceInterface.getCount(productID);
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       _orderCount = apiResponse.response!.data['order_count'];
@@ -159,7 +185,7 @@ class ProductDetailsController extends ChangeNotifier
 
   void getSharableLink(String productID, BuildContext context) async {
     ApiResponseModel apiResponse =
-        await productDetailsServiceInterface.getSharableLink(productID);
+    await productDetailsServiceInterface.getSharableLink(productID);
     if (apiResponse.response != null &&
         apiResponse.response!.statusCode == 200) {
       _sharableLink = apiResponse.response!.data;
@@ -249,8 +275,8 @@ class ProductDetailsController extends ChangeNotifier
 
   void previewDownload(
       {required String url,
-      required String fileName,
-      bool isIos = false}) async {
+        required String fileName,
+        bool isIos = false}) async {
     _isDownloadLoading = true;
     notifyListeners();
 
@@ -286,7 +312,7 @@ class ProductDetailsController extends ChangeNotifier
 
     if (isIos) {
       HttpClientResponse apiResponse =
-          await productDetailsServiceInterface.previewDownload(url);
+      await productDetailsServiceInterface.previewDownload(url);
       if (apiResponse.statusCode == 200) {
         List<int> downloadData = [];
         Directory downloadDirectory;
