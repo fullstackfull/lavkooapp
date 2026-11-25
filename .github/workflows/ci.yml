@@ -9,7 +9,7 @@ on:
   # be merged, so the base filter is gone.
   pull_request:
   push:
-    branches: ['gcc/**', 'wt/**']
+    branches: ['gcc/**']
   # So a run can be asked for on a branch without pushing an empty commit to get
   # one.
   workflow_dispatch:
