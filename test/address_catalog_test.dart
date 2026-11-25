@@ -99,13 +99,25 @@ void main() {
     });
   });
 
+  /// The switch is a compile-time constant, so each of these holds in one build
+  /// and is skipped in the other -- the way every other flag of this app is
+  /// tested. The readers above are run in both builds and do not depend on it:
+  /// a row with no usable id is dropped either way.
   group('the switch', () {
-    test('is off in every build but one made with the dart-define', () {
-      expect(
+    test(
+      'is off in a build that did not ask for the catalogue, which is every build that ships',
+      () => expect(
         AddressCatalogConfig.enabled,
         isFalse,
         reason: 'the catalogue ships dark: the address form is the one this app has always had until a build asks for it',
-      );
-    });
+      ),
+      skip: AddressCatalogConfig.enabled ? 'this build asked for the catalogue' : null,
+    );
+
+    test(
+      'is on in a build made with the dart-define, and only then',
+      () => expect(AddressCatalogConfig.enabled, isTrue),
+      skip: AddressCatalogConfig.enabled ? null : 'this build did not ask for the catalogue',
+    );
   });
 }
