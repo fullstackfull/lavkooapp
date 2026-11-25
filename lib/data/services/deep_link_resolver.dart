@@ -19,12 +19,12 @@ class ResolvedDeepLink {
   /// could not even see that such a link named a market: `readLocally` switched on the first
   /// segment, so `ae` was simply not a path it knew and the link fell through to the browser.
   ///
-  /// Recorded and NOT acted on. What a link that names a market OTHER than the one the customer
-  /// chose should do — switch to it, ask, or open as the market they are on — is the owner's
-  /// decision, still open (axis J, J-10), and the plan's own rule is that a manual choice is never
-  /// overridden by something inferred (plan line 189). So the customer stays where they chose to
-  /// be, which is exactly what the app does today, and the market the link named is here for
-  /// whoever implements that decision.
+  /// Acted on by `DeepLinkStorefrontRule`, which the gateway applies before it opens the link. What
+  /// a link that names a market OTHER than the one the customer chose should do — switch to it, ask,
+  /// or open as the market they are on — is the owner's decision and still open (axis J, J-10), so
+  /// all three are built and the build flag `GCC_DEEP_LINK_MARKET_RULE` picks one. It ships as
+  /// `stay`, which honours the plan's rule that a manual choice is never overridden by something
+  /// inferred (plan line 189) and is exactly what this app did before a link could name a market.
   final String? storefront;
 
   /// What a slug parameter turned out to be, when the app's screen cannot open on a slug.

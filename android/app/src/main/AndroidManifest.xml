@@ -139,6 +139,61 @@
                 <data android:pathPrefix="/brand/" />
                 <data android:pathPrefix="/products" />
                 <data android:pathPrefix="/go/" />
+
+                <!-- The same published paths under each market's own prefix (/ae/product/x), which the six-market web serves (J-10, GCC-19).
+                     Written out one market at a time rather than as a pattern: android:pathPattern takes only * and .*, so a two-letter
+                     wildcard cannot be expressed, and a bare /ae/ prefix would open the app for every page of that market, including the
+                     ones the app has no screen for, which the browser serves better. The market itself is read off the first segment by
+                     DeepLinkResolver.readLocally and by the shop's own resolver, and what the app DOES about a market other than the
+                     customer's is DeepLinkStorefrontRule. -->
+                <data android:pathPattern="/sa" />
+                <data android:pathPrefix="/sa/track-order" />
+                <data android:pathPrefix="/sa/referral-login" />
+                <data android:pathPrefix="/sa/product/" />
+                <data android:pathPrefix="/sa/vendor-shop/" />
+                <data android:pathPrefix="/sa/brand/" />
+                <data android:pathPrefix="/sa/products" />
+                <data android:pathPrefix="/sa/go/" />
+                <data android:pathPattern="/ae" />
+                <data android:pathPrefix="/ae/track-order" />
+                <data android:pathPrefix="/ae/referral-login" />
+                <data android:pathPrefix="/ae/product/" />
+                <data android:pathPrefix="/ae/vendor-shop/" />
+                <data android:pathPrefix="/ae/brand/" />
+                <data android:pathPrefix="/ae/products" />
+                <data android:pathPrefix="/ae/go/" />
+                <data android:pathPattern="/kw" />
+                <data android:pathPrefix="/kw/track-order" />
+                <data android:pathPrefix="/kw/referral-login" />
+                <data android:pathPrefix="/kw/product/" />
+                <data android:pathPrefix="/kw/vendor-shop/" />
+                <data android:pathPrefix="/kw/brand/" />
+                <data android:pathPrefix="/kw/products" />
+                <data android:pathPrefix="/kw/go/" />
+                <data android:pathPattern="/qa" />
+                <data android:pathPrefix="/qa/track-order" />
+                <data android:pathPrefix="/qa/referral-login" />
+                <data android:pathPrefix="/qa/product/" />
+                <data android:pathPrefix="/qa/vendor-shop/" />
+                <data android:pathPrefix="/qa/brand/" />
+                <data android:pathPrefix="/qa/products" />
+                <data android:pathPrefix="/qa/go/" />
+                <data android:pathPattern="/bh" />
+                <data android:pathPrefix="/bh/track-order" />
+                <data android:pathPrefix="/bh/referral-login" />
+                <data android:pathPrefix="/bh/product/" />
+                <data android:pathPrefix="/bh/vendor-shop/" />
+                <data android:pathPrefix="/bh/brand/" />
+                <data android:pathPrefix="/bh/products" />
+                <data android:pathPrefix="/bh/go/" />
+                <data android:pathPattern="/om" />
+                <data android:pathPrefix="/om/track-order" />
+                <data android:pathPrefix="/om/referral-login" />
+                <data android:pathPrefix="/om/product/" />
+                <data android:pathPrefix="/om/vendor-shop/" />
+                <data android:pathPrefix="/om/brand/" />
+                <data android:pathPrefix="/om/products" />
+                <data android:pathPrefix="/om/go/" />
             </intent-filter>
         </activity>
 

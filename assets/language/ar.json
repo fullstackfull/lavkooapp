@@ -3268,5 +3268,9 @@
   "marketing_channel_whatsapp": "واتساب",
   "marketing_channel_push": "إشعارات التطبيق",
   "earned_on_every_order": "من قيمة كل طلب تُمنح كنقاط",
-  "customs_duty": "الرسوم الجمركية"
+  "customs_duty": "الرسوم الجمركية",
+  "deep_link_other_market_title": "هذا الرابط لمتجر آخر",
+  "deep_link_other_market_body": "يفتح هذا الرابط صفحة من متجر {store}، وله منتجاته وأسعاره وسلته الخاصة. هل تريد فتحه هناك أم البقاء في متجرك الحالي؟",
+  "deep_link_open_there": "افتحه هناك",
+  "deep_link_stay_here": "ابق هنا"
 }

@@ -3212,5 +3212,9 @@
   "marketing_channel_whatsapp": "WhatsApp",
   "marketing_channel_push": "App notifications",
   "earned_on_every_order": "of every order, earned as points",
-  "customs_duty": "Customs duty"
+  "customs_duty": "Customs duty",
+  "deep_link_other_market_title": "This link is for another store",
+  "deep_link_other_market_body": "This link opens a page of the {store} store, which has its own products, prices and cart. Open it there, or stay where you are?",
+  "deep_link_open_there": "Open there",
+  "deep_link_stay_here": "Stay here"
 }
