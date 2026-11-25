@@ -31,6 +31,7 @@ import 'package:syriapharmacy/common/basewidget/show_custom_snakbar_widget.dart'
 import 'package:syriapharmacy/common/basewidget/custom_textfield_widget.dart';
 import 'package:syriapharmacy/features/checkout/widgets/choose_payment_widget.dart';
 import 'package:syriapharmacy/features/checkout/widgets/coupon_apply_widget.dart';
+import 'package:syriapharmacy/features/checkout/widgets/customs_duty_amount_widget.dart';
 import 'package:syriapharmacy/features/checkout/widgets/shipping_details_widget.dart';
 import 'package:syriapharmacy/features/checkout/widgets/wallet_payment_widget.dart';
 import 'package:provider/provider.dart';
@@ -556,6 +557,10 @@ class CheckoutScreenState extends State<CheckoutScreen> {
                                           amount: PriceConverter.convertPrice(
                                               context, widget.shippingFee),
                                         ),
+                                        // What the shop quotes for customs duty, right after the shipping it is charged beside (H1-09).
+                                        // Nothing at all for a basket that crosses no border, and nothing a shop with duty off: the
+                                        // controller leaves it null and this draws no row.
+                                        const CustomsDutyAmountWidget(),
                                         AmountWidget(
                                           title: getTranslated('discount', context),
                                           amount: PriceConverter.convertPrice(

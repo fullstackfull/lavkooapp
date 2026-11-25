@@ -62,6 +62,11 @@ class CheckoutService implements CheckoutServiceInterface {
   }
 
   @override
+  Future customsDuty(String? addressId) {
+    return checkoutRepositoryInterface.customsDuty(addressId);
+  }
+
+  @override
   Future offlinePaymentPlaceOrder(
       String? addressID,
       String? couponCode,

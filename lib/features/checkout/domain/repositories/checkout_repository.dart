@@ -68,6 +68,19 @@ class CheckoutRepository implements CheckoutRepositoryInterface {
           ? null
           : Options(headers: {'Idempotency-Key': idempotencyKey});
 
+  /// What the shop quotes for customs duty on this basket, for the address the customer is checking out with (H1-09).
+  ///
+  /// Null in the answer for a basket that crosses no border, which is every basket a one-country shop takes, so the screen draws no line.
+  @override
+  Future<ApiResponseModel> customsDuty(String? addressId) async {
+    try {
+      final response = await dioClient!.get('${AppConstants.customsDutyUri}?address_id=${addressId ?? ''}');
+      return ApiResponseModel.withSuccess(response);
+    } catch (e) {
+      return ApiResponseModel.withError(ApiErrorHandler.getMessage(e), unanswered: ApiErrorHandler.neverAnswered(e));
+    }
+  }
+
   @override
   Future<ApiResponseModel> offlinePaymentPlaceOrder(
       String? addressID,

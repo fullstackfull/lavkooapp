@@ -13,6 +13,8 @@ abstract class CheckoutServiceInterface{
     String? idempotencyKey,
   });
 
+  Future<dynamic> customsDuty(String? addressId);
+
   Future<dynamic> offlinePaymentPlaceOrder(String? addressID, String? couponCode, String? couponDiscountAmount, String? billingAddressId, String? orderNote, List <String?> typeKey, List<String> typeValue, int? id, String name, String? paymentNote,bool? isCheckCreateAccount, String? password, String? idempotencyKey);
 
   Future<dynamic> walletPaymentPlaceOrder(String? addressID, String? couponCode,String? couponDiscountAmount, String? billingAddressId, String? orderNote, bool? isCheckCreateAccount, String? password, String? idempotencyKey);

@@ -229,6 +229,10 @@ class AppConstants {
   static const String submitDeliveryManReview =
       '/api/v1/customer/order/deliveryman-review/update?order_id=';
   static const String mergeGuestCart = '/api/v1/cart/get-merge-guest-cart';
+
+  /// What the customer is told about customs duty before they pay (H1-09). Answers null for a basket that crosses no border, which is
+  /// every basket a one-country shop takes, so a shop that has not opened a second market shows no line.
+  static const String customsDutyUri = '/api/v1/cart/customs-duty';
   static const String orderDetailsTrack =
       '/api/v1/order/track-order-details?order_id=';
 
