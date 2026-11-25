@@ -7,7 +7,7 @@
 ///
 /// The backend closed its half a while ago and nothing here could talk to it: `ThemePreviewToken`
 /// signs one unpublished version for one hour with the application key, `GET
-/// /api/v1/theme/home?preview=<token>` answers that version marked `preview: true`, with
+/// /api/v1/theme/home?preview=TOKEN` answers that version marked `preview: true`, with
 /// `Cache-Control: no-store` and no ETag, and a token that is expired, forged, or minted for
 /// another storefront's theme is ignored and the published page served instead. The token is
 /// opaque here: this app neither reads it nor could forge one, and the server decides every time

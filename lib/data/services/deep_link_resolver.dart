@@ -47,6 +47,17 @@ class ResolvedDeepLink {
 
   bool get isCampaign => attribution['campaign_code'] != null;
 
+  /// A storefront's own code, as the storefront list writes it, or null for anything that is not
+  /// one of the six markets. Read from the server's answer and from a path segment alike, so one
+  /// vocabulary decides both.
+  static String? _storefrontCode(Object? value) {
+    final String code = value is String ? value.trim().toUpperCase() : '';
+
+    return StorefrontCountry.all.any((storefront) => storefront.code == code)
+        ? code
+        : null;
+  }
+
   factory ResolvedDeepLink.fromJson(Map<String, dynamic> json) {
     final subject = json['subject'];
     final attribution = json['attribution'];
@@ -104,17 +115,6 @@ class DeepLinkResolver {
     return readLocally(uri);
   }
 
-  /// A storefront's own code, as the storefront list writes it, or null for anything that is not
-  /// one of the six markets. Read from the server's answer and from a path segment alike, so one
-  /// vocabulary decides both.
-  static String? _storefrontCode(Object? value) {
-    final String code = value is String ? value.trim().toUpperCase() : '';
-
-    return StorefrontCountry.all.any((storefront) => storefront.code == code)
-        ? code
-        : null;
-  }
-
   /// The offline reading of a link: the published paths, and nothing invented.
   ///
   /// [storefronts] is whether this build knows about markets at all, and defaults to the build's own
@@ -131,7 +131,7 @@ class DeepLinkResolver {
     // unprefixed one is, so one reading serves both and a prefixed link can never mean something a
     // bare link does not.
     final String? storefront =
-        storefronts && segments.isNotEmpty ? _storefrontCode(segments.first) : null;
+        storefronts && segments.isNotEmpty ? ResolvedDeepLink._storefrontCode(segments.first) : null;
     if (storefront != null) {
       segments.removeAt(0);
     }
