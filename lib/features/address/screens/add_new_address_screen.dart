@@ -448,7 +448,8 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                             //     ),
                             //   ),
                             // ),
-                            const SizedBox(height: Dimensions.paddingSizeDefault),
+                            const SizedBox(
+                                height: Dimensions.paddingSizeDefault),
                             CustomTextFieldWidget(
                               labelText:
                                   getTranslated('delivery_address', context),
@@ -686,7 +687,8 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                             // Draws nothing at all unless this build asks for the catalogue AND the store
                             // has rows in it, so the form above is untouched on every installation that
                             // has not imported one.
-                            AddressCatalogFieldsWidget(existing: widget.address),
+                            AddressCatalogFieldsWidget(
+                                existing: widget.address),
                             const SizedBox(
                                 height: Dimensions.paddingSizeDefaultAddress),
                             Container(
