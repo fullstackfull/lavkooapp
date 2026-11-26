@@ -228,7 +228,7 @@ class AddFundDialogueWidget extends StatelessWidget {
                                         return ListView.builder(
                                           padding: EdgeInsets.zero,
                                           itemCount: configProvider.configModel
-                                                  ?.paymentMethods?.length ??
+                                                  ?.paymentMethodsOnOffer?.length ??
                                               0,
                                           shrinkWrap: true,
                                           physics:
@@ -236,7 +236,7 @@ class AddFundDialogueWidget extends StatelessWidget {
                                           itemBuilder: (context, index) {
                                             final method = configProvider
                                                 .configModel!
-                                                .paymentMethods![index];
+                                                .paymentMethodsOnOffer![index];
                                             return CustomCheckBoxWidget(
                                               index: index,
                                               icon:
@@ -269,7 +269,7 @@ class AddFundDialogueWidget extends StatelessWidget {
                                           .setDigitalPaymentMethodName(
                                               0,
                                               configProvider.configModel!
-                                                  .paymentMethods![0].keyName!);
+                                                  .paymentMethodsOnOffer![0].keyName!);
                                     }
                                     if (inputAmountController.text
                                         .trim()

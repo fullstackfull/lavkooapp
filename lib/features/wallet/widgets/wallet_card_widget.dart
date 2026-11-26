@@ -115,7 +115,7 @@ class WalletCardWidget extends StatelessWidget {
             false) &&
         (Provider.of<SplashController>(context, listen: false)
                 .configModel
-                ?.paymentMethods
+                ?.paymentMethodsOnOffer
                 ?.isNotEmpty ??
             false);
   }

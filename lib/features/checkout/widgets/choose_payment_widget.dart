@@ -136,7 +136,7 @@ class ChoosePaymentWidget extends StatelessWidget {
                               height: 35,
                               child: CustomImageWidget(
                                 image:
-                                    '${configProvider.configModel?.paymentMethodImagePath}/${configProvider.configModel!.paymentMethods![orderProvider.paymentMethodIndex].additionalDatas!.gatewayImage ?? ''}',
+                                    '${configProvider.configModel?.paymentMethodImagePath}/${configProvider.configModel!.paymentMethodsOnOffer![orderProvider.paymentMethodIndex].additionalDatas!.gatewayImage ?? ''}',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -145,7 +145,7 @@ class ChoosePaymentWidget extends StatelessWidget {
                               child: Text(
                                 configProvider
                                         .configModel!
-                                        .paymentMethods![
+                                        .paymentMethodsOnOffer![
                                             orderProvider.paymentMethodIndex]
                                         .additionalDatas!
                                         .gatewayTitle ??

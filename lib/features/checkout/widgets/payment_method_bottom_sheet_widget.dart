@@ -190,13 +190,13 @@ class PaymentMethodBottomSheetWidgetState
                                       changeAmountTextController),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethods?.isNotEmpty ??
+                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false) &&
                                   !checkoutController.isCODChecked)
                                 SizedBox(height: Dimensions.paddingSizeSmall),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethods?.isNotEmpty ??
+                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false))
                                 Container(
                                   padding: const EdgeInsets.all(
@@ -216,7 +216,7 @@ class PaymentMethodBottomSheetWidgetState
                                     children: [
                                       if ((configModel?.digitalPayment ??
                                               false) &&
-                                          (configModel?.paymentMethods
+                                          (configModel?.paymentMethodsOnOffer
                                                   ?.isNotEmpty ??
                                               false))
                                         Padding(
@@ -241,7 +241,7 @@ class PaymentMethodBottomSheetWidgetState
                                         ),
                                       if ((configModel?.digitalPayment ??
                                               false) &&
-                                          (configModel?.paymentMethods
+                                          (configModel?.paymentMethodsOnOffer
                                                   ?.isNotEmpty ??
                                               false))
                                         Consumer<SplashController>(builder:
@@ -250,7 +250,7 @@ class PaymentMethodBottomSheetWidgetState
                                             padding: EdgeInsets.zero,
                                             itemCount: configProvider
                                                     .configModel
-                                                    ?.paymentMethods
+                                                    ?.paymentMethodsOnOffer
                                                     ?.length ??
                                                 0,
                                             shrinkWrap: true,
@@ -262,14 +262,14 @@ class PaymentMethodBottomSheetWidgetState
                                                 padding: 0,
                                                 icon:
                                                     '${configProvider.configModel?.paymentMethodImagePath}/'
-                                                    '${configProvider.configModel?.paymentMethods?[index].additionalDatas?.gatewayImage ?? ''}',
+                                                    '${configProvider.configModel?.paymentMethodsOnOffer?[index].additionalDatas?.gatewayImage ?? ''}',
                                                 name: configProvider
                                                     .configModel!
-                                                    .paymentMethods![index]
+                                                    .paymentMethodsOnOffer![index]
                                                     .keyName!,
                                                 title: configProvider
                                                         .configModel!
-                                                        .paymentMethods![index]
+                                                        .paymentMethodsOnOffer![index]
                                                         .additionalDatas
                                                         ?.gatewayTitle ??
                                                     '',
@@ -287,7 +287,7 @@ class PaymentMethodBottomSheetWidgetState
                                 ),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethods?.isNotEmpty ??
+                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false))
                                 SizedBox(height: Dimensions.paddingSizeSmall),
 
@@ -505,7 +505,7 @@ bool _isPaymentMethodsAvailable(
   bool isWalletOn = configModel?.walletStatus == 1 &&
       Provider.of<AuthController>(context, listen: false).isLoggedIn();
   bool isOnlinePaymentMethodsOn =
-      configModel?.paymentMethods?.isNotEmpty ?? false;
+      configModel?.paymentMethodsOnOffer?.isNotEmpty ?? false;
   bool isOfflinePaymentMethodsOn = offlineMethods?.isNotEmpty ?? false;
 
   return isCashOnDeliveryOn ||

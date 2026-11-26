@@ -362,6 +362,8 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
       final ConfigModel fresh = ConfigModel.fromJson(apiResponse.response!.data);
 
       _configModel!.paymentMethods = fresh.paymentMethods;
+      // Both lists, or a re-read would replace the global one and leave the storefront's stale -- and the screens read the storefront's.
+      _configModel!.storefrontPaymentMethods = fresh.storefrontPaymentMethods;
       _configModel!.digitalPayment = fresh.digitalPayment;
       _configModel!.cashOnDelivery = fresh.cashOnDelivery;
       _configModel!.offlinePayment = fresh.offlinePayment;

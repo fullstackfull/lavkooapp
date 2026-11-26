@@ -69,6 +69,24 @@ class ConfigModel {
   /// shop too old to send it leaves this null, and a screen that reads null says nothing, which is what every screen does today.
   double? loyaltyPointEarnRate;
   List<PaymentMethods>? paymentMethods;
+
+  /// The payment methods the storefront this config was answered for may offer (J-09).
+  ///
+  /// [paymentMethods] is the shop's GLOBAL list and stays exactly what it has always been: a client that reads only it keeps the answer it
+  /// has. This is the narrower list the shop can give once the app says which storefront it is asking for -- a hide rule bound to that
+  /// country can be judged, and a gateway that cannot take that market's money is left out instead of being refused after the customer has
+  /// picked it.
+  ///
+  /// Null for every shop that does not send it, which is every shop with storefronts off. Read [paymentMethodsOnOffer] rather than this
+  /// field: it falls back to the global list, so an older shop is served by the same screens.
+  List<PaymentMethods>? storefrontPaymentMethods;
+
+  /// What a screen offers: the storefront's list when the shop sent one, and the global list otherwise.
+  ///
+  /// Nullable and of the same type as [paymentMethods] on purpose -- every screen that chose a gateway read that field, and a nullable
+  /// getter of the same type is the whole of the change at each of them.
+  List<PaymentMethods>? get paymentMethodsOnOffer => storefrontPaymentMethods ?? paymentMethods;
+
   OfflinePayment? offlinePayment;
   String? paymentMethodImagePath;
   String? refEarningStatus;
@@ -160,6 +178,7 @@ class ConfigModel {
     this.loyaltyPointEarnRate,
     this.loyaltyPointMinimumPoint,
     this.paymentMethods,
+    this.storefrontPaymentMethods,
     this.offlinePayment,
     this.paymentMethodImagePath,
     this.refEarningStatus,
@@ -333,6 +352,14 @@ class ConfigModel {
       paymentMethods = <PaymentMethods>[];
       json['payment_methods'].forEach((v) {
         paymentMethods!.add(PaymentMethods.fromJson(v));
+      });
+    }
+    // An empty list is a real answer and not a missing one: "this storefront offers nothing" is what the shop said, and falling back to the
+    // global list there would offer a method the shop has just refused. Only an absent key means "this shop does not answer per storefront".
+    if (json['storefront_payment_methods'] != null) {
+      storefrontPaymentMethods = <PaymentMethods>[];
+      json['storefront_payment_methods'].forEach((v) {
+        storefrontPaymentMethods!.add(PaymentMethods.fromJson(v));
       });
     }
     offlinePayment = json['offline_payment'] != null
