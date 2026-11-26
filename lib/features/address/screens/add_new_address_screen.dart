@@ -66,7 +66,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
   CameraPosition? _cameraPosition;
   bool _updateAddress = true;
   Address? _address;
-  String zip = '', country = 'IN';
   late LatLng _defaut;
 
   final GlobalKey<FormState> _addressFormKey = GlobalKey();

@@ -322,6 +322,12 @@ jobs:
           flutter test test/address_catalog_test.dart
           flutter test --dart-define=GCC_UNIFIED_ADDRESS=true test/address_catalog_test.dart
 
+      # J-14: no country code is written into the address feature. The template this application was built from left `country = 'IN'` in the
+      # address form, dead but present, and the allowed set is read from StorefrontCountry rather than typed here, so a market added there is
+      # allowed the same day. It is a source scan and does not depend on the build flag, so it runs once.
+      - name: J-14 no country is written into the address feature, and the markets it allows are the application's own
+        run: flutter test test/address_default_country_test.dart
+
       # J-05 criterion 3: the cart, the checkout, the wallet and the coupon surfaces are BUILT and the exact words they write are read off
       # them — the currency mark, the number and the decimals of the currency. The inventory of every use of toStringAsFixed, and of every
       # other way of writing a number with decimals anywhere in lib, runs beside it: the scan says nothing new was added without being
