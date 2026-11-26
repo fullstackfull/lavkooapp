@@ -71,7 +71,8 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
   ConfigModel? get configModel => _configModel;
   BaseUrls? get baseUrls => _baseUrls;
   CurrencyList? get myCurrency => _myCurrency;
-  CurrencyList? get usdCurrency => _usdCurrency ?? _myCurrency ?? _defaultCurrency;
+  CurrencyList? get usdCurrency =>
+      _usdCurrency ?? _myCurrency ?? _defaultCurrency;
   CurrencyList? get defaultCurrency => _defaultCurrency;
   int? get currencyIndex => _currencyIndex;
   bool get hasConnection => _hasConnection;
@@ -258,7 +259,8 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
   Future<void> onStorefrontChanged(StorefrontChange change) async {
     // The legal texts are dropped whether or not a screen is up: a policy of the market the customer left must not survive the change,
     // and unlike the config it is not something the app needs in hand to run.
-    final bool reloadLegalTexts = _defaultBusinessPages != null || _businessPages != null;
+    final bool reloadLegalTexts =
+        _defaultBusinessPages != null || _businessPages != null;
     _defaultBusinessPages = null;
     _businessPages = null;
     notifyListeners();
@@ -282,7 +284,8 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
   }
 
   void getCurrencyData(String? currencyCode) {
-    if (_configModel?.currencyList != null && _configModel!.currencyList!.isNotEmpty) {
+    if (_configModel?.currencyList != null &&
+        _configModel!.currencyList!.isNotEmpty) {
       _myCurrency = null;
       _currencyIndex = null;
 
@@ -291,7 +294,8 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
         var currency = _configModel!.currencyList![i];
         if (currency.code == 'SYP' ||
             (currency.id != null &&
-                currency.id.toString() == _configModel!.systemDefaultCurrency.toString())) {
+                currency.id.toString() ==
+                    _configModel!.systemDefaultCurrency.toString())) {
           _myCurrency = currency;
           _currencyIndex = i;
           break;
@@ -299,7 +303,9 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
       }
 
       // 2. Priority: Check saved currency if active
-      if (_myCurrency == null && currencyCode != null && currencyCode.isNotEmpty) {
+      if (_myCurrency == null &&
+          currencyCode != null &&
+          currencyCode.isNotEmpty) {
         for (int i = 0; i < _configModel!.currencyList!.length; i++) {
           var currency = _configModel!.currencyList![i];
           if (currency.code == currencyCode && currency.status != false) {
@@ -335,7 +341,6 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
     }
   }
 
-
   /// Re-read just the payment options from `/api/v1/config`.
   ///
   /// Which payment methods exist is decided entirely by the admin panel, and the app holds a cached
@@ -355,11 +360,14 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
     if (_configModel == null) return;
 
     try {
-      final ApiResponseModel apiResponse = await splashServiceInterface!.getConfig();
+      final ApiResponseModel apiResponse =
+          await splashServiceInterface!.getConfig();
 
-      if (apiResponse.response == null || apiResponse.response!.statusCode != 200) return;
+      if (apiResponse.response == null ||
+          apiResponse.response!.statusCode != 200) return;
 
-      final ConfigModel fresh = ConfigModel.fromJson(apiResponse.response!.data);
+      final ConfigModel fresh =
+          ConfigModel.fromJson(apiResponse.response!.data);
 
       _configModel!.paymentMethods = fresh.paymentMethods;
       // Both lists, or a re-read would replace the global one and leave the storefront's stale -- and the screens read the storefront's.
@@ -452,5 +460,4 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
     }
     return ModalRoute.of(_buildContext!)?.settings.name == 'MaintenanceScreen';
   }
-
 }

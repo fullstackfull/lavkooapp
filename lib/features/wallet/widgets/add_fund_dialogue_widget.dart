@@ -99,7 +99,10 @@ class AddFundDialogueWidget extends StatelessWidget {
                                         textAlign: TextAlign.center,
                                         keyboardType: TextInputType.number,
                                         decoration: InputDecoration(
-                                          hintText: getTranslated('amount_hint_example', context) ?? 'Ex 150',
+                                          hintText: getTranslated(
+                                                  'amount_hint_example',
+                                                  context) ??
+                                              'Ex 150',
                                           hintStyle: textRegular.copyWith(
                                               fontSize:
                                                   Dimensions.fontSizeDefault,
@@ -227,8 +230,10 @@ class AddFundDialogueWidget extends StatelessWidget {
                                       builder: (context, configProvider, _) {
                                         return ListView.builder(
                                           padding: EdgeInsets.zero,
-                                          itemCount: configProvider.configModel
-                                                  ?.paymentMethodsOnOffer?.length ??
+                                          itemCount: configProvider
+                                                  .configModel
+                                                  ?.paymentMethodsOnOffer
+                                                  ?.length ??
                                               0,
                                           shrinkWrap: true,
                                           physics:
@@ -268,8 +273,10 @@ class AddFundDialogueWidget extends StatelessWidget {
                                       digitalPaymentProvider
                                           .setDigitalPaymentMethodName(
                                               0,
-                                              configProvider.configModel!
-                                                  .paymentMethodsOnOffer![0].keyName!);
+                                              configProvider
+                                                  .configModel!
+                                                  .paymentMethodsOnOffer![0]
+                                                  .keyName!);
                                     }
                                     if (inputAmountController.text
                                         .trim()

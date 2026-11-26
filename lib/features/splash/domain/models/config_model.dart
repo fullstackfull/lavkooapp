@@ -85,7 +85,8 @@ class ConfigModel {
   ///
   /// Nullable and of the same type as [paymentMethods] on purpose -- every screen that chose a gateway read that field, and a nullable
   /// getter of the same type is the whole of the change at each of them.
-  List<PaymentMethods>? get paymentMethodsOnOffer => storefrontPaymentMethods ?? paymentMethods;
+  List<PaymentMethods>? get paymentMethodsOnOffer =>
+      storefrontPaymentMethods ?? paymentMethods;
 
   OfflinePayment? offlinePayment;
   String? paymentMethodImagePath;
@@ -222,7 +223,8 @@ class ConfigModel {
     digitalProductSetting = json['digital_product_setting'];
     if (json['system_default_currency'] != null) {
       try {
-        systemDefaultCurrency = int.parse(json['system_default_currency'].toString());
+        systemDefaultCurrency =
+            int.parse(json['system_default_currency'].toString());
       } catch (e) {
         systemDefaultCurrency = json['system_default_currency'];
       }
@@ -616,7 +618,7 @@ class CurrencyList {
     name = json['name'];
     symbol = json['symbol'];
     code = json['code'];
-    
+
     // Fix for Syrian Pound symbol displaying as "ل." from backend
     if (code?.toUpperCase() == 'SYP') {
       symbol = 'ل.س';

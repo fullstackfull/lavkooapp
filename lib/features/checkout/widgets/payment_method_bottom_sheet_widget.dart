@@ -190,13 +190,15 @@ class PaymentMethodBottomSheetWidgetState
                                       changeAmountTextController),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
+                                  (configModel
+                                          ?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false) &&
                                   !checkoutController.isCODChecked)
                                 SizedBox(height: Dimensions.paddingSizeSmall),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
+                                  (configModel
+                                          ?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false))
                                 Container(
                                   padding: const EdgeInsets.all(
@@ -265,11 +267,13 @@ class PaymentMethodBottomSheetWidgetState
                                                     '${configProvider.configModel?.paymentMethodsOnOffer?[index].additionalDatas?.gatewayImage ?? ''}',
                                                 name: configProvider
                                                     .configModel!
-                                                    .paymentMethodsOnOffer![index]
+                                                    .paymentMethodsOnOffer![
+                                                        index]
                                                     .keyName!,
                                                 title: configProvider
                                                         .configModel!
-                                                        .paymentMethodsOnOffer![index]
+                                                        .paymentMethodsOnOffer![
+                                                            index]
                                                         .additionalDatas
                                                         ?.gatewayTitle ??
                                                     '',
@@ -287,7 +291,8 @@ class PaymentMethodBottomSheetWidgetState
                                 ),
 
                               if ((configModel?.digitalPayment ?? false) &&
-                                  (configModel?.paymentMethodsOnOffer?.isNotEmpty ??
+                                  (configModel
+                                          ?.paymentMethodsOnOffer?.isNotEmpty ??
                                       false))
                                 SizedBox(height: Dimensions.paddingSizeSmall),
 
