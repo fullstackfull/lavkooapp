@@ -123,17 +123,21 @@ class _DeepLinkGatewayScreenState extends State<DeepLinkGatewayScreen> {
     final bool? follow = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
-        title: Text(getTranslated('deep_link_other_market_title', dialogContext) ?? ''),
-        content: Text((getTranslated('deep_link_other_market_body', dialogContext) ?? '')
-            .replaceAll('{store}', there)),
+        title: Text(
+            getTranslated('deep_link_other_market_title', dialogContext) ?? ''),
+        content: Text(
+            (getTranslated('deep_link_other_market_body', dialogContext) ?? '')
+                .replaceAll('{store}', there)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(getTranslated('deep_link_stay_here', dialogContext) ?? ''),
+            child:
+                Text(getTranslated('deep_link_stay_here', dialogContext) ?? ''),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(getTranslated('deep_link_open_there', dialogContext) ?? ''),
+            child: Text(
+                getTranslated('deep_link_open_there', dialogContext) ?? ''),
           ),
         ],
       ),

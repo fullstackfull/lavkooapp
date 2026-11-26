@@ -40,28 +40,28 @@ class AddressModel {
   int? cityId;
   String? district;
   String? nationalAddress;
-  AddressModel(
-      {this.id,
-        this.contactPersonName,
-        this.addressType,
-        this.address,
-        this.city,
-        this.zip,
-        this.phone,
-        this.createdAt,
-        this.updatedAt,
-        this.state,
-        this.country,
-        this.latitude,
-        this.longitude,
-        this.isBilling,
-        this.guestId,
-        this.email,
-        this.regionId,
-        this.cityId,
-        this.district,
-        this.nationalAddress,
-      });
+  AddressModel({
+    this.id,
+    this.contactPersonName,
+    this.addressType,
+    this.address,
+    this.city,
+    this.zip,
+    this.phone,
+    this.createdAt,
+    this.updatedAt,
+    this.state,
+    this.country,
+    this.latitude,
+    this.longitude,
+    this.isBilling,
+    this.guestId,
+    this.email,
+    this.regionId,
+    this.cityId,
+    this.district,
+    this.nationalAddress,
+  });
 
   AddressModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -77,7 +77,7 @@ class AddressModel {
     country = json['country'];
     latitude = json['latitude'];
     longitude = json['longitude'];
-    isBilling = json['is_billing']??false;
+    isBilling = json['is_billing'] ?? false;
     email = json['email'];
     regionId = _identifier(json['region_id']);
     cityId = _identifier(json['city_id']);
@@ -136,4 +136,3 @@ class AddressModel {
     return text.isEmpty ? null : text;
   }
 }
-
