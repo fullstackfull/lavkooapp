@@ -48,7 +48,8 @@ class AddressController with ChangeNotifier {
   /// and the store has rows to offer. A store whose catalogue has not been
   /// imported answers an empty list, and then the form is the one it always was
   /// rather than two empty pickers nobody can get past.
-  bool get addressCatalogIsOffered => AddressCatalogConfig.enabled && _addressRegions.isNotEmpty;
+  bool get addressCatalogIsOffered =>
+      AddressCatalogConfig.enabled && _addressRegions.isNotEmpty;
 
   /// Reads the regions once per form. It never throws and never shows an error:
   /// a catalogue that cannot be read is a catalogue with no rows, and the form
@@ -81,7 +82,8 @@ class AddressController with ChangeNotifier {
       return;
     }
 
-    final List<AddressCityModel> cities = await addressServiceInterface.getAddressCities(regionId: region.id);
+    final List<AddressCityModel> cities =
+        await addressServiceInterface.getAddressCities(regionId: region.id);
 
     // The region may have been changed again while this was in flight; the answer of a region
     // nobody is looking at any more is dropped rather than drawn under the one they are.
@@ -119,8 +121,9 @@ class AddressController with ChangeNotifier {
       return;
     }
 
-    final AddressRegionModel? region =
-        _addressRegions.where((AddressRegionModel row) => row.id == regionId).firstOrNull;
+    final AddressRegionModel? region = _addressRegions
+        .where((AddressRegionModel row) => row.id == regionId)
+        .firstOrNull;
 
     if (region == null) {
       return;
@@ -132,7 +135,9 @@ class AddressController with ChangeNotifier {
       return;
     }
 
-    final AddressCityModel? city = _addressCities.where((AddressCityModel row) => row.id == cityId).firstOrNull;
+    final AddressCityModel? city = _addressCities
+        .where((AddressCityModel row) => row.id == cityId)
+        .firstOrNull;
 
     if (city != null) {
       chooseAddressCity(city);
@@ -149,9 +154,11 @@ class AddressController with ChangeNotifier {
   /// Kept WITHOUT notifying, both of them: these two are typed, and rebuilding
   /// the form on every keystroke would fight the field the person is typing in.
   /// Nothing on the screen reads them back; the save does, once.
-  void writeAddressDistrict(String? value) => _addressDistrict = _something(value);
+  void writeAddressDistrict(String? value) =>
+      _addressDistrict = _something(value);
 
-  void writeNationalAddress(String? value) => _nationalAddress = _something(value);
+  void writeNationalAddress(String? value) =>
+      _nationalAddress = _something(value);
 
   /// Forgets what a form chose, so that the next form does not open on it.
   void forgetAddressCatalogChoice() {

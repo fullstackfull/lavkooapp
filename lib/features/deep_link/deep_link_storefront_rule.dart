@@ -115,12 +115,14 @@ class DeepLinkStorefrontTarget {
   /// A move that fails must not cost the customer the screen they tapped for, exactly as on the push
   /// path: the failure is logged and the link opens in the market they are on, which is what it did
   /// before any of this existed.
-  static Future<void> move(StorefrontSwitcher switcher, StorefrontCountry target) async {
+  static Future<void> move(
+      StorefrontSwitcher switcher, StorefrontCountry target) async {
     try {
       await switcher.switchTo(target);
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[deep link] the storefront did not move: ${error.runtimeType}');
+        debugPrint(
+            '[deep link] the storefront did not move: ${error.runtimeType}');
       }
     }
   }
@@ -136,7 +138,8 @@ class DeepLinkStorefrontTarget {
       return Provider.of<T>(context, listen: false);
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[deep link] no ${T.toString()} in this tree: ${error.runtimeType}');
+        debugPrint(
+            '[deep link] no ${T.toString()} in this tree: ${error.runtimeType}');
       }
 
       return null;
@@ -150,7 +153,8 @@ class DeepLinkStorefrontTarget {
     required BuildContext? context,
     DeepLinkStorefrontRule? rule,
   }) {
-    final StorefrontController? controller = read<StorefrontController>(context);
+    final StorefrontController? controller =
+        read<StorefrontController>(context);
 
     if (controller == null || read<StorefrontSwitcher>(context) == null) {
       return (target: null, step: DeepLinkStorefrontStep.openHere);

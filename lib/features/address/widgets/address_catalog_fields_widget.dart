@@ -39,12 +39,15 @@ class AddressCatalogFieldsWidget extends StatefulWidget {
   const AddressCatalogFieldsWidget({super.key, this.existing});
 
   @override
-  State<AddressCatalogFieldsWidget> createState() => _AddressCatalogFieldsWidgetState();
+  State<AddressCatalogFieldsWidget> createState() =>
+      _AddressCatalogFieldsWidgetState();
 }
 
-class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget> {
+class _AddressCatalogFieldsWidgetState
+    extends State<AddressCatalogFieldsWidget> {
   final TextEditingController _districtController = TextEditingController();
-  final TextEditingController _nationalAddressController = TextEditingController();
+  final TextEditingController _nationalAddressController =
+      TextEditingController();
   final FocusNode _districtNode = FocusNode();
   final FocusNode _nationalAddressNode = FocusNode();
 
@@ -59,7 +62,8 @@ class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget>
     // built, and the context is read HERE rather than inside the asynchronous part.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _openOnTheCatalogue(Provider.of<AddressController>(context, listen: false));
+        _openOnTheCatalogue(
+            Provider.of<AddressController>(context, listen: false));
       }
     });
   }
@@ -85,7 +89,8 @@ class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget>
   @override
   Widget build(BuildContext context) {
     return Consumer<AddressController>(
-      builder: (BuildContext context, AddressController addressController, Widget? child) {
+      builder: (BuildContext context, AddressController addressController,
+          Widget? child) {
         if (!addressController.addressCatalogIsOffered) {
           return const SizedBox.shrink();
         }
@@ -110,7 +115,9 @@ class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget>
             keyOf: (AddressCityModel city) => city.id,
             // Disabled rather than hidden until a region is chosen, so that the order of the two is
             // visible instead of a field appearing from nowhere.
-            onChanged: addressController.chosenRegion == null ? null : addressController.chooseAddressCity,
+            onChanged: addressController.chosenRegion == null
+                ? null
+                : addressController.chooseAddressCity,
           ),
           const SizedBox(height: Dimensions.paddingSizeDefaultAddress),
           CustomTextFieldWidget(
@@ -161,12 +168,16 @@ class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget>
       // Reads the CURRENT choice from the build above rather than the field's own value: the
       // choice lives in the controller, and this field exists only to join the form's validation
       // so that the save cannot pass with a region or a city missing.
-      validator: (int? _) => chosen == null ? getTranslated('address_catalog_choice_required', context) : null,
+      validator: (int? _) => chosen == null
+          ? getTranslated('address_catalog_choice_required', context)
+          : null,
       builder: (FormFieldState<int> field) => InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           errorText: field.errorText,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)),
+          border: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(Dimensions.paddingSizeExtraSmall)),
         ),
         child: DropdownButton<int>(
           value: chosen,
@@ -175,14 +186,18 @@ class _AddressCatalogFieldsWidgetState extends State<AddressCatalogFieldsWidget>
           items: rows
               .map((T row) => DropdownMenuItem<int>(
                     value: keyOf(row),
-                    child: Text(nameOf(row), style: textRegular.copyWith(fontSize: Dimensions.fontSizeSmall)),
+                    child: Text(nameOf(row),
+                        style: textRegular.copyWith(
+                            fontSize: Dimensions.fontSizeSmall)),
                   ))
               .toList(),
           onChanged: onChanged == null
               ? null
               : (int? picked) {
                   field.didChange(picked);
-                  onChanged(picked == null ? null : rows.firstWhere((T row) => keyOf(row) == picked));
+                  onChanged(picked == null
+                      ? null
+                      : rows.firstWhere((T row) => keyOf(row) == picked));
                 },
         ),
       ),

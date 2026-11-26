@@ -124,14 +124,15 @@ class DeepLinkResolver {
   static ResolvedDeepLink readLocally(Uri uri,
       {bool storefronts = StorefrontConfig.enabled}) {
     final segments =
-    uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+        uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
 
     // A market's own path prefix (`/ae/product/x`), which the six-market web publishes and which
     // the app read as an unknown first segment. The rest of the path is then read exactly as the
     // unprefixed one is, so one reading serves both and a prefixed link can never mean something a
     // bare link does not.
-    final String? storefront =
-        storefronts && segments.isNotEmpty ? ResolvedDeepLink._storefrontCode(segments.first) : null;
+    final String? storefront = storefronts && segments.isNotEmpty
+        ? ResolvedDeepLink._storefrontCode(segments.first)
+        : null;
     if (storefront != null) {
       segments.removeAt(0);
     }
@@ -148,23 +149,23 @@ class DeepLinkResolver {
       'brand' when parameter != null => ResolvedDeepLink(
           target: 'brand', parameter: parameter, storefront: storefront),
       'products' =>
-          ResolvedDeepLink(target: 'product_list', storefront: storefront),
-    // An order id, and only an order id.
-    //
-    // This used to accept any second segment, and the shop serves `result`, `result-view`, `last`
-    // and `order-wise-result-view` under this prefix — the order identifier travels in the QUERY
-    // STRING, never as a path segment. So the Track Order button in the order-placed email, which
-    // links to /track-order/result?order_id=..., opened the app on an order called "result".
-    //
-    // Narrowed rather than removed: a numeric segment is unambiguous, so a link that really does
-    // carry an id still works, while every page under this prefix falls through to the web view
-    // where its query string means something.
+        ResolvedDeepLink(target: 'product_list', storefront: storefront),
+      // An order id, and only an order id.
+      //
+      // This used to accept any second segment, and the shop serves `result`, `result-view`, `last`
+      // and `order-wise-result-view` under this prefix — the order identifier travels in the QUERY
+      // STRING, never as a path segment. So the Track Order button in the order-placed email, which
+      // links to /track-order/result?order_id=..., opened the app on an order called "result".
+      //
+      // Narrowed rather than removed: a numeric segment is unambiguous, so a link that really does
+      // carry an id still works, while every page under this prefix falls through to the web view
+      // where its query string means something.
       'track-order' when parameter != null && int.tryParse(parameter) != null =>
-          ResolvedDeepLink(
-              target: 'order_tracking',
-              parameter: parameter,
-              storefront: storefront),
-    // A short link is a code, not a destination: only the shop knows where it points.
+        ResolvedDeepLink(
+            target: 'order_tracking',
+            parameter: parameter,
+            storefront: storefront),
+      // A short link is a code, not a destination: only the shop knows where it points.
       'go' => ResolvedDeepLink(target: 'home', storefront: storefront),
       _ => ResolvedDeepLink(
           target: 'web', webUrl: uri.toString(), storefront: storefront),
