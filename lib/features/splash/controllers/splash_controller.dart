@@ -364,7 +364,9 @@ class SplashController extends ChangeNotifier with StorefrontChangeAware {
           await splashServiceInterface!.getConfig();
 
       if (apiResponse.response == null ||
-          apiResponse.response!.statusCode != 200) return;
+          apiResponse.response!.statusCode != 200) {
+        return;
+      }
 
       final ConfigModel fresh =
           ConfigModel.fromJson(apiResponse.response!.data);
