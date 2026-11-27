@@ -66,14 +66,14 @@ class ApiErrorHandler {
               break;
             case DioExceptionType.receiveTimeout:
               errorDescription =
-              "Receive timeout in connection with API server";
+                  "Receive timeout in connection with API server";
               break;
             case DioExceptionType.badResponse:
               switch (error.response!.statusCode) {
                 case 403:
                   if (error.response!.data['errors'] != null) {
                     ErrorResponse errorResponse =
-                    ErrorResponse.fromJson(error.response?.data);
+                        ErrorResponse.fromJson(error.response?.data);
                     errorDescription = errorResponse.errors?[0].message;
                   } else {
                     errorDescription = error.response!.data['message'];
@@ -88,7 +88,7 @@ class ApiErrorHandler {
                 case 401:
                   if (error.response!.data['errors'] != null) {
                     ErrorResponse errorResponse =
-                    ErrorResponse.fromJson(error.response?.data);
+                        ErrorResponse.fromJson(error.response?.data);
                     errorDescription = errorResponse.errors?[0].message;
                   } else {
                     errorDescription = error.response!.data['message'];
@@ -101,7 +101,7 @@ class ApiErrorHandler {
                 case 400:
                   if (error.response!.data['errors'] != null) {
                     ErrorResponse errorResponse =
-                    ErrorResponse.fromJson(error.response?.data);
+                        ErrorResponse.fromJson(error.response?.data);
                     errorDescription = errorResponse.errors?[0].message;
                   } else {
                     errorDescription = error.response?.data['message'] ?? '';
@@ -122,21 +122,21 @@ class ApiErrorHandler {
                   break;
                 default:
                   ErrorResponse errorResponse =
-                  ErrorResponse.fromJson(error.response!.data);
+                      ErrorResponse.fromJson(error.response!.data);
                   if (errorResponse.errors != null &&
                       errorResponse.errors!.isNotEmpty) {
                     errorDescription = errorResponse;
                   } else {
                     errorDescription =
-                    "Failed to load data - status code: ${error.response!.statusCode}";
+                        "Failed to load data - status code: ${error.response!.statusCode}";
                   }
               }
               break;
             case DioExceptionType.badCertificate:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               break;
             case DioExceptionType.connectionError:
-            // TODO: Handle this case.
+              // TODO: Handle this case.
               break;
             case DioExceptionType.unknown:
               errorDescription = "Request to API call limit excited ";
