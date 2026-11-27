@@ -8,6 +8,24 @@ import 'package:syriapharmacy/main.dart';
 import 'package:provider/provider.dart';
 
 class ApiErrorHandler {
+  /// The sentence an answer that is NOT a JSON object carries, or null when it
+  /// carries none.
+  ///
+  /// Several v1 endpoints answer `response()->json('some sentence', 403)`,
+  /// which is a bare JSON string and not an object -- a refused chat type is
+  /// one. A page is deliberately not a sentence: an HTML error page from a
+  /// proxy in front of the API is not something to put in front of a customer,
+  /// so it falls back to the status line the app has always shown.
+  static String? _textOfANonObjectBody(dynamic body) {
+    if (body is! String) {
+      return null;
+    }
+
+    final String text = body.trim();
+
+    return text.isEmpty || text.startsWith('<') ? null : text;
+  }
+
   /// Did this error mean the request never got an answer, as opposed to being refused?
   ///
   /// The distinction matters wherever a retry is not free. A 403 is the server saying no, and the
@@ -71,7 +89,19 @@ class ApiErrorHandler {
             case DioExceptionType.badResponse:
               switch (error.response!.statusCode) {
                 case 403:
-                  if (error.response!.data['errors'] != null) {
+                  // A refusal is not always a JSON object. Several v1
+                  // endpoints answer `response()->json(translate('...'), 403)`
+                  // -- a bare JSON string -- and indexing a String with
+                  // 'errors' raises a TypeError, which the catch below does not
+                  // hold and which is raised from inside the calling
+                  // repository's own catch block, so it escaped the repository
+                  // and the customer was shown nothing at all. An object is
+                  // read exactly as it always was.
+                  if (error.response!.data is! Map) {
+                    errorDescription = _textOfANonObjectBody(
+                            error.response!.data) ??
+                        "Failed to load data - status code: ${error.response!.statusCode}";
+                  } else if (error.response!.data['errors'] != null) {
                     ErrorResponse errorResponse =
                         ErrorResponse.fromJson(error.response?.data);
                     errorDescription = errorResponse.errors?[0].message;
@@ -99,7 +129,13 @@ class ApiErrorHandler {
                 case 404:
                   break;
                 case 400:
-                  if (error.response!.data['errors'] != null) {
+                  // As 403 above: a body that is not an object used to throw
+                  // out of the repository.
+                  if (error.response!.data is! Map) {
+                    errorDescription = _textOfANonObjectBody(
+                            error.response!.data) ??
+                        "Failed to load data - status code: ${error.response!.statusCode}";
+                  } else if (error.response!.data['errors'] != null) {
                     ErrorResponse errorResponse =
                         ErrorResponse.fromJson(error.response?.data);
                     errorDescription = errorResponse.errors?[0].message;
@@ -121,6 +157,19 @@ class ApiErrorHandler {
                   errorDescription = error.response!.statusMessage;
                   break;
                 default:
+                  // The statuses with no case of their own -- a 422 from
+                  // anywhere but the two refusals read at the top, a 502 page
+                  // from a proxy in front of the API. An object reads exactly
+                  // as it always did, including the "Failed to load data"
+                  // sentence for one with no `errors`; a body that is not an
+                  // object used to throw out of the repository instead.
+                  if (error.response!.data is! Map) {
+                    errorDescription = _textOfANonObjectBody(
+                            error.response!.data) ??
+                        "Failed to load data - status code: ${error.response!.statusCode}";
+                    break;
+                  }
+
                   ErrorResponse errorResponse =
                       ErrorResponse.fromJson(error.response!.data);
                   if (errorResponse.errors != null &&
